@@ -9,3 +9,14 @@ Why no license (yet)? We want to share our progress, but we are not sure about t
 ## Prototype solution
 
 We are about to explore ideas how we can solve the issue we described in detail about [UX challenges in web forms if you have a file on another device](https://github.com/compose-us/build-in-public/tree/main/updates/2023-10-23%20Defining%20our%20mission%20-%20Improve%20Web%20Form%20File%20Uploads).
+
+### Todos
+
+- [ ] Build a server that allows file uploads from a form
+  - [ ] Build a server that accepts files
+  - [ ] Build a web form with an input field for files
+- [ ] Let device A create a URL that allows connecting another device through WebRTC
+  - [ ] Allow only one connection per URL
+  - [ ] Establish a WebRTC connection between devices
+  - [ ] Have an upload field on that URL for device B
+  - [ ] Uploading to that URL populates the file field on device A
