@@ -20,3 +20,12 @@ We are about to explore ideas how we can solve the issue we described in detail 
   - [ ] Establish a WebRTC connection between devices
   - [ ] Have an upload field on that URL for device B
   - [ ] Uploading to that URL populates the file field on device A
+
+## Roadmap
+
+- [ ] Make it easier to use by creating QR codes
+- [ ] Make it possible for form developers to add our feature with a single script
+- [ ] Find a business model that works for everybody
+- [ ] Find a license that fits our needs
+- [ ] Create a logo
+- [ ] Build a website
