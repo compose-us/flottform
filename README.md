@@ -12,9 +12,9 @@ We are about to explore ideas how we can solve the issue we described in detail 
 
 ### Todos
 
-- [ ] Build a server that allows file uploads from a form
-  - [ ] Build a server that accepts files
-  - [ ] Build a web form with an input field for files
+- [x] Build a server that allows file uploads from a form
+  - [x] Build a server that accepts files
+  - [x] Build a web form with an input field for files
 - [ ] Let device A create a URL that allows connecting another device through WebRTC
   - [ ] Allow only one connection per URL
   - [ ] Establish a WebRTC connection between devices
