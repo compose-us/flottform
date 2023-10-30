@@ -10,6 +10,7 @@ export const actions: Actions = {
 		const fd = await request.formData();
 		const message = fd.get('message');
 		const document = fd.get('document');
+		const document2 = fd.get('document2');
 
 		if (!isString(message)) {
 			return fail(422, { error: true, message: 'message needs to be a string' });
@@ -19,13 +20,24 @@ export const actions: Actions = {
 			return fail(422, { error: true, message: 'document needs to be a file' });
 		}
 
+		if (!isFile(document2)) {
+			return fail(422, { error: true, message: 'document2 needs to be a file' });
+		}
+
 		const uuid = crypto.randomUUID();
 		const writeStream = Writable.toWeb(createWriteStream(`${UPLOAD_FOLDER}/${uuid}`));
-		await document.stream().pipeTo(writeStream);
+
+		const uuid2 = crypto.randomUUID();
+		const writeStream2 = Writable.toWeb(createWriteStream(`${UPLOAD_FOLDER}/${uuid2}`));
+		await Promise.all([
+			document.stream().pipeTo(writeStream),
+			document2.stream().pipeTo(writeStream2)
+		]);
 
 		return {
 			success: true,
-			file: uuid
+			document: uuid,
+			document2: uuid2
 		};
 	}
 };
