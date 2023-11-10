@@ -7,12 +7,19 @@
 	let offer: RTCSessionDescriptionInit;
 	let answerOffer: RTCSessionDescriptionInit;
 	let iceCandidates: RTCIceCandidateInit[] = [];
-	let iceCandidatesInput: HTMLInputElement;
+	let iceCandidatesInput: HTMLElement;
 	let channel: RTCDataChannel | null = null;
 	let message: string;
 	let form: HTMLFormElement;
 	let fileInput: HTMLInputElement;
 	let hasOpenDataChannel: boolean = false;
+
+	let textToCopy: HTMLPreElement;
+
+	const copyToClipboard = async () => {
+		const text = textToCopy.innerHTML;
+		navigator.clipboard.writeText(text);
+	};
 
 	onMount(async () => {
 		const hash = window.location.hash;
@@ -96,7 +103,8 @@
 	<pre>{JSON.stringify(iceCandidates)}</pre>
 
 	<p>to copy:</p>
-	<pre>{JSON.stringify({ a: answerOffer, c: iceCandidates })}</pre>
+	<pre bind:this={textToCopy}>{JSON.stringify({ a: answerOffer, c: iceCandidates })}</pre>
+	<button on:click={copyToClipboard}>Copy to clipboard</button>
 
 	{#if hasOpenDataChannel}
 		<form bind:this={form} on:submit={sendFileToPeer}>
