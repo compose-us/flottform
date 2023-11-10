@@ -1,14 +1,18 @@
 <script lang="ts">
 	import { decodeHashToOffer } from '$lib/flottform/offer-to-hash';
+	import type { SubmitFunction } from '@sveltejs/kit';
 	import { onMount } from 'svelte';
 
 	let connectionToForm: RTCPeerConnection;
 	let offer: RTCSessionDescriptionInit;
-	let answer: string;
+	let answerOffer: RTCSessionDescriptionInit;
 	let iceCandidates: RTCIceCandidateInit[] = [];
 	let iceCandidatesInput: HTMLInputElement;
 	let channel: RTCDataChannel | null = null;
 	let message: string;
+	let form: HTMLFormElement;
+	let fileInput: HTMLInputElement;
+	let hasOpenDataChannel: boolean = false;
 
 	onMount(async () => {
 		const hash = window.location.hash;
@@ -20,6 +24,9 @@
 		connectionToForm.ondatachannel = (e) => {
 			console.log('ondatachannel', e);
 			channel = e.channel;
+			channel.onopen = (e) => {
+				hasOpenDataChannel = true;
+			};
 			channel.onmessage = (x) => {
 				message = x.data;
 			};
@@ -35,13 +42,47 @@
 			await connectionToForm.addIceCandidate(iceCandidate);
 		}
 		console.log('state-setRemoteDescription', connectionToForm.connectionState);
-		const answerOffer = await connectionToForm.createAnswer();
+		answerOffer = await connectionToForm.createAnswer();
 		console.log('state-createAnswer', connectionToForm.connectionState);
 		await connectionToForm.setLocalDescription(answerOffer);
 		console.log('state-setLocalDescription', connectionToForm.connectionState);
-		answer = JSON.stringify(answerOffer);
-		console.log(answer);
 	});
+
+	const sendFileToPeer = async (e: SubmitEvent) => {
+		const formData = new FormData(form);
+		const file = fileInput.files?.item(0);
+		if (!file) {
+			console.log('no file?!?!');
+			return;
+		}
+		if (!channel) {
+			console.log('no channel?!?!');
+			return;
+		}
+
+		const fileMeta = {
+			lastModified: file.lastModified,
+			name: file.name,
+			type: file.type,
+			size: file.size
+		};
+		channel.send(JSON.stringify(fileMeta));
+		channel.onerror = (e) => {
+			console.log('channel.onerror', e);
+		};
+		const maxChunkSize = 16384;
+		const ab = await file.arrayBuffer();
+		if (!ab) {
+			console.log('no array buffer');
+			return;
+		}
+
+		for (let i = 0; i * maxChunkSize <= ab.byteLength; i++) {
+			const end = (i + 1) * maxChunkSize;
+			channel.send(ab.slice(i * maxChunkSize, end));
+		}
+		console.log('sent file!', ab);
+	};
 </script>
 
 <div>
@@ -49,11 +90,20 @@
 	<pre>{JSON.stringify(offer, null, 2)}</pre>
 
 	<p>answer:</p>
-	<pre>{answer}</pre>
+	<pre>{JSON.stringify(answerOffer)}</pre>
 
 	<p>ice candidates:</p>
 	<pre>{JSON.stringify(iceCandidates)}</pre>
 
+	<p>to copy:</p>
+	<pre>{JSON.stringify({ a: answerOffer, c: iceCandidates })}</pre>
+
+	{#if hasOpenDataChannel}
+		<form bind:this={form} on:submit={sendFileToPeer}>
+			<input bind:this={fileInput} type="file" name="fileToSend" />
+			<button>Send file to peer</button>
+		</form>
+	{/if}
 	<p>last message:</p>
 	<pre>{message}</pre>
 </div>

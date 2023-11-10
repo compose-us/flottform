@@ -25,10 +25,10 @@ export const actions: Actions = {
 		}
 
 		const uuid = crypto.randomUUID();
-		const writeStream = Writable.toWeb(createWriteStream(`${UPLOAD_FOLDER}/${uuid}`));
+		const writeStream = Writable.toWeb(createWriteStream(`${UPLOAD_FOLDER}/${uuid}-${document.name}`));
 
 		const uuid2 = crypto.randomUUID();
-		const writeStream2 = Writable.toWeb(createWriteStream(`${UPLOAD_FOLDER}/${uuid2}`));
+		const writeStream2 = Writable.toWeb(createWriteStream(`${UPLOAD_FOLDER}/${uuid2}-${document2.name}`));
 		await Promise.all([
 			document.stream().pipeTo(writeStream),
 			document2.stream().pipeTo(writeStream2)
