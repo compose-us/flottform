@@ -1,46 +1,41 @@
 <script lang="ts">
-	import { decodeHashToOffer } from '$lib/flottform/offer-to-hash';
-	import type { SubmitFunction } from '@sveltejs/kit';
 	import { onMount } from 'svelte';
+	import { page } from '$app/stores';
+	import type { PageData } from './$types';
+
+	export let data: PageData;
 
 	let connectionToForm: RTCPeerConnection;
-	let offer: RTCSessionDescriptionInit;
+	let offer: RTCSessionDescriptionInit = data.offer;
 	let answerOffer: RTCSessionDescriptionInit;
 	let iceCandidates: RTCIceCandidateInit[] = [];
-	let iceCandidatesInput: HTMLElement;
 	let channel: RTCDataChannel | null = null;
-	let message: string;
 	let form: HTMLFormElement;
 	let fileInput: HTMLInputElement;
-	let hasOpenDataChannel: boolean = false;
-
-	let textToCopy: HTMLPreElement;
-
-	const copyToClipboard = async () => {
-		const text = textToCopy.innerHTML;
-		navigator.clipboard.writeText(text);
-	};
+	let state: 'loading' | 'waiting-for-file' | 'sending-file' | 'done' | 'error' = 'loading';
+	let progress = 1;
 
 	onMount(async () => {
-		const hash = window.location.hash;
-		const { o, c } = decodeHashToOffer(hash);
-		offer = o;
-		const remoteIceCandidates = c;
+		const remoteIceCandidates = data.candidates;
 		connectionToForm = new RTCPeerConnection();
 		console.log('state', connectionToForm.connectionState);
 		connectionToForm.ondatachannel = (e) => {
 			console.log('ondatachannel', e);
 			channel = e.channel;
 			channel.onopen = (e) => {
-				hasOpenDataChannel = true;
-			};
-			channel.onmessage = (x) => {
-				message = x.data;
+				state = 'waiting-for-file';
 			};
 		};
 		connectionToForm.onicecandidate = async (e) => {
 			if (e.candidate) {
 				iceCandidates = [...iceCandidates, e.candidate];
+				await fetch($page.url, {
+					method: 'PUT',
+					body: JSON.stringify({
+						offer: answerOffer,
+						candidates: iceCandidates
+					})
+				});
 			}
 		};
 		console.log('setting remote description');
@@ -56,7 +51,7 @@
 	});
 
 	const sendFileToPeer = async (e: SubmitEvent) => {
-		const formData = new FormData(form);
+		state = 'sending-file';
 		const file = fileInput.files?.item(0);
 		if (!file) {
 			console.log('no file?!?!');
@@ -75,6 +70,7 @@
 		};
 		channel.send(JSON.stringify(fileMeta));
 		channel.onerror = (e) => {
+			state = 'error';
 			console.log('channel.onerror', e);
 		};
 		const maxChunkSize = 16384;
@@ -85,38 +81,29 @@
 		}
 
 		for (let i = 0; i * maxChunkSize <= ab.byteLength; i++) {
+			progress = i / (ab.byteLength / maxChunkSize);
 			const end = (i + 1) * maxChunkSize;
 			channel.send(ab.slice(i * maxChunkSize, end));
+			await new Promise((r) => setTimeout(r, 100));
 		}
 		console.log('sent file!', ab);
+		state = 'done';
 	};
 </script>
 
 <div>
-	<p>received offer:</p>
-	<pre>{JSON.stringify(offer, null, 2)}</pre>
-
-	<p>answer:</p>
-	<pre>{JSON.stringify(answerOffer)}</pre>
-
-	<p>ice candidates:</p>
-	<pre>{JSON.stringify(iceCandidates)}</pre>
-
-	<p>to copy:</p>
-	<pre bind:this={textToCopy}>{JSON.stringify({ a: answerOffer, c: iceCandidates })}</pre>
-	<button on:click={copyToClipboard}>Copy to clipboard</button>
-
-	{#if hasOpenDataChannel}
+	{#if state === 'loading'}
+		<div>Connecting to form</div>
+	{:else if state === 'waiting-for-file'}
 		<form bind:this={form} on:submit={sendFileToPeer}>
 			<input bind:this={fileInput} type="file" name="fileToSend" />
 			<button>Send file to peer</button>
 		</form>
+	{:else if state === 'sending-file'}
+		<div>sending file ({Math.round(progress * 100)}%)</div>
+	{:else if state === 'done'}
+		<div>done!</div>
+	{:else}
+		<div>Error! Please refresh or create a new channel</div>
 	{/if}
-	<p>last message:</p>
-	<pre>{message}</pre>
 </div>
-
-<style>
-	div {
-	}
-</style>

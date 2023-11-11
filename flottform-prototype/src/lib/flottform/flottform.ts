@@ -1,5 +1,4 @@
-import { encodeOfferToHash } from './offer-to-hash';
-
+const POLL_TIMEOUT = 5000;
 let channelNumber = 0;
 
 export default function initFlottform() {
@@ -15,6 +14,7 @@ export default function initFlottform() {
 		let peerConnection: RTCPeerConnection | null = null;
 		let offer: RTCSessionDescriptionInit | null = null;
 		let myIceCandidates: RTCIceCandidateInit[] = [];
+		const secret = `${fileInputField.id}-${Math.floor(Math.random() * 1000)}`;
 
 		const createChannelElement = document.createElement('div');
 		const createChannelLinkArea = document.createElement('div');
@@ -22,18 +22,6 @@ export default function initFlottform() {
 		createChannelLinkWithOffer.setAttribute('target', '_blank');
 		createChannelLinkArea.appendChild(createChannelLinkWithOffer);
 		createChannelElement.appendChild(createChannelLinkArea);
-
-		function updateLink() {
-			console.log({ offer, myIceCandidates });
-			if (offer && myIceCandidates.length > 0) {
-				const newLink = `${window.location.origin}/peers/#${encodeOfferToHash({
-					o: offer,
-					c: myIceCandidates
-				})}`;
-				createChannelLinkWithOffer.setAttribute('href', newLink);
-				createChannelLinkWithOffer.innerHTML = newLink;
-			}
-		}
 
 		const createChannelInput = document.createElement('input');
 		createChannelInput.setAttribute('type', 'text');
@@ -45,8 +33,6 @@ export default function initFlottform() {
 		createChannelButton.addEventListener('click', async () => {
 			console.log('clicked create channel button', state);
 			switch (state) {
-				case 'waiting-for-answer':
-					return receiveAnswer();
 				case 'waiting-for-ice':
 					return receiveIceCandidates();
 				default:
@@ -72,52 +58,6 @@ export default function initFlottform() {
 				createChannelButton.innerHTML = 'Waiting for file / re-init';
 			}
 
-			function isAnswerAndCandidates(
-				answer: unknown
-			): answer is { a: RTCSessionDescriptionInit; c: RTCIceCandidateInit[] } {
-				return (
-					!!answer &&
-					typeof answer === 'object' &&
-					'a' in answer &&
-					typeof answer.a === 'object' &&
-					'c' in answer &&
-					Array.isArray(answer.c)
-				);
-			}
-
-			async function receiveAnswer() {
-				if (!peerConnection) {
-					console.log('no connection?!');
-					return;
-				}
-				const answerText = createChannelInput.value;
-				console.log('received answer', answerText);
-				const answer = JSON.parse(answerText);
-				console.log({ answer });
-				if (isAnswerAndCandidates(answer)) {
-					console.log('is answer and candidates!');
-					const { a: answerOffer, c: iceCandidatesFromRemote } = answer;
-					console.log({ answerOffer, iceCandidatesFromRemote });
-					await peerConnection.setRemoteDescription(answerOffer);
-					for (const iceCandidate of iceCandidatesFromRemote) {
-						await peerConnection.addIceCandidate(iceCandidate);
-						console.log('added ice candidate successfully', iceCandidate);
-					}
-
-					state = 'waiting-for-file';
-					createChannelInput.value = '';
-					createChannelButton.innerHTML = 'Init new connection';
-				} else {
-					console.log('is just an answer!');
-					const answerOffer = answer as RTCSessionDescriptionInit;
-					await peerConnection.setRemoteDescription(answerOffer);
-
-					createChannelInput.value = JSON.stringify(myIceCandidates);
-					state = 'waiting-for-ice';
-					createChannelButton.innerHTML = 'Receive Ice Candidates';
-				}
-			}
-
 			async function initConnection() {
 				if (peerConnection) {
 					peerConnection.close();
@@ -128,15 +68,73 @@ export default function initFlottform() {
 					fileInputField.id ?? fileInputField.getAttribute('name') ?? channelNumber
 				}`;
 				const dataChannel = peerConnection.createDataChannel(channelName);
+
+				let nextPollForPeer: ReturnType<typeof setTimeout>;
+
 				peerConnection.onicecandidate = async (e) => {
 					if (e.candidate) {
 						myIceCandidates.push(e.candidate);
 						console.log('added Ice Candidate to array', e.candidate);
-						updateLink();
+
+						console.log({ offer, myIceCandidates });
+						if (offer && myIceCandidates.length > 0) {
+							const putLink = `${window.location.origin}/peers/`;
+							const connectLink = `${window.location.origin}/peers/${secret}`;
+							const pollPeerLink = `${window.location.origin}/peers/?secret=${encodeURIComponent(
+								secret
+							)}`;
+							createChannelLinkWithOffer.setAttribute('href', connectLink);
+							createChannelLinkWithOffer.innerHTML = connectLink;
+							await fetch(putLink, {
+								method: 'PUT',
+								body: JSON.stringify({
+									secret,
+									offer,
+									candidates: myIceCandidates
+								})
+							});
+							console.log('put offer and candidates into', secret);
+
+							if (!nextPollForPeer) {
+								startPollingForPeer();
+							}
+							function startPollingForPeer() {
+								nextPollForPeer = setTimeout(tryFindPeer, POLL_TIMEOUT);
+
+								async function tryFindPeer() {
+									console.log('polling for peer');
+									const response = await fetch(pollPeerLink);
+									if (!response.ok) {
+										console.log('no peer found');
+										nextPollForPeer = setTimeout(tryFindPeer, POLL_TIMEOUT);
+										return;
+									}
+									const { offer, candidates } = await response.json();
+									console.log('found a peer!', { offer, candidates });
+									if (!peerConnection) {
+										console.log('peerConnection should not be null here!');
+										return;
+									}
+									await peerConnection.setRemoteDescription(offer);
+									for (const iceCandidate of candidates) {
+										await peerConnection.addIceCandidate(iceCandidate);
+										console.log('added ice candidate successfully', iceCandidate);
+									}
+
+									state = 'waiting-for-file';
+									createChannelInput.value = '';
+									createChannelButton.innerHTML = 'Init new connection';
+								}
+							}
+						}
 					}
 				};
+				function stopPollingForPeer() {
+					clearTimeout(nextPollForPeer);
+				}
 				dataChannel.onopen = (e) => {
 					console.log('data dataChannel opened!', e);
+					stopPollingForPeer();
 				};
 				dataChannel.onclose = (e) => {
 					console.log('data dataChannel closed!', e);
