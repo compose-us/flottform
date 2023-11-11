@@ -4,7 +4,10 @@
 	import initFlottform from '$lib/flottform/flottform';
 
 	onMount(() => {
-		initFlottform();
+		const fileInputFields = document.querySelectorAll(
+			'input[type=file]'
+		) as NodeListOf<HTMLInputElement>;
+		initFlottform(fileInputFields);
 	});
 </script>
 
@@ -21,7 +24,7 @@
 		<input id="document" type="file" name="document" required />
 	</div>
 	<div>
-        <label for="document2">Upload your second document</label>
+		<label for="document2">Upload your second document</label>
 		<input id="document2" type="file" name="document2" required />
 	</div>
 	<button type="submit">Send</button>

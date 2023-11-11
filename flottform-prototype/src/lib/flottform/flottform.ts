@@ -1,11 +1,10 @@
+import { toDataURL } from 'qrcode';
+
 const POLL_TIMEOUT = 5000;
 let channelNumber = 0;
 
-export default function initFlottform() {
+export default function initFlottform(fileInputFields: NodeListOf<HTMLInputElement>) {
 	console.log('initFlottForm()');
-	const fileInputFields = document.querySelectorAll(
-		'input[type=file]'
-	) as NodeListOf<HTMLInputElement>;
 	console.log('initFlottForm(): found fields', fileInputFields);
 
 	for (const fileInputField of fileInputFields) {
@@ -18,8 +17,11 @@ export default function initFlottform() {
 
 		const createChannelElement = document.createElement('div');
 		const createChannelLinkArea = document.createElement('div');
+		const createChannelQrCode = document.createElement('img');
 		const createChannelLinkWithOffer = document.createElement('a');
 		createChannelLinkWithOffer.setAttribute('target', '_blank');
+		createChannelQrCode.style.display = 'none';
+		createChannelLinkArea.appendChild(createChannelQrCode);
 		createChannelLinkArea.appendChild(createChannelLinkWithOffer);
 		createChannelElement.appendChild(createChannelLinkArea);
 
@@ -31,7 +33,6 @@ export default function initFlottform() {
 		const createChannelButton = document.createElement('button');
 		createChannelButton.setAttribute('type', 'button');
 		createChannelButton.addEventListener('click', async () => {
-			console.log('clicked create channel button', state);
 			switch (state) {
 				case 'waiting-for-ice':
 					return receiveIceCandidates();
@@ -50,7 +51,6 @@ export default function initFlottform() {
 				) as RTCIceCandidateInit[];
 				for (const iceCandidate of iceCandidatesFromRemote) {
 					await peerConnection.addIceCandidate(iceCandidate);
-					console.log('added ice candidate successfully', iceCandidate);
 				}
 
 				state = 'waiting-for-file';
@@ -74,15 +74,15 @@ export default function initFlottform() {
 				peerConnection.onicecandidate = async (e) => {
 					if (e.candidate) {
 						myIceCandidates.push(e.candidate);
-						console.log('added Ice Candidate to array', e.candidate);
 
-						console.log({ offer, myIceCandidates });
 						if (offer && myIceCandidates.length > 0) {
 							const putLink = `${window.location.origin}/peers/`;
 							const connectLink = `${window.location.origin}/peers/${secret}`;
 							const pollPeerLink = `${window.location.origin}/peers/?secret=${encodeURIComponent(
 								secret
 							)}`;
+							createChannelQrCode.setAttribute('src', await toDataURL(connectLink));
+							createChannelQrCode.style.display = 'block';
 							createChannelLinkWithOffer.setAttribute('href', connectLink);
 							createChannelLinkWithOffer.innerHTML = connectLink;
 							await fetch(putLink, {
@@ -93,7 +93,6 @@ export default function initFlottform() {
 									candidates: myIceCandidates
 								})
 							});
-							console.log('put offer and candidates into', secret);
 
 							if (!nextPollForPeer) {
 								startPollingForPeer();
@@ -133,12 +132,9 @@ export default function initFlottform() {
 					clearTimeout(nextPollForPeer);
 				}
 				dataChannel.onopen = (e) => {
-					console.log('data dataChannel opened!', e);
 					stopPollingForPeer();
 				};
-				dataChannel.onclose = (e) => {
-					console.log('data dataChannel closed!', e);
-				};
+				dataChannel.onclose = (e) => {};
 				const arrayBuffers: ArrayBuffer[] = [];
 				let hasMetaInformation = false;
 				let fileName = 'no-name';
@@ -151,7 +147,6 @@ export default function initFlottform() {
 				};
 
 				dataChannel.onmessage = (e) => {
-					console.log('received message event', e);
 					if (!hasMetaInformation) {
 						const fileMeta = JSON.parse(e.data) as {
 							lastModified?: number;
@@ -182,7 +177,6 @@ export default function initFlottform() {
 				const stats = await peerConnection.getStats();
 				offer = await peerConnection.createOffer();
 				peerConnection.setLocalDescription(offer);
-				console.log({ stats, offer, canTrickleIce: peerConnection.canTrickleIceCandidates });
 
 				peerConnection.ondatachannel = (e) => {
 					console.log('got a connection in form', e);
