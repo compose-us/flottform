@@ -1,5 +1,5 @@
 import { candidates, offers } from '$lib/flottform/flottform.server';
-import { fail, json } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
 
 export const GET = async ({ request }) => {
 	const secret = new URL(request.url).searchParams.get('secret');

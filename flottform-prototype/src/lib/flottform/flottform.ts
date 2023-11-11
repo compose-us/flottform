@@ -24,10 +24,12 @@ export default function initFlottform(fileInputFields: NodeListOf<HTMLInputEleme
 		createChannelLinkArea.appendChild(createChannelQrCode);
 		createChannelLinkArea.appendChild(createChannelLinkWithOffer);
 		createChannelElement.appendChild(createChannelLinkArea);
+		createChannelLinkArea.classList.add('qrCodeWrapper');
 
 		const createChannelInput = document.createElement('input');
 		createChannelInput.setAttribute('type', 'text');
 		createChannelInput.disabled = true;
+		createChannelInput.style.display = 'none';
 		createChannelElement.appendChild(createChannelInput);
 
 		const createChannelButton = document.createElement('button');
@@ -84,7 +86,7 @@ export default function initFlottform(fileInputFields: NodeListOf<HTMLInputEleme
 							createChannelQrCode.setAttribute('src', await toDataURL(connectLink));
 							createChannelQrCode.style.display = 'block';
 							createChannelLinkWithOffer.setAttribute('href', connectLink);
-							createChannelLinkWithOffer.innerHTML = connectLink;
+							createChannelLinkWithOffer.innerHTML = 'Use a link';
 							await fetch(putLink, {
 								method: 'PUT',
 								body: JSON.stringify({
@@ -190,7 +192,8 @@ export default function initFlottform(fileInputFields: NodeListOf<HTMLInputEleme
 				createChannelButton.innerHTML = 'Receive answer';
 			}
 		});
-		createChannelButton.innerHTML = 'Create channel';
+		createChannelButton.innerHTML = 'Load file from other devise';
+		createChannelButton.classList.add('qrCodeButton');
 		createChannelElement.appendChild(createChannelButton);
 
 		fileInputField.after(createChannelElement);
