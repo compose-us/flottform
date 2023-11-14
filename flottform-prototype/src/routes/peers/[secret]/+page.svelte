@@ -103,7 +103,6 @@
 
 <div class="wrapper">
 	{#if state === 'loading'}
-		<div>Connecting to form</div>
 		<JumpingDots />
 	{:else if state === 'waiting-for-file'}
 		<form bind:this={form} on:submit={sendFileToPeer}>
@@ -142,15 +141,16 @@
 		display: grid;
 		place-items: center;
 		gap: 1.25rem;
+		margin-top: 2rem;
 	}
 	input[type='file'] {
 		height: 10rem;
 		padding: 0.25rem 0.5rem;
-		border: 2px solid deeppink;
+		border: 2px solid var(--cus-color-blue);
 		border-radius: 5px;
-		background-color: #ff6ec517;
+		background-color: #fff;
 	}
 	.drag {
-		border: 3px dotted deeppink;
+		border: 3px dotted var(--cus-color-blue);
 	}
 </style>

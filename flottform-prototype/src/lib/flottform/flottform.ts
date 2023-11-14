@@ -86,7 +86,7 @@ export default function initFlottform(fileInputFields: NodeListOf<HTMLInputEleme
 							createChannelQrCode.setAttribute('src', await toDataURL(connectLink));
 							createChannelQrCode.style.display = 'block';
 							createChannelLinkWithOffer.setAttribute('href', connectLink);
-							createChannelLinkWithOffer.innerHTML = 'Use a link';
+							createChannelLinkWithOffer.innerHTML = connectLink;
 							await fetch(putLink, {
 								method: 'PUT',
 								body: JSON.stringify({
@@ -195,8 +195,7 @@ export default function initFlottform(fileInputFields: NodeListOf<HTMLInputEleme
 		createChannelButton.innerHTML = 'Load file from other devise';
 		createChannelButton.classList.add('qrCodeButton');
 		createChannelElement.appendChild(createChannelButton);
-
-		fileInputField.after(createChannelElement);
+		fileInputField.parentElement!.after(createChannelElement);
 		console.log('initFlottForm(): appended to fileInputField');
 	}
 }
