@@ -7,7 +7,7 @@
 
 <style>
 	button {
-		background: linear-gradient(40deg, #ff6ec4, deeppink);
+		background: linear-gradient(40deg, var(--cus-color-blue), var(--cus-color-green));
 		padding: 0.75rem 1rem;
 		color: #fff;
 		font-weight: 700;
