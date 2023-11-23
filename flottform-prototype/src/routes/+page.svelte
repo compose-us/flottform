@@ -173,7 +173,7 @@
 	.drag {
 		border: 3px dotted var(--cus-color-blue);
 	}
-	:global(.qrCodeButton) {
+	form :global(.qrCodeButton) {
 		background: var(--cus-color-blue);
 		padding: 0.5rem 0.75rem;
 		color: #fff;
@@ -183,7 +183,7 @@
 		cursor: pointer;
 		display: inline-block;
 	}
-	:global(.qrCodeWrapper) {
+	form :global(.qrCodeWrapper) {
 		margin-bottom: 1rem;
 	}
 </style>

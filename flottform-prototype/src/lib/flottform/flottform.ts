@@ -1,6 +1,6 @@
 import { toDataURL } from 'qrcode';
 
-const POLL_TIMEOUT = 5000;
+const POLL_TIMEOUT = 2000;
 let channelNumber = 0;
 
 export default function initFlottform(fileInputFields: NodeListOf<HTMLInputElement>) {
@@ -36,28 +36,8 @@ export default function initFlottform(fileInputFields: NodeListOf<HTMLInputEleme
 		createChannelButton.setAttribute('type', 'button');
 		createChannelButton.addEventListener('click', async () => {
 			switch (state) {
-				case 'waiting-for-ice':
-					return receiveIceCandidates();
 				default:
 					return initConnection();
-			}
-
-			async function receiveIceCandidates() {
-				if (!peerConnection) {
-					console.log('no connection?!');
-					return;
-				}
-				const iceCandidatesFromRemoteString = createChannelInput.value;
-				const iceCandidatesFromRemote = JSON.parse(
-					iceCandidatesFromRemoteString
-				) as RTCIceCandidateInit[];
-				for (const iceCandidate of iceCandidatesFromRemote) {
-					await peerConnection.addIceCandidate(iceCandidate);
-				}
-
-				state = 'waiting-for-file';
-				createChannelInput.value = '';
-				createChannelButton.innerHTML = 'Waiting for file / re-init';
 			}
 
 			async function initConnection() {
@@ -124,7 +104,9 @@ export default function initFlottform(fileInputFields: NodeListOf<HTMLInputEleme
 
 									state = 'waiting-for-file';
 									createChannelInput.value = '';
-									createChannelButton.innerHTML = 'Init new connection';
+									createChannelQrCode.style.display = 'none';
+									createChannelLinkWithOffer.innerHTML = '';
+									createChannelButton.innerHTML = 'Connected!';
 								}
 							}
 						}
@@ -166,6 +148,10 @@ export default function initFlottform(fileInputFields: NodeListOf<HTMLInputEleme
 					const ab = e.data as ArrayBuffer;
 					arrayBuffers.push(ab);
 					currentSize += ab.byteLength;
+					createChannelButton.innerHTML = `Receiving file ${Math.round(
+						(currentSize / size) * 100
+					)}%`;
+
 					if (currentSize === size) {
 						const fileForForm = new File(arrayBuffers, fileName);
 						const dt = new DataTransfer();
@@ -173,6 +159,7 @@ export default function initFlottform(fileInputFields: NodeListOf<HTMLInputEleme
 						fileInputField.files = dt.files;
 
 						state = 'done';
+						createChannelButton.innerHTML = `File received: ${fileName}`;
 						dataChannel.close();
 					}
 				};

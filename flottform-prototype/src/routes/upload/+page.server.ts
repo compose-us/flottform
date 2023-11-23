@@ -25,10 +25,12 @@ export const actions: Actions = {
 		}
 
 		const uuid = crypto.randomUUID();
-		const writeStream = Writable.toWeb(createWriteStream(`${UPLOAD_FOLDER}/${uuid}-${document.name}`));
+		const filenameDoc1 = `${uuid}-${document.name}`;
+		const writeStream = Writable.toWeb(createWriteStream(`${UPLOAD_FOLDER}/${filenameDoc1}`));
 
 		const uuid2 = crypto.randomUUID();
-		const writeStream2 = Writable.toWeb(createWriteStream(`${UPLOAD_FOLDER}/${uuid2}-${document2.name}`));
+		const filenameDoc2 = `${uuid2}-${document2.name}`;
+		const writeStream2 = Writable.toWeb(createWriteStream(`${UPLOAD_FOLDER}/${filenameDoc2}`));
 		await Promise.all([
 			document.stream().pipeTo(writeStream),
 			document2.stream().pipeTo(writeStream2)
@@ -36,8 +38,11 @@ export const actions: Actions = {
 
 		return {
 			success: true,
+			message,
 			document: uuid,
-			document2: uuid2
+			document2: uuid2,
+			filenameDoc1,
+			filenameDoc2
 		};
 	}
 };
