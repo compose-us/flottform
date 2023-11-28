@@ -140,9 +140,9 @@
 		text-align: center;
 		position: absolute;
 		inset: 0;
-		opacity: 0;
 		width: 100%;
 		height: 100%;
+		border-color: transparent;
 	}
 	.dropField {
 		height: 7rem;
@@ -151,6 +151,11 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		z-index: 9;
+		border-color: var(--cus-color-blue);
+	}
+	input[type='text'] {
+		border-color: var(--cus-color-blue);
 	}
 	.uploadIcon {
 		width: 1.5rem;
