@@ -36,5 +36,9 @@
 		"vitest": "^0.32.2"
 	},
 	"type": "module",
-	"packageManager": "pnpm@8.10.0"
+	"packageManager": "pnpm@8.10.0",
+	"dependencies": {
+		"@fontsource/raleway": "^5.0.15",
+		"@fontsource/roboto": "^5.0.8"
+	}
 }

@@ -2,6 +2,9 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import type { PageData } from './$types';
+	import ProgressRing from '$lib/components/ProgressRing.svelte';
+	import JumpingDots from '$lib/components/JumpingDots.svelte';
+	import Button from '$lib/components/Button.svelte';
 
 	export let data: PageData;
 
@@ -15,7 +18,14 @@
 	let state: 'loading' | 'waiting-for-file' | 'sending-file' | 'done' | 'error' = 'loading';
 	let progress = 1;
 
+	let dragTarget = false;
+
+	function handleDrag(e: Event) {
+		dragTarget = true;
+	}
+
 	onMount(async () => {
+		state = 'loading';
 		const remoteIceCandidates = data.candidates;
 		connectionToForm = new RTCPeerConnection();
 		console.log('state', connectionToForm.connectionState);
@@ -84,26 +94,63 @@
 			progress = i / (ab.byteLength / maxChunkSize);
 			const end = (i + 1) * maxChunkSize;
 			channel.send(ab.slice(i * maxChunkSize, end));
-			await new Promise((r) => setTimeout(r, 100));
+			await new Promise((r) => setTimeout(r, 10));
 		}
 		console.log('sent file!', ab);
 		state = 'done';
 	};
 </script>
 
-<div>
+<div class="wrapper">
 	{#if state === 'loading'}
-		<div>Connecting to form</div>
+		<JumpingDots />
 	{:else if state === 'waiting-for-file'}
 		<form bind:this={form} on:submit={sendFileToPeer}>
-			<input bind:this={fileInput} type="file" name="fileToSend" />
-			<button>Send file to peer</button>
+			<input
+				bind:this={fileInput}
+				type="file"
+				name="fileToSend"
+				class:drag={dragTarget}
+				on:drop={(e) => {
+					dragTarget = false;
+					return e.dataTransfer?.files;
+				}}
+				on:dragenter={(e) => handleDrag(e)}
+			/>
+			<Button type="submit" label="Send file to peer" />
 		</form>
 	{:else if state === 'sending-file'}
 		<div>sending file ({Math.round(progress * 100)}%)</div>
+		<ProgressRing {progress} />
 	{:else if state === 'done'}
 		<div>done!</div>
 	{:else}
 		<div>Error! Please refresh or create a new channel</div>
 	{/if}
 </div>
+
+<style>
+	.wrapper {
+		width: 100%;
+		height: 100%;
+		display: grid;
+		place-items: center;
+		gap: 1.25rem;
+	}
+	form {
+		display: grid;
+		place-items: center;
+		gap: 1.25rem;
+		margin-top: 2rem;
+	}
+	input[type='file'] {
+		height: 10rem;
+		padding: 0.25rem 0.5rem;
+		border: 2px solid var(--cus-color-blue);
+		border-radius: 5px;
+		background-color: #fff;
+	}
+	.drag {
+		border: 3px dotted var(--cus-color-blue);
+	}
+</style>
