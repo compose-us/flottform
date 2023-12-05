@@ -1,0 +1,28 @@
+volumes:
+  node-cache:
+  pnpm-cache:
+  pnpm-store:
+
+services:
+  flottform-demo:
+    build:
+      args:
+        NODE_VERSION: "${NODE_VERSION}"
+      context: ./
+      dockerfile: ./docker/Dockerfile.dev
+      target: runner
+    working_dir: "/app"
+    container_name: flottform-demo
+    entrypoint: /app/docker/entrypoint.sh
+    command: "pnpm run dev --host"
+    environment:
+      NODE_ENV: "development"
+      BASE_PATH: "/"
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./:/app
+      - /app/node_modules
+      - node-cache:/root/.cache
+      - pnpm-cache:/root/.npm
+      - pnpm-store:/app/.pnpm-store
