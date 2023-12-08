@@ -5,9 +5,11 @@
 	import ProgressRing from '$lib/components/ProgressRing.svelte';
 	import JumpingDots from '$lib/components/JumpingDots.svelte';
 	import Button from '$lib/components/Button.svelte';
+	import { writable } from 'svelte/store';
 
 	export let data: PageData;
 
+	let status = writable('');
 	let connectionToForm: RTCPeerConnection;
 	let offer: RTCSessionDescriptionInit = data.offer;
 	let answerOffer: RTCSessionDescriptionInit;
@@ -25,20 +27,26 @@
 	}
 
 	onMount(async () => {
+		$status = `${$status}\nMounted`;
 		state = 'loading';
 		const remoteIceCandidates = data.candidates;
 		connectionToForm = new RTCPeerConnection();
 		console.log('state', connectionToForm.connectionState);
-		connectionToForm.ondatachannel = (e) => {
-			console.log('ondatachannel', e);
-			channel = e.channel;
-			channel.onopen = (e) => {
-				state = 'waiting-for-file';
-			};
+		connectionToForm.onconnectionstatechange = (e) => {
+			$status = `${$status}\nonconnectionstatechange - ${connectionToForm.connectionState} - ${e}`;
 		};
-		connectionToForm.onicecandidate = async (e) => {
-			if (e.candidate) {
-				iceCandidates = [...iceCandidates, e.candidate];
+		connectionToForm.onicecandidate = (e) => {
+			$status = `${$status}\nonicecandidate - ${connectionToForm.connectionState} - ${e}`;
+		};
+		connectionToForm.onicecandidateerror = (e) => {
+			$status = `${$status}\nonicecandidateerror - ${connectionToForm.connectionState} - ${e}`;
+		};
+		connectionToForm.oniceconnectionstatechange = (e) => {
+			$status = `${$status}\noniceconnectionstatechange - ${connectionToForm.iceConnectionState} - ${e}`;
+		};
+		connectionToForm.onicegatheringstatechange = async (e) => {
+			$status = `${$status}\nonicegatheringstatechange - ${connectionToForm.iceGatheringState} - ${e}`;
+			if (connectionToForm.iceGatheringState === 'complete') {
 				await fetch($page.url, {
 					method: 'PUT',
 					body: JSON.stringify({
@@ -48,13 +56,47 @@
 				});
 			}
 		};
+		connectionToForm.onnegotiationneeded = (e) => {
+			$status = `${$status}\nonnegotiationneeded - ${connectionToForm.connectionState} - ${e}`;
+		};
+		connectionToForm.onsignalingstatechange = (e) => {
+			$status = `${$status}\nonsignalingstatechange - ${connectionToForm.signalingState} - ${e}`;
+		};
+		connectionToForm.ontrack = (e) => {
+			$status = `${$status}\nontrack - ${connectionToForm.connectionState} - ${e}`;
+		};
+		connectionToForm.onconnectionstatechange = (e) => {
+			$status = `${$status}\nonconnectionstatechange: ${e}`;
+		};
+		connectionToForm.onicecandidateerror = (e) => {
+			$status = `${$status}\nonicecandidateerror: ${e}`;
+		};
+		connectionToForm.ondatachannel = (e) => {
+			$status = `${$status}\nondatachannel: ${e.channel}`;
+			console.log('ondatachannel', e);
+			channel = e.channel;
+			channel.onopen = (e) => {
+				$status = `${$status}\nondatachannel - onopen: ${e.type}`;
+				state = 'waiting-for-file';
+			};
+		};
+		connectionToForm.onicecandidate = async (e) => {
+			$status = `${$status}\nonicecandidate: ${e.candidate}`;
+			if (e.candidate) {
+				iceCandidates = [...iceCandidates, e.candidate];
+			}
+		};
 		console.log('setting remote description');
 		await connectionToForm.setRemoteDescription(offer);
 		for (const iceCandidate of remoteIceCandidates) {
 			await connectionToForm.addIceCandidate(iceCandidate);
 		}
 		console.log('state-setRemoteDescription', connectionToForm.connectionState);
+		$status = `${$status}\nice candidates set, creating answer`;
 		answerOffer = await connectionToForm.createAnswer();
+		$status = `${$status}\ncreateAnswer:
+sdp=${answerOffer.sdp}
+type=${answerOffer.type}`;
 		console.log('state-createAnswer', connectionToForm.connectionState);
 		await connectionToForm.setLocalDescription(answerOffer);
 		console.log('state-setLocalDescription', connectionToForm.connectionState);
@@ -127,6 +169,7 @@
 	{:else}
 		<div>Error! Please refresh or create a new channel</div>
 	{/if}
+	<pre>{$status}</pre>
 </div>
 
 <style>
@@ -152,5 +195,9 @@
 	}
 	.drag {
 		border: 3px dotted var(--cus-color-blue);
+	}
+	pre {
+		max-width: 100%;
+		overflow: auto;
 	}
 </style>

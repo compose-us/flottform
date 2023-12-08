@@ -18,15 +18,23 @@
 	});
 </script>
 
+<svelte:head>
+	<title>Flottform DEMO</title>
+</svelte:head>
+
 <div class="fullWidthSection">
 	<div class="formSection">
-		<h1>Flottform prototype</h1>
-		<p>This is a generic form that allows uploading of a file.</p>
+		<h1>Returns and complaints</h1>
+		<p>
+			Welcome to our support section. We acknowledge you're here because you want something fixed.
+			One of our products broke down or didn't arrive in the shape you expected it to. Please let us
+			know about the issue below and we will try our best to support you!
+		</p>
 
 		<form action="{base}/upload" method="POST" enctype="multipart/form-data">
 			<div>
-				<label for="message">A custom message</label>
-				<input id="message" type="text" name="message" />
+				<label for="message">Please provide a clear description of the problem:</label>
+				<textarea id="message" name="message" />
 			</div>
 
 			<div>
@@ -113,6 +121,12 @@
 			</div>
 			<Button type="submit" label="Send" />
 		</form>
+		<p class="notice">
+			This form is a demonstration of Flottform. It will save the images on a server when you hit
+			"Send", so can actually see that the server ultimately received the file, regardless from
+			which device you sent it. We will keep the uploaded files on the demo server only for a short
+			amount of time and may delete them automatically without further notice.
+		</p>
 	</div>
 </div>
 
@@ -154,8 +168,10 @@
 		z-index: 9;
 		border-color: var(--cus-color-blue);
 	}
-	input[type='text'] {
+	textarea {
 		border-color: var(--cus-color-blue);
+		height: 5em;
+		width: 100%;
 	}
 	.uploadIcon {
 		width: 1.5rem;
@@ -190,5 +206,10 @@
 	}
 	form :global(.qrCodeWrapper) {
 		margin-bottom: 1rem;
+	}
+
+	.notice {
+		opacity: 0.5;
+		font-size: smaller;
 	}
 </style>

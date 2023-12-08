@@ -1,6 +1,6 @@
 import { toDataURL } from 'qrcode';
 
-const POLL_TIMEOUT = 2000;
+const POLL_TIMEOUT = 1000;
 let channelNumber = 0;
 
 export default function initFlottform(fileInputFields: NodeListOf<HTMLInputElement>) {
@@ -49,6 +49,7 @@ export default function initFlottform(fileInputFields: NodeListOf<HTMLInputEleme
 				const channelName = `file-${
 					fileInputField.id ?? fileInputField.getAttribute('name') ?? channelNumber
 				}`;
+
 				const dataChannel = peerConnection.createDataChannel(channelName);
 
 				let nextPollForPeer: ReturnType<typeof setTimeout>;
@@ -170,8 +171,28 @@ export default function initFlottform(fileInputFields: NodeListOf<HTMLInputEleme
 				peerConnection.ondatachannel = (e) => {
 					console.log('got a connection in form', e);
 				};
+
 				peerConnection.onconnectionstatechange = (e) => {
-					console.log('connectionstatechanged', e);
+					console.log('on.onconnectionstatechange', e);
+				};
+
+				peerConnection.oniceconnectionstatechange = (e) => {
+					console.log('oniceconnectionstatechange', e);
+				};
+
+				peerConnection.onicegatheringstatechange = (e) => {
+					console.log('onicegatheringstatechange', e);
+				};
+				peerConnection.onnegotiationneeded = (e) => {
+					console.log('onnegotiationneeded', e);
+				};
+
+				peerConnection.onsignalingstatechange = (e) => {
+					console.log('onsignalingstatechange', e);
+					console.log('connectionState', peerConnection?.connectionState);
+					console.log('signalingState', peerConnection?.signalingState);
+					console.log('iceConnectionState', peerConnection?.iceConnectionState);
+					console.log('iceGatheringState', peerConnection?.iceGatheringState);
 				};
 
 				state = 'waiting-for-answer';
