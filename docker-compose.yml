@@ -1,0 +1,5 @@
+services:
+  flottform-server:
+    ports:
+      - "8080:5173"
+  demo:

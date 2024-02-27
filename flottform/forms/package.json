@@ -1,0 +1,45 @@
+{
+	"name": "@flottform/forms",
+	"version": "0.0.1",
+	"private": true,
+	"description": "Flottform client side SDK",
+	"author": "compose.us GmbH",
+	"type": "module",
+	"files": [
+		"src",
+		"dist"
+	],
+	"main": "./dist/index.umd.cjs",
+	"module": "./dist/index.js",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/index.umd.cjs"
+		}
+	},
+	"types": "./dist/src/index.d.ts",
+	"keywords": [
+		"browser",
+		"client",
+		"flottform",
+		"forms",
+		"webrtc"
+	],
+	"scripts": {
+		"build": "vite build",
+		"preview": "vite preview",
+		"lint": "prettier --check . && eslint .",
+		"format": "prettier --write .",
+		"test": "pnpm run test:unit",
+		"test:unit": "vitest"
+	},
+	"devDependencies": {
+		"@types/qrcode": "^1.5.5",
+		"@vitest/browser": "^1.3.1",
+		"qrcode": "^1.5.3",
+		"vite": "^5.0.3",
+		"vite-plugin-dts": "^3.7.3",
+		"vitest": "^1.3.1",
+		"webdriverio": "^8.32.3"
+	}
+}
