@@ -1,4 +1,4 @@
-import { type RequestHandler, json, error } from '@sveltejs/kit';
+import { type RequestHandler, json, error, text } from '@sveltejs/kit';
 import { retrieveFlottformDatabase } from '$lib/database';
 import { RTCIceCandidateInitSchema, RTCSessionDescriptionInitSchema } from '$lib/validations';
 import { ZodError, z } from 'zod';
@@ -23,6 +23,7 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 
 	try {
 		const { iceCandidates, hostKey } = validatePutPeerInfosBody.parse(data);
+		console.log('received PUT host:', { endpointId, hostKey, iceCandidates });
 		const db = await retrieveFlottformDatabase();
 		const endpoint = await db.putHostInfo({ endpointId, iceCandidates, hostKey });
 		return json(endpoint);
@@ -32,4 +33,13 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 		}
 		throw err;
 	}
+};
+
+export const OPTIONS: RequestHandler = async () => {
+	return text('', {
+		headers: {
+			'Access-Control-Allow-Origin': '*',
+			'Access-Control-Allow-Methods': 'PUT,OPTIONS'
+		}
+	});
 };

@@ -89,7 +89,10 @@
 		const fileInputFields = document.querySelectorAll(
 			'input[type=file]'
 		) as NodeListOf<HTMLInputElement>;
-		createFlottformInput(fileInputFields[0], { flottformApi: 'http://localhost:5177/flottform' });
+		createFlottformInput(fileInputFields[0], {
+			flottformApi: 'http://localhost:5177/flottform',
+			clientUrl: `${base}/flottform-client`
+		});
 	});
 </script>
 

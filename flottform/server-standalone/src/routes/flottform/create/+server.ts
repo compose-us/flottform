@@ -1,4 +1,4 @@
-import { type RequestHandler, json, error } from '@sveltejs/kit';
+import { type RequestHandler, json, error, text } from '@sveltejs/kit';
 import { retrieveFlottformDatabase } from '$lib/database';
 import { RTCSessionDescriptionInitSchema } from '$lib/validations';
 
@@ -19,4 +19,13 @@ export const POST: RequestHandler = async ({ request }) => {
 	const endpoint = await db.createEndpoint({ session });
 
 	return json(endpoint);
+};
+
+export const OPTIONS: RequestHandler = async () => {
+	return text('', {
+		headers: {
+			'Access-Control-Allow-Origin': '*',
+			'Access-Control-Allow-Methods': 'POST,OPTIONS'
+		}
+	});
 };

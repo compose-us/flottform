@@ -4,10 +4,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
 	plugins: [sveltekit()],
 	server: {
-		origin: '*',
-		headers: {
-			'access-control-allow-origin': '*'
-		}
+		cors: true
 	},
 	test: {
 		include: ['src/**/*.{test,spec}.{js,ts}']

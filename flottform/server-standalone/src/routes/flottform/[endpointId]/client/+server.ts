@@ -1,4 +1,4 @@
-import { type RequestHandler, json, error } from '@sveltejs/kit';
+import { type RequestHandler, json, error, text } from '@sveltejs/kit';
 import { retrieveFlottformDatabase } from '$lib/database';
 import { RTCIceCandidateInitSchema, RTCSessionDescriptionInitSchema } from '$lib/validations';
 import { z, ZodError } from 'zod';
@@ -34,4 +34,13 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 		}
 		throw err;
 	}
+};
+
+export const OPTIONS: RequestHandler = async () => {
+	return text('', {
+		headers: {
+			'Access-Control-Allow-Origin': '*',
+			'Access-Control-Allow-Methods': 'PUT,OPTIONS'
+		}
+	});
 };
