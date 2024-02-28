@@ -184,7 +184,7 @@ export function createFlottformInput(
 				inputField.files = dt.files;
 
 				state = 'done';
-				createChannelButton.innerHTML = `File received: ${fileName}`;
+				createChannelButton.innerHTML = `Open new connection`;
 				dataChannel.close();
 			}
 		};
