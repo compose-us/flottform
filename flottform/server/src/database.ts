@@ -35,11 +35,7 @@ class FlottformDatabase {
 		return entry;
 	}
 
-	async getEndpoint({
-		endpointId
-	}: {
-		endpointId: EndpointId;
-	}): Promise<Exact<SafeEndpointInfo, SafeEndpointInfo>> {
+	async getEndpoint({ endpointId }: { endpointId: EndpointId }): Promise<SafeEndpointInfo> {
 		const entry = this.map.get(endpointId);
 		if (!entry) {
 			throw Error('Endpoint not found');

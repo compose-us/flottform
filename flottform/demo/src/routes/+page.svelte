@@ -91,7 +91,9 @@
 		) as NodeListOf<HTMLInputElement>;
 		createFlottformInput(fileInputFields[0], {
 			flottformApi: 'http://localhost:5177/flottform',
-			clientUrl: `${base}/flottform-client`
+			createClientUrl: async ({ endpointId }) => {
+				return `${base}/flottform-client/${endpointId}`;
+			}
 		});
 	});
 </script>

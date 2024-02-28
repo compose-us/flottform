@@ -9,9 +9,15 @@ export const GET: RequestHandler = async ({ params }) => {
 	}
 
 	const db = await retrieveFlottformDatabase();
-	const endpointInfos = await db.getEndpoint({ endpointId });
-
-	return json(endpointInfos);
+	try {
+		const endpointInfos = await db.getEndpoint({ endpointId });
+		return json(endpointInfos);
+	} catch (err) {
+		if (err instanceof Error && err.message === 'Endpoint not found') {
+			return error(404, 'Endpoint not found');
+		}
+		throw err;
+	}
 };
 
 const deleteEndpointSchema = z.object({
