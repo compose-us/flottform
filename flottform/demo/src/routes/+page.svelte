@@ -28,17 +28,31 @@
 		highlighted = false;
 	};
 
+	const randomArrayElement = (arr: string[]): string => arr[Math.floor(Math.random() * arr.length)];
+
 	const mockUser = {
-		name: 'Codey',
-		surname: 'Bugsworth',
-		email: 'codey.bugsworth@example.com',
-		phone: '+1 (404) 555-1234',
-		street: 'Null Pointer Lane',
-		houseNumber: '404',
-		city: 'Devsville',
-		postcode: '1337',
-		problemDescription:
+		name: ['Alice', 'John', 'Emily', 'Michael', 'Emma', 'Codey'],
+		surname: ['Smith', 'Doe', 'Johnson', 'Brown', 'Wilson', 'Bugsworth'],
+		phone: [
+			'+1 (555) 123-4567',
+			'+1 (123) 456-7890',
+			'+1 (987) 654-3210',
+			'+1 (543) 210-9876',
+			'+1 (123) 456-7890',
+			'+1 (404) 555-1234'
+		],
+		street: ['Main St', 'Elm St', 'Park Ave', 'Oak St', 'Cedar St', 'Null Pointer Lane'],
+		houseNumber: ['123', '42', '7', '99', '777', '404'],
+		city: ['Anytown', 'Springfield', 'Metroville', 'Greenville', 'Oakland', 'Devsville'],
+		postcode: ['54321', '98765', '12345', '54321', '88888', '1337'],
+		problemDescription: [
+			"I'm facing an unusual challenge where the system is asking me to upload a photo of myself wearing a unicorn costume while holding a rubber chicken. It's as if the authentication process has taken a whimsical turn into a surreal circus!",
+			'My transaction is on hold until I upload a selfie balancing a pineapple on my head while reciting the alphabet backward. Is this some sort of cognitive test or an initiation into the secret society of online shoppers?',
+			"To access the restricted area, the system demands a photo of me impersonating a famous historical figure of my choice while juggling three rubber ducks. It's like stepping into a time-traveling talent show!",
+			"I'm stuck in authentication limbo where the system insists on a photo of me wearing a pirate hat and holding a sign that says 'Arrr! I solemnly swear I'm up to no good'. Is this a security measure or a comedic treasure hunt?",
+			"I'm trying to unlock a premium feature, but the system demands a selfie of me wearing a Viking helmet while riding a hobby horse and reciting Shakespearean sonnets. To be or not to be a verified user, that is the question!",
 			"I'm experiencing a hardware glitch where my mouse pointer seems to be stuck in an infinite loop, circling endlessly. It's as if my computer is caught in a dance routine it can't escape. This quirky performance has turned my hardware into a dance floor, and now my head is spinning too—literally! I fear it might be broken. Is there a reboot button for humans as well?"
+		]
 	};
 
 	let isFillingOut = false;
@@ -62,23 +76,26 @@
 	const fillOutForm = async () => {
 		resetValues();
 		isFillingOut = true;
-		await typeValue(mockUser.name, 'name');
+		await typeValue(randomArrayElement(mockUser.name), 'name');
 		await waitForMs(100);
-		await typeValue(mockUser.surname, 'surname');
+		await typeValue(randomArrayElement(mockUser.surname), 'surname');
 		await waitForMs(50);
-		await typeValue(mockUser.email, 'email');
+		await typeValue(
+			`${$prefilledForm.name}.${$prefilledForm.surname}@example.com`.toLocaleLowerCase(),
+			'email'
+		);
 		await waitForMs(80);
-		await typeValue(mockUser.phone, 'phone');
+		await typeValue(randomArrayElement(mockUser.phone), 'phone');
 		await waitForMs(110);
-		await typeValue(mockUser.street, 'street');
+		await typeValue(randomArrayElement(mockUser.street), 'street');
 		await waitForMs(40);
-		await typeValue(mockUser.houseNumber, 'houseNumber');
+		await typeValue(randomArrayElement(mockUser.houseNumber), 'houseNumber');
 		await waitForMs(80);
-		await typeValue(mockUser.city, 'city');
+		await typeValue(randomArrayElement(mockUser.city), 'city');
 		await waitForMs(50);
-		await typeValue(mockUser.postcode, 'postcode');
+		await typeValue(randomArrayElement(mockUser.postcode), 'postcode');
 		await waitForMs(70);
-		await typeValue(mockUser.problemDescription, 'problemDescription', 5);
+		await typeValue(randomArrayElement(mockUser.problemDescription), 'problemDescription', 5);
 		highlighted = true;
 		isFillingOut = false;
 	};
