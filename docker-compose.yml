@@ -61,13 +61,14 @@ services:
       target: runner
     container_name: flottform-demo
     working_dir: '/app'
-    entrypoint: "./docker-entrypoint.sh"
+    entrypoint: './docker-entrypoint.sh'
     command: 'pnpm -r --if-present --parallel run dev --host'
     restart: always
     environment:
       - 'PROTOCOL_HEADER=x-forwarded-proto'
       - 'HOST_HEADER=x-forwarded-host'
       - 'PUBLIC_FLOTTFORM_SERVER_BASE=https://${HOST}/flottform'
+      - 'PUBLIC_IS_ONLINE_DEMO=true'
       - 'ORIGIN=https://${HOST}'
     volumes:
       - './:/app'
@@ -80,17 +81,17 @@ services:
       - pnpm-cache:/root/.npm
       - pnpm-store:/app/.pnpm-store
     ports:
-      - "5173:5173"
-      - "5177:5177"
+      - '5173:5173'
+      - '5177:5177'
     labels:
       - 'traefik.enable=true'
       - 'traefik.docker.network=web'
-      # - 'traefik.http.services.flottform-server-standalone.loadbalancer.server.port=5177'
-      # - 'traefik.http.routers.flottform-server-standalone.priority=100'
-      # - 'traefik.http.routers.flottform-server-standalone.rule=Host(`${HOST}`) && PathPrefix(`/flottform`)'
-      # - 'traefik.http.routers.flottform-server-standalone.service=flottform-server-standalone'
-      # - 'traefik.http.routers.flottform-server-standalone.entrypoints=websecure'
-      # - 'traefik.http.routers.flottform-server-standalone.tls.certresolver=leresolver'
+      - 'traefik.http.services.flottform-server-standalone.loadbalancer.server.port=5177'
+      - 'traefik.http.routers.flottform-server-standalone.priority=100'
+      - 'traefik.http.routers.flottform-server-standalone.rule=Host(`${HOST}`) && PathPrefix(`/flottform`)'
+      - 'traefik.http.routers.flottform-server-standalone.service=flottform-server-standalone'
+      - 'traefik.http.routers.flottform-server-standalone.entrypoints=websecure'
+      - 'traefik.http.routers.flottform-server-standalone.tls.certresolver=leresolver'
       - 'traefik.http.services.flottform-demo.loadbalancer.server.port=5173'
       - 'traefik.http.routers.flottform-demo.priority=50'
       - 'traefik.http.routers.flottform-demo.service=flottform-demo'
