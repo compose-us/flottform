@@ -17,6 +17,13 @@ type EndpointInfo = {
 type SafeEndpointInfo = Omit<EndpointInfo, 'hostKey' | 'clientKey'>;
 type Exact<A, B> = A extends B ? (B extends A ? A : never) : never;
 
+function createRandomHostKey(): string {
+	return crypto.randomUUID();
+}
+function createRandomEndpointId(): string {
+	return crypto.randomUUID();
+}
+
 class FlottformDatabase {
 	private map = new Map<EndpointId, EndpointInfo>();
 
@@ -24,8 +31,8 @@ class FlottformDatabase {
 
 	async createEndpoint({ session }: { session: RTCSessionDescriptionInit }): Promise<EndpointInfo> {
 		const entry = {
-			hostKey: 'hello',
-			endpointId: 'abc',
+			hostKey: createRandomHostKey(),
+			endpointId: createRandomEndpointId(),
 			hostInfo: {
 				session,
 				iceCandidates: []
