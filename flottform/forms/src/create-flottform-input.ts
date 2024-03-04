@@ -45,7 +45,7 @@ export function createFlottformInput(
 
 	const createChannelButton = document.createElement('button');
 	createChannelButton.setAttribute('type', 'button');
-	createChannelButton.innerHTML = 'Load file from other devise';
+	createChannelButton.innerHTML = 'Load file from other device';
 	createChannelButton.classList.add('qrCodeButton');
 	createChannelButton.addEventListener('click', async () => {
 		if (peerConnection) {
@@ -75,19 +75,19 @@ export function createFlottformInput(
 
 		const { endpointId, hostKey } = await response.json();
 		console.log('Created endpoint', { endpointId, hostKey });
+		const pollPeerLink = `${baseApi}/${endpointId}`;
+		const putHostLink = `${pollPeerLink}/host`;
+		const connectLink = await createClientUrl({ endpointId });
+		createChannelQrCode.setAttribute('src', await toDataURL(connectLink));
+		createChannelQrCode.style.display = 'block';
+		createChannelLinkWithOffer.setAttribute('href', connectLink);
+		createChannelLinkWithOffer.innerHTML = connectLink;
 
 		peerConnection.onicecandidate = async (e) => {
 			if (e.candidate) {
 				myIceCandidates.push(e.candidate);
 
 				if (offer && myIceCandidates.length > 0) {
-					const pollPeerLink = `${baseApi}/${endpointId}`;
-					const putHostLink = `${pollPeerLink}/host`;
-					const connectLink = await createClientUrl({ endpointId });
-					createChannelQrCode.setAttribute('src', await toDataURL(connectLink));
-					createChannelQrCode.style.display = 'block';
-					createChannelLinkWithOffer.setAttribute('href', connectLink);
-					createChannelLinkWithOffer.innerHTML = connectLink;
 					await fetch(putHostLink, {
 						method: 'PUT',
 						mode: 'cors',
