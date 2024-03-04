@@ -79,6 +79,9 @@ services:
       - node-cache:/root/.cache
       - pnpm-cache:/root/.npm
       - pnpm-store:/app/.pnpm-store
+    ports:
+      - "5173:5173"
+      - "5177:5177"
     labels:
       - 'traefik.enable=true'
       - 'traefik.docker.network=web'
