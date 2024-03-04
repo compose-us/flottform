@@ -13,9 +13,9 @@ services:
     container_name: flottform-traefik
     restart: always
     command:
-      # - '--api=false'
-      # - '--api.dashboard=false'
-      # - '--api.insecure=false'
+      - '--api=true'
+      - '--api.dashboard=true'
+      - '--api.insecure=false'
       # Enabling docker provider
       - '--providers.docker=true'
       # Do not expose containers unless explicitly told so
@@ -32,10 +32,10 @@ services:
       - '--configFile=/traefik/traefik.yml'
     labels:
       - 'traefik.enable=true'
-      # - 'traefik.http.routers.dashboard.rule=Host(`traefik.${HOST}`)'
-      # - 'traefik.http.routers.dashboard.entrypoints=websecure'
-      # - 'traefik.http.routers.dashboard.tls.certresolver=leresolver'
-      # - 'traefik.http.routers.dashboard.service=api@internal'
+      - 'traefik.http.routers.dashboard.rule=Host(`traefik.${HOST}`)'
+      - 'traefik.http.routers.dashboard.entrypoints=websecure'
+      - 'traefik.http.routers.dashboard.tls.certresolver=leresolver'
+      - 'traefik.http.routers.dashboard.service=api@internal'
       # global redirect to https
       - 'traefik.http.routers.http-catchall.rule=HostRegexp(`{host:.+}`)'
       - 'traefik.http.routers.http-catchall.entrypoints=web'
