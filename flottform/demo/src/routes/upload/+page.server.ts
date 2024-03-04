@@ -2,6 +2,7 @@ import { fail } from '@sveltejs/kit';
 import type { Actions } from './$types';
 import { Writable } from 'node:stream';
 import { createWriteStream } from 'node:fs';
+import { readdir } from 'node:fs/promises';
 
 const UPLOAD_FOLDER = 'static/uploads';
 
@@ -31,7 +32,7 @@ export const actions: Actions = {
 		const filenameDoc = `${uuid}-${document.name}`;
 		const writeStream = Writable.toWeb(createWriteStream(`${UPLOAD_FOLDER}/${filenameDoc}`));
 
-		await Promise.all([document.stream().pipeTo(writeStream)]);
+		await Promise.all([document.stream().pipeTo(writeStream), tryRemovingOldUploads()]);
 
 		return {
 			success: true,
@@ -58,4 +59,15 @@ function isFile(x: any): x is File {
 	return (
 		x !== null && x !== undefined && x.name !== undefined && typeof x.arrayBuffer === 'function'
 	);
+}
+
+async function tryRemovingOldUploads(): Promise<void> {
+	try {
+		const uploadFolderList = await readdir(UPLOAD_FOLDER);
+		for (const file of uploadFolderList) {
+			console.log('found file', file);
+		}
+	} catch (err) {
+		console.log('Could not delete old uploads:', err);
+	}
 }
