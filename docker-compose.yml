@@ -61,6 +61,7 @@ services:
       target: runner
     container_name: flottform-demo
     working_dir: '/app'
+    entrypoint: "./docker-entrypoint.sh"
     command: 'pnpm -r --if-present --parallel run dev'
     restart: always
     environment:
