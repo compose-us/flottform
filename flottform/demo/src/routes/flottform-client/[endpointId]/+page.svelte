@@ -3,6 +3,7 @@
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
 	import FileInput from '$lib/components/FileInput.svelte';
+	import { sdpExchangeServerBase } from '../../../api';
 
 	let sendFileToPeer = () => {};
 	let fileInput: HTMLInputElement;
@@ -14,7 +15,7 @@
 		const result = await connectToFlottform({
 			endpointId: $page.params.endpointId,
 			fileInput,
-			flottformApi: 'http://localhost:5177/flottform',
+			flottformApi: sdpExchangeServerBase,
 			onStateChange(state) {
 				currentState = state;
 			}

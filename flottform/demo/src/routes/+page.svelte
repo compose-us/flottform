@@ -4,6 +4,7 @@
 	import { createFlottformInput } from '@flottform/forms';
 	import { writable } from 'svelte/store';
 	import FileInput from '$lib/components/FileInput.svelte';
+	import { createClientUrl, sdpExchangeServerBase } from '../api';
 
 	let highlighted = false;
 
@@ -105,10 +106,8 @@
 			'input[type=file]'
 		) as NodeListOf<HTMLInputElement>;
 		createFlottformInput(fileInputFields[0], {
-			flottformApi: 'http://localhost:5177/flottform',
-			createClientUrl: async ({ endpointId }) => {
-				return `${base}/flottform-client/${endpointId}`;
-			}
+			flottformApi: sdpExchangeServerBase,
+			createClientUrl
 		});
 	});
 </script>
