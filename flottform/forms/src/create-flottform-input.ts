@@ -16,7 +16,7 @@ export function createFlottformInput(
 		createClientUrl: (params: { endpointId: string }) => Promise<string>;
 		configuration?: RTCConfiguration;
 	}
-) {
+): void {
 	const baseApi = (flottformApi instanceof URL ? flottformApi : new URL(flottformApi))
 		.toString()
 		.replace(/\/$/, '');
@@ -76,7 +76,7 @@ export function createFlottformInput(
 		const { endpointId, hostKey } = await response.json();
 		console.log('Created endpoint', { endpointId, hostKey });
 		const pollPeerLink = `${baseApi}/${endpointId}`;
-		const putHostLink = `${pollPeerLink}/host`;
+		const putHostLink = `${baseApi}/${endpointId}/host`;
 		const connectLink = await createClientUrl({ endpointId });
 		createChannelQrCode.setAttribute('src', await toDataURL(connectLink));
 		createChannelQrCode.style.display = 'block';
@@ -86,57 +86,58 @@ export function createFlottformInput(
 		peerConnection.onicecandidate = async (e) => {
 			if (e.candidate) {
 				myIceCandidates.push(e.candidate);
-
-				if (offer && myIceCandidates.length > 0) {
-					await fetch(putHostLink, {
-						method: 'PUT',
-						mode: 'cors',
-						body: JSON.stringify({
-							hostKey,
-							iceCandidates: myIceCandidates
-						})
-					});
-
-					if (!nextPollForClient) {
-						startPollingForClient();
-					}
-					function startPollingForClient() {
-						nextPollForClient = setTimeout(tryFindClient, POLL_TIMEOUT);
-
-						async function tryFindClient() {
-							console.log('polling for client');
-							const response = await fetch(pollPeerLink);
-							if (!response.ok) {
-								console.log('no client found');
-								nextPollForClient = setTimeout(tryFindClient, POLL_TIMEOUT);
-								return;
-							}
-							const { clientInfo } = (await response.json()) as SafeEndpointInfo;
-							if (!clientInfo) {
-								console.log('No client info found (yet)');
-								nextPollForClient = setTimeout(tryFindClient, POLL_TIMEOUT);
-								return;
-							}
-							if (!peerConnection) {
-								console.log('peerConnection should not be null here!');
-								return;
-							}
-							await peerConnection.setRemoteDescription(clientInfo.session);
-							for (const iceCandidate of clientInfo.iceCandidates) {
-								await peerConnection.addIceCandidate(iceCandidate);
-								console.log('added ice candidate successfully', iceCandidate);
-							}
-
-							state = 'waiting-for-file';
-							createChannelInput.value = '';
-							createChannelQrCode.style.display = 'none';
-							createChannelLinkWithOffer.innerHTML = '';
-							createChannelButton.innerHTML = 'Connected!';
-						}
-					}
-				}
 			} else {
 				console.log('no ice candidate in event', e);
+			}
+
+			if (offer) {
+				await fetch(putHostLink, {
+					method: 'PUT',
+					mode: 'cors',
+					body: JSON.stringify({
+						hostKey,
+						iceCandidates: myIceCandidates
+					})
+				});
+
+				if (!nextPollForClient) {
+					startPollingForClient();
+				}
+
+				function startPollingForClient() {
+					nextPollForClient = setTimeout(tryFindClient, POLL_TIMEOUT);
+
+					async function tryFindClient() {
+						console.log('polling for client');
+						const response = await fetch(pollPeerLink);
+						if (!response.ok) {
+							console.log('no client found');
+							nextPollForClient = setTimeout(tryFindClient, POLL_TIMEOUT);
+							return;
+						}
+						const { clientInfo } = (await response.json()) as SafeEndpointInfo;
+						if (!clientInfo) {
+							console.log('No client info found (yet)');
+							nextPollForClient = setTimeout(tryFindClient, POLL_TIMEOUT);
+							return;
+						}
+						if (!peerConnection) {
+							console.log('peerConnection should not be null here!');
+							return;
+						}
+						await peerConnection.setRemoteDescription(clientInfo.session);
+						for (const iceCandidate of clientInfo.iceCandidates) {
+							await peerConnection.addIceCandidate(iceCandidate);
+							console.log('added ice candidate successfully', iceCandidate);
+						}
+
+						state = 'waiting-for-file';
+						createChannelInput.value = '';
+						createChannelQrCode.style.display = 'none';
+						createChannelLinkWithOffer.innerHTML = '';
+						createChannelButton.innerHTML = 'Connected!';
+					}
+				}
 			}
 		};
 		function stopPollingForPeer() {

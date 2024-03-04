@@ -101,7 +101,7 @@
 		isFillingOut = false;
 	};
 
-	onMount(() => {
+	onMount(async () => {
 		const fileInputFields = document.querySelectorAll(
 			'input[type=file]'
 		) as NodeListOf<HTMLInputElement>;

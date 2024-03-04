@@ -12,20 +12,25 @@
 	let currentPercentage = 0;
 
 	onMount(async () => {
-		const result = await connectToFlottform({
-			endpointId: $page.params.endpointId,
-			fileInput,
-			flottformApi: sdpExchangeServerBase,
-			onStateChange(state) {
-				currentState = state;
-			}
-		});
+		try {
+			const result = await connectToFlottform({
+				endpointId: $page.params.endpointId,
+				fileInput,
+				flottformApi: sdpExchangeServerBase,
+				onStateChange(state) {
+					currentState = state;
+				}
+			});
 
-		sendFileToPeer = result.createSendFileToPeer({
-			onProgress(p) {
-				currentPercentage = p;
-			}
-		});
+			sendFileToPeer = result.createSendFileToPeer({
+				onProgress(p) {
+					currentPercentage = p;
+				}
+			});
+		} catch (err) {
+			console.log('Error connecting to flottform', err);
+			currentState = 'error';
+		}
 	});
 </script>
 
@@ -80,6 +85,10 @@
 						>Send file</span
 					>
 				</button>
+			{:else if currentState === 'error'}
+				<h2 class="animate-ping">Ouch!</h2>
+				<p>There was an error connecting to flottform! 😬</p>
+				<p>Please try again with a new QR code by clicking the button again on the main form.</p>
 			{/if}
 		</div>
 	</form>

@@ -43,7 +43,7 @@ export async function connectToFlottform({
 		await connection.addIceCandidate(iceCandidate);
 	}
 
-	const put = await fetch(putClientInfoUrl, {
+	await fetch(putClientInfoUrl, {
 		method: 'PUT',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({
