@@ -84,10 +84,9 @@ export function createFlottformInput(
 		createChannelLinkWithOffer.innerHTML = connectLink;
 
 		peerConnection.onicecandidate = async (e) => {
+			console.log('onicecandidate', e);
 			if (e.candidate) {
 				myIceCandidates.push(e.candidate);
-			} else {
-				console.log('no ice candidate in event', e);
 			}
 
 			if (offer) {

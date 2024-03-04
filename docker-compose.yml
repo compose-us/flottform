@@ -3,6 +3,7 @@ networks:
     external: false
 
 volumes:
+  uploads:
   node-cache:
   pnpm-cache:
   pnpm-store:
@@ -71,12 +72,13 @@ services:
       - 'PUBLIC_IS_ONLINE_DEMO=true'
       - 'ORIGIN=https://${HOST}'
     volumes:
-      - './:/app'
-      - '/app/node_modules'
-      - '/app/flottform/demo/node_modules'
-      - '/app/flottform/forms/node_modules'
-      - '/app/flottform/server/node_modules'
-      - '/app/flottform/server-standalone/node_modules'
+      - ./:/app
+      - /app/node_modules
+      - /app/flottform/demo/node_modules
+      - /app/flottform/forms/node_modules
+      - /app/flottform/server/node_modules
+      - /app/flottform/server-standalone/node_modules
+      - uploads:/app/flottform/demo/static/uploads
       - node-cache:/root/.cache
       - pnpm-cache:/root/.npm
       - pnpm-store:/app/.pnpm-store
