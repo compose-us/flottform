@@ -1,5 +1,95 @@
+networks:
+  web:
+    external: false
+
+volumes:
+  node-cache:
+  pnpm-cache:
+  pnpm-store:
+
 services:
-  flottform-server:
+  traefik:
+    image: 'traefik:${TRAEFIK_VERSION}'
+    container_name: flottform-traefik
+    restart: always
+    command:
+      - '--api=true'
+      - '--api.dashboard=true'
+      - '--api.insecure=false'
+      # Enabling docker provider
+      - '--providers.docker=true'
+      # Do not expose containers unless explicitly told so
+      - '--providers.docker.exposedbydefault=false'
+      - '--providers.docker.network=web'
+      - '--entrypoints.web.address=:80'
+      - '--entrypoints.web.http.redirections.entryPoint.to=websecure'
+      - '--entrypoints.web.http.redirections.entryPoint.scheme=https'
+      - '--entrypoints.web.http.redirections.entrypoint.permanent=true'
+      - '--entrypoints.websecure.address=:443'
+      - '--certificatesresolvers.leresolver.acme.tlschallenge=true'
+      - '--certificatesresolvers.leresolver.acme.email=joern.bernhardt+letsencrypt@compose.us'
+      - '--certificatesresolvers.leresolver.acme.storage=/letsencrypt/acme.json'
+      - '--configFile=/traefik/traefik.yml'
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.dashboard.rule=Host(`traefik.${HOST}`)'
+      - 'traefik.http.routers.dashboard.entrypoints=websecure'
+      - 'traefik.http.routers.dashboard.tls.certresolver=leresolver'
+      - 'traefik.http.routers.dashboard.service=api@internal'
+      # global redirect to https
+      - 'traefik.http.routers.http-catchall.rule=HostRegexp(`{host:.+}`)'
+      - 'traefik.http.routers.http-catchall.entrypoints=web'
+      - 'traefik.http.routers.http-catchall.middlewares=redirect-to-https@docker'
+      # middleware redirect
+      - 'traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https'
     ports:
-      - "8080:5173"
+      - '80:80'
+      - '443:443'
+    volumes:
+      - '/var/local/traefik/letsencrypt:/letsencrypt'
+      - '/var/run/docker.sock:/var/run/docker.sock:ro'
+      - '/traefik'
+    networks:
+      - 'web'
+
   demo:
+    build:
+      args:
+        NODE_VERSION: '${NODE_VERSION}'
+      context: .
+      dockerfile: ./Dockerfile
+      target: runner
+    container_name: flottform-demo
+    working_dir: '/app'
+    command: 'pnpm -r --if-present --parallel run dev'
+    restart: always
+    environment:
+      - 'PROTOCOL_HEADER=x-forwarded-proto'
+      - 'HOST_HEADER=x-forwarded-host'
+      - 'PUBLIC_FLOTTFORM_SERVER_BASE=https://${HOST}/flottform'
+      - 'ORIGIN=https://${HOST}'
+    volumes:
+      - './:/app'
+      - '/app/node_modules'
+      - '/app/flottform/demo/node_modules'
+      - '/app/flottform/forms/node_modules'
+      - '/app/flottform/server/node_modules'
+      - '/app/flottform/server-standalone/node_modules'
+      - node-cache:/root/.cache
+      - pnpm-cache:/root/.npm
+      - pnpm-store:/app/.pnpm-store
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.docker.network=web'
+      - 'traefik.http.services.flottform-demo.loadbalancer.server.port=5173'
+      - 'traefik.http.routers.flottform-demo.service=flottform-demo'
+      - 'traefik.http.routers.flottform-demo.rule=Host(`${HOST}`)'
+      - 'traefik.http.routers.flottform-demo.entrypoints=websecure'
+      - 'traefik.http.routers.flottform-demo.tls.certresolver=leresolver'
+      - 'traefik.http.services.flottform-server-standalone.loadbalancer.server.port=5177'
+      - 'traefik.http.routers.flottform-server-standalone.service=flottform-server-standalone'
+      - 'traefik.http.routers.flottform-server-standalone.rule=Host(`${HOST}`) && PathPrefix(`/flottform`)'
+      - 'traefik.http.routers.flottform-server-standalone.entrypoints=websecure'
+      - 'traefik.http.routers.flottform-server-standalone.tls.certresolver=leresolver'
+    networks:
+      - 'web'
