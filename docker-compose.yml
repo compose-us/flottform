@@ -88,7 +88,7 @@ services:
       - 'traefik.docker.network=web'
       - 'traefik.http.services.flottform-server-standalone.loadbalancer.server.port=5177'
       - 'traefik.http.routers.flottform-server-standalone.priority=100'
-      - 'traefik.http.routers.flottform-server-standalone.rule=Host(`${HOST}`) && PathPrefix(`/flottform`)'
+      - 'traefik.http.routers.flottform-server-standalone.rule=Host(`${HOST}`) && PathPrefix(`/flottform/`)'
       - 'traefik.http.routers.flottform-server-standalone.service=flottform-server-standalone'
       - 'traefik.http.routers.flottform-server-standalone.entrypoints=websecure'
       - 'traefik.http.routers.flottform-server-standalone.tls.certresolver=leresolver'
