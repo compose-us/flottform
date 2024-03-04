@@ -62,7 +62,7 @@ services:
     container_name: flottform-demo
     working_dir: '/app'
     entrypoint: "./docker-entrypoint.sh"
-    command: 'pnpm -r --if-present --parallel run dev'
+    command: 'pnpm -r --if-present --parallel run dev --host'
     restart: always
     environment:
       - 'PROTOCOL_HEADER=x-forwarded-proto'
