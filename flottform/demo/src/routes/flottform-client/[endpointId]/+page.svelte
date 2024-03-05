@@ -17,6 +17,10 @@
 				endpointId: $page.params.endpointId,
 				fileInput,
 				flottformApi: sdpExchangeServerBase,
+				onError(error) {
+					currentState = 'error';
+					console.log(error);
+				},
 				onStateChange(state) {
 					currentState = state;
 				}

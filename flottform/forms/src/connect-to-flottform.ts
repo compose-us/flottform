@@ -9,12 +9,14 @@ export async function connectToFlottform({
 	endpointId,
 	fileInput,
 	flottformApi,
+	onError = () => {},
 	onStateChange = () => {},
 	configuration = DEFAULT_WEBRTC_CONFIG
 }: {
 	endpointId: string;
 	fileInput: HTMLInputElement;
 	flottformApi: string;
+	onError?: (error: Error) => void;
 	onStateChange?: (state: ClientState) => void;
 	configuration?: RTCConfiguration;
 }): Promise<{
