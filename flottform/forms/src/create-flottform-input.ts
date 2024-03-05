@@ -1,5 +1,5 @@
 import { toDataURL } from 'qrcode';
-import { DEFAULT_WEBRTC_CONFIG, SafeEndpointInfo } from './internal';
+import { DEFAULT_WEBRTC_CONFIG, type SafeEndpointInfo } from './internal';
 
 const POLL_TIMEOUT = 1000;
 
@@ -21,7 +21,14 @@ export function createFlottformInput(
 		.toString()
 		.replace(/\/$/, '');
 
-	let state: 'new' | 'waiting-for-answer' | 'waiting-for-ice' | 'waiting-for-file' | 'done' = 'new';
+	let state:
+		| 'new'
+		| 'waiting-for-answer'
+		| 'waiting-for-ice'
+		| 'waiting-for-file'
+		| 'done'
+		| 'error' = 'new';
+
 	let peerConnection: RTCPeerConnection | null = null;
 	let offer: RTCSessionDescriptionInit | null = null;
 	let myIceCandidates: RTCIceCandidateInit[] = [];
@@ -54,8 +61,6 @@ export function createFlottformInput(
 		peerConnection = new RTCPeerConnection(configuration);
 		channelNumber++;
 		const channelName = `file-${inputField.id ?? inputField.getAttribute('name') ?? channelNumber}`;
-
-		const dataChannel = peerConnection.createDataChannel(channelName);
 
 		let nextPollForClient: ReturnType<typeof setTimeout>;
 
@@ -139,13 +144,24 @@ export function createFlottformInput(
 				}
 			}
 		};
-		function stopPollingForPeer() {
-			clearTimeout(nextPollForClient);
-		}
-		dataChannel.onopen = (e) => {
-			stopPollingForPeer();
+		peerConnection.onicecandidateerror = async (e) => {
+			console.error('peerConnection.onicecandidateerror', e);
 		};
-		dataChannel.onclose = (e) => {};
+
+		const stopPollingForPeer = () => {
+			if (nextPollForClient) {
+				clearTimeout(nextPollForClient);
+			}
+		};
+
+		const dataChannel = peerConnection.createDataChannel(channelName);
+		dataChannel.addEventListener('open', stopPollingForPeer);
+		dataChannel.addEventListener('error', (event) => {
+			const error = (event as RTCErrorEvent).error;
+			console.log('error in dataChannel', error);
+		});
+		dataChannel.addEventListener('close', stopPollingForPeer);
+
 		const arrayBuffers: ArrayBuffer[] = [];
 		let hasMetaInformation = false;
 		let fileName = 'no-name';
@@ -188,33 +204,6 @@ export function createFlottformInput(
 				dataChannel.close();
 			}
 		};
-
-		// peerConnection.ondatachannel = (e) => {
-		// 	console.log('got a connection in form', e);
-		// };
-
-		// peerConnection.onconnectionstatechange = (e) => {
-		// 	console.log('on.onconnectionstatechange', e);
-		// };
-
-		// peerConnection.oniceconnectionstatechange = (e) => {
-		// 	console.log('oniceconnectionstatechange', e);
-		// };
-
-		// peerConnection.onicegatheringstatechange = (e) => {
-		// 	console.log('onicegatheringstatechange', e);
-		// };
-		// peerConnection.onnegotiationneeded = (e) => {
-		// 	console.log('onnegotiationneeded', e);
-		// };
-
-		// peerConnection.onsignalingstatechange = (e) => {
-		// 	console.log('onsignalingstatechange', e);
-		// 	console.log('connectionState', peerConnection?.connectionState);
-		// 	console.log('signalingState', peerConnection?.signalingState);
-		// 	console.log('iceConnectionState', peerConnection?.iceConnectionState);
-		// 	console.log('iceGatheringState', peerConnection?.iceGatheringState);
-		// };
 
 		state = 'waiting-for-answer';
 		createChannelInput.disabled = false;
