@@ -73,14 +73,18 @@ export async function connectToFlottform({
 	connection.onicegatheringstatechange = async (e) => {
 		console.info(`onicegatheringstatechange - ${connection.iceGatheringState} - ${e}`);
 		if (connection.iceGatheringState === 'complete') {
-			await fetch(putClientInfoUrl, {
-				method: 'PUT',
-				body: JSON.stringify({
-					clientKey,
-					session,
-					iceCandidates
-				})
-			});
+			try {
+				await fetch(putClientInfoUrl, {
+					method: 'PUT',
+					body: JSON.stringify({
+						clientKey,
+						iceCandidates,
+						session
+					})
+				});
+			} catch (err) {
+				onError(err);
+			}
 		}
 	};
 	connection.onnegotiationneeded = (e) => {
