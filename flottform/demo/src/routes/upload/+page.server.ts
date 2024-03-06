@@ -30,6 +30,7 @@ export const actions: Actions = {
 			return fail(422, { error: true, message: 'document needs to be a file' });
 		}
 
+		console.log('creating folder if does not exist', UPLOAD_FOLDER);
 		await mkdir(UPLOAD_FOLDER, { recursive: true });
 
 		const uuid = crypto.randomUUID();
