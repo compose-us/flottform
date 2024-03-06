@@ -5,6 +5,7 @@ import { ZodError, z } from 'zod';
 
 const validatePutPeerInfosBody = z.object({
 	hostKey: z.string(),
+	session: RTCSessionDescriptionInitSchema,
 	iceCandidates: z.array(RTCIceCandidateInitSchema)
 });
 
@@ -22,10 +23,10 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 	}
 
 	try {
-		const { iceCandidates, hostKey } = validatePutPeerInfosBody.parse(data);
-		console.log('received PUT host:', { endpointId, hostKey, iceCandidates });
+		const { iceCandidates, hostKey, session } = validatePutPeerInfosBody.parse(data);
+		console.log('received PUT host:', { endpointId, hostKey, session, iceCandidates });
 		const db = await retrieveFlottformDatabase();
-		const endpoint = await db.putHostInfo({ endpointId, iceCandidates, hostKey });
+		const endpoint = await db.putHostInfo({ endpointId, iceCandidates, session, hostKey });
 		return json(endpoint, {
 			headers: {
 				'Access-Control-Allow-Origin': '*',

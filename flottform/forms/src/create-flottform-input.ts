@@ -29,9 +29,7 @@ export function createFlottformInput(
 		| 'done'
 		| 'error' = 'new';
 
-	let peerConnection: RTCPeerConnection | null = null;
-	let offer: RTCSessionDescriptionInit | null = null;
-	let myIceCandidates: RTCIceCandidateInit[] = [];
+	let openPeerConnection: RTCPeerConnection | null = null;
 
 	const createChannelElement = document.createElement('div');
 	const createChannelLinkArea = document.createElement('div');
@@ -44,38 +42,46 @@ export function createFlottformInput(
 	createChannelElement.appendChild(createChannelLinkArea);
 	createChannelLinkArea.classList.add('qrCodeWrapper');
 
-	const createChannelInput = document.createElement('input');
-	createChannelInput.setAttribute('type', 'text');
-	createChannelInput.disabled = true;
-	createChannelInput.style.display = 'none';
-	createChannelElement.appendChild(createChannelInput);
-
 	const createChannelButton = document.createElement('button');
 	createChannelButton.setAttribute('type', 'button');
 	createChannelButton.innerHTML = 'Load file from other device';
 	createChannelButton.classList.add('qrCodeButton');
 	createChannelButton.addEventListener('click', async () => {
-		if (peerConnection) {
-			peerConnection.close();
+		if (openPeerConnection) {
+			openPeerConnection.close();
 		}
-		peerConnection = new RTCPeerConnection(configuration);
+		const peerConnection = new RTCPeerConnection(configuration);
+		openPeerConnection = peerConnection;
 		channelNumber++;
 		const channelName = `file-${inputField.id ?? inputField.getAttribute('name') ?? channelNumber}`;
+		const dataChannel = peerConnection.createDataChannel(channelName);
 
-		let nextPollForClient: ReturnType<typeof setTimeout>;
+		let hostOffer = await peerConnection.createOffer();
+		let myIceCandidates: RTCIceCandidateInit[] = [];
+		peerConnection.setLocalDescription(hostOffer);
 
-		offer = await peerConnection.createOffer();
-		peerConnection.setLocalDescription(offer);
+		peerConnection.onicecandidate = async (e) => {
+			if (e.candidate) {
+				myIceCandidates.push(e.candidate);
+			}
+		};
+		peerConnection.onicecandidateerror = async (e) => {
+			console.error('peerConnection.onicecandidateerror', e);
+		};
+		peerConnection.oniceconnectionstatechange = async (e) => {
+			if (peerConnection.iceConnectionState === 'failed') {
+				console.log('Failed to find a possible connection path');
+			}
+		};
 
 		const response = await fetch(`${baseApi}/create`, {
 			method: 'POST',
 			mode: 'cors',
 			headers: {
 				Accept: 'application/json',
-				'Content-Type': 'application/json',
-				'Access-Control-Allow-Origin': '*'
+				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify({ session: offer })
+			body: JSON.stringify({ session: hostOffer })
 		});
 
 		const { endpointId, hostKey } = await response.json();
@@ -88,79 +94,38 @@ export function createFlottformInput(
 		createChannelLinkWithOffer.setAttribute('href', connectLink);
 		createChannelLinkWithOffer.innerHTML = connectLink;
 
-		peerConnection.onicecandidate = async (e) => {
-			console.log('onicecandidate', e);
-			if (e.candidate) {
-				myIceCandidates.push(e.candidate);
-			}
+		await putHostInfo(putHostLink, hostKey, hostOffer, myIceCandidates);
 
-			if (offer) {
-				await fetch(putHostLink, {
-					method: 'PUT',
-					mode: 'cors',
-					body: JSON.stringify({
-						hostKey,
-						iceCandidates: myIceCandidates
-					})
-				});
+		state = 'waiting-for-answer';
+		createChannelButton.innerHTML = 'Receive answer';
 
-				if (!nextPollForClient) {
-					startPollingForClient();
+		await waitForPeerConnection(pollPeerLink);
+
+		async function waitForPeerConnection(pollPeerLink: string) {
+			console.log('waitForPeerConnection');
+			while (
+				peerConnection.iceGatheringState !== 'complete' ||
+				peerConnection.connectionState !== 'connected'
+			) {
+				await new Promise<void>((r) => setTimeout(r, POLL_TIMEOUT));
+
+				const response = await fetch(pollPeerLink);
+				if (!response.ok) {
+					console.log('no client found');
+					continue;
 				}
-
-				function startPollingForClient() {
-					nextPollForClient = setTimeout(tryFindClient, POLL_TIMEOUT);
-
-					async function tryFindClient() {
-						console.log('polling for client');
-						const response = await fetch(pollPeerLink);
-						if (!response.ok) {
-							console.log('no client found');
-							nextPollForClient = setTimeout(tryFindClient, POLL_TIMEOUT);
-							return;
-						}
-						const { clientInfo } = (await response.json()) as SafeEndpointInfo;
-						if (!clientInfo) {
-							console.log('No client info found (yet)');
-							nextPollForClient = setTimeout(tryFindClient, POLL_TIMEOUT);
-							return;
-						}
-						if (!peerConnection) {
-							console.log('peerConnection should not be null here!');
-							return;
-						}
-						await peerConnection.setRemoteDescription(clientInfo.session);
-						for (const iceCandidate of clientInfo.iceCandidates) {
-							await peerConnection.addIceCandidate(iceCandidate);
-							console.log('added ice candidate successfully', iceCandidate);
-						}
-
-						state = 'waiting-for-file';
-						createChannelInput.value = '';
-						createChannelQrCode.style.display = 'none';
-						createChannelLinkWithOffer.innerHTML = '';
-						createChannelButton.innerHTML = 'Connected!';
-					}
+				const { clientInfo } = (await response.json()) as SafeEndpointInfo;
+				if (!clientInfo) {
+					continue;
+				}
+				if (peerConnection.currentRemoteDescription === null) {
+					await peerConnection.setRemoteDescription(clientInfo.session);
+				}
+				for (const iceCandidate of clientInfo.iceCandidates) {
+					await peerConnection.addIceCandidate(iceCandidate);
 				}
 			}
-		};
-		peerConnection.onicecandidateerror = async (e) => {
-			console.error('peerConnection.onicecandidateerror', e);
-		};
-
-		const stopPollingForPeer = () => {
-			if (nextPollForClient) {
-				clearTimeout(nextPollForClient);
-			}
-		};
-
-		const dataChannel = peerConnection.createDataChannel(channelName);
-		dataChannel.addEventListener('open', stopPollingForPeer);
-		dataChannel.addEventListener('error', (event) => {
-			const error = (event as RTCErrorEvent).error;
-			console.log('error in dataChannel', error);
-		});
-		dataChannel.addEventListener('close', stopPollingForPeer);
+		}
 
 		const arrayBuffers: ArrayBuffer[] = [];
 		let hasMetaInformation = false;
@@ -204,11 +169,20 @@ export function createFlottformInput(
 				dataChannel.close();
 			}
 		};
-
-		state = 'waiting-for-answer';
-		createChannelInput.disabled = false;
-		createChannelButton.innerHTML = 'Receive answer';
 	});
 	createChannelElement.appendChild(createChannelButton);
 	inputField.parentElement!.after(createChannelElement);
+}
+
+async function putHostInfo(
+	putHostLink: string,
+	hostKey: string,
+	session: RTCSessionDescriptionInit,
+	iceCandidates: RTCIceCandidateInit[]
+): Promise<void> {
+	await fetch(putHostLink, {
+		method: 'PUT',
+		mode: 'cors',
+		body: JSON.stringify({ hostKey, session, iceCandidates })
+	});
 }

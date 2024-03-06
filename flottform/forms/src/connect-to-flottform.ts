@@ -36,6 +36,7 @@ export async function connectToFlottform({
 	let iceCandidates: RTCIceCandidateInit[] = [];
 
 	const connection = new RTCPeerConnection(configuration);
+
 	const { hostInfo } = result;
 	await connection.setRemoteDescription(hostInfo.session);
 	const session = await connection.createAnswer();
@@ -44,7 +45,6 @@ export async function connectToFlottform({
 	for (const iceCandidate of hostInfo.iceCandidates) {
 		await connection.addIceCandidate(iceCandidate);
 	}
-
 	await fetch(putClientInfoUrl, {
 		method: 'PUT',
 		headers: { 'Content-Type': 'application/json' },
@@ -83,7 +83,7 @@ export async function connectToFlottform({
 					})
 				});
 			} catch (err) {
-				onError(err);
+				onError(err as Error);
 			}
 		}
 	};

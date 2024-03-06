@@ -56,10 +56,12 @@ class FlottformDatabase {
 	async putHostInfo({
 		endpointId,
 		hostKey,
+		session,
 		iceCandidates
 	}: {
 		endpointId: EndpointId;
 		hostKey: HostKey;
+		session: RTCSessionDescriptionInit;
 		iceCandidates: RTCIceCandidateInit[];
 	}): Promise<SafeEndpointInfo> {
 		const existingSession = this.map.get(endpointId);
@@ -72,7 +74,7 @@ class FlottformDatabase {
 
 		const newInfo = {
 			...existingSession,
-			hostInfo: { ...existingSession.hostInfo, iceCandidates }
+			hostInfo: { ...existingSession.hostInfo, session, iceCandidates }
 		};
 		this.map.set(endpointId, newInfo);
 
