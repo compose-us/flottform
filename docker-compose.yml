@@ -71,7 +71,6 @@ services:
       - 'PUBLIC_IS_ONLINE_DEMO=true'
       - 'ORIGIN=https://${HOST}'
     volumes:
-      - ./:/app
       - /app/node_modules
       - /app/flottform/demo/node_modules
       - /app/flottform/forms/node_modules
@@ -115,7 +114,6 @@ services:
       - 'ORIGIN=https://${HOST}'
       - 'UPLOAD_FOLDER=/app/flottform/demo/static/uploads'
     volumes:
-      - ./:/app
       - /app/node_modules
       - /app/flottform/demo/node_modules
       - /app/flottform/forms/node_modules
