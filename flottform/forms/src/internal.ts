@@ -21,7 +21,7 @@ export type ClientState = 'loading' | 'waiting-for-file' | 'sending-file' | 'don
 export const DEFAULT_WEBRTC_CONFIG: RTCConfiguration = {
 	iceServers: [
 		{
-			urls: ['stun:stun.l.google.com:19302']
+			urls: ['stun:stun1.l.google.com:19302']
 		}
 	]
 };
