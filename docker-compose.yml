@@ -81,8 +81,6 @@ services:
       - node-cache:/root/.cache
       - pnpm-cache:/root/.npm
       - pnpm-store:/app/.pnpm-store
-    ports:
-      - '3000:3000'
     labels:
       - 'traefik.enable=true'
       - 'traefik.docker.network=web'
@@ -125,8 +123,6 @@ services:
       - node-cache:/root/.cache
       - pnpm-cache:/root/.npm
       - pnpm-store:/app/.pnpm-store
-    ports:
-      - '3000:3000'
     labels:
       - 'traefik.enable=true'
       - 'traefik.docker.network=web'
