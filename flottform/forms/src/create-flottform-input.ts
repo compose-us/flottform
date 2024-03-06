@@ -138,7 +138,7 @@ export function createFlottformInput(
 			console.log('channel.onerror', e);
 		};
 
-		dataChannel.onmessage = (e) => {
+		dataChannel.onmessage = async (e) => {
 			if (!hasMetaInformation) {
 				const fileMeta = JSON.parse(e.data) as {
 					lastModified?: number;
@@ -153,9 +153,11 @@ export function createFlottformInput(
 				return;
 			}
 
-			const ab = e.data as ArrayBuffer;
+			const data = e.data;
+			const ab = data instanceof Blob ? await data.arrayBuffer() : (data as ArrayBuffer);
 			arrayBuffers.push(ab);
 			currentSize += ab.byteLength;
+			console.log({ size, currentSize, e });
 			createChannelButton.innerHTML = `Receiving file ${Math.round((currentSize / size) * 100)}%`;
 
 			if (currentSize === size) {
