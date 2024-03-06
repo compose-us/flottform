@@ -76,7 +76,6 @@ services:
       - /app/flottform/forms/node_modules
       - /app/flottform/server/node_modules
       - /app/flottform/server-standalone/node_modules
-      - uploads:/app/flottform/demo/static/uploads
       - node-cache:/root/.cache
       - pnpm-cache:/root/.npm
       - pnpm-store:/app/.pnpm-store

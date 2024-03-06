@@ -2,7 +2,7 @@ import { fail } from '@sveltejs/kit';
 import type { Actions } from './$types';
 import { Writable } from 'node:stream';
 import { createWriteStream } from 'node:fs';
-import { mkdir, readdir } from 'node:fs/promises';
+import { mkdir, readdir, stat, unlink } from 'node:fs/promises';
 import { env } from '$env/dynamic/private';
 
 const UPLOAD_FOLDER = env.UPLOAD_FOLDER ?? 'static/uploads';
@@ -72,7 +72,13 @@ async function tryRemovingOldUploads(): Promise<void> {
 	try {
 		const uploadFolderList = await readdir(UPLOAD_FOLDER);
 		for (const file of uploadFolderList) {
-			console.log('found file', file);
+			const fileName = `${uploadFolderList}/${file}`;
+			const fileStats = await stat(fileName);
+			const lastEdited = fileStats.mtimeMs || fileStats.atimeMs || fileStats.ctimeMs;
+			const twoHoursAgo = +new Date() - 1000 * 60 * 60 * 2;
+			if (lastEdited > twoHoursAgo) {
+				await unlink(fileName);
+			}
 		}
 	} catch (err) {
 		console.log('Could not delete old uploads:', err);
