@@ -106,6 +106,7 @@ services:
     command: 'node flottform/demo/build'
     restart: always
     environment:
+      - 'BODY_SIZE_LIMIT=33554432'
       - 'PROTOCOL_HEADER=x-forwarded-proto'
       - 'HOST_HEADER=x-forwarded-host'
       - 'PUBLIC_FLOTTFORM_SERVER_BASE=https://${HOST}/flottform'
