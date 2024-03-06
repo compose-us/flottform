@@ -39,7 +39,7 @@ export const actions: Actions = {
 		console.log('creating/uploading', filePath);
 		const writeStream = Writable.toWeb(createWriteStream(filePath));
 
-		await Promise.all([document.stream().pipeTo(writeStream), tryRemovingOldUploads()]);
+		await Promise.allSettled([document.stream().pipeTo(writeStream), tryRemovingOldUploads()]);
 
 		return {
 			success: true,
@@ -72,7 +72,7 @@ async function tryRemovingOldUploads(): Promise<void> {
 	try {
 		const uploadFolderList = await readdir(UPLOAD_FOLDER);
 		for (const file of uploadFolderList) {
-			const fileName = `${uploadFolderList}/${file}`;
+			const fileName = `${UPLOAD_FOLDER}/${file}`;
 			const fileStats = await stat(fileName);
 			const lastEdited = fileStats.mtimeMs || fileStats.atimeMs || fileStats.ctimeMs;
 			const twoHoursAgo = +new Date() - 1000 * 60 * 60 * 2;
