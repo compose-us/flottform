@@ -8,6 +8,7 @@ const UPLOAD_FOLDER = 'static/uploads';
 
 export const actions: Actions = {
 	default: async ({ request }) => {
+		console.log('got a request');
 		const fd = await request.formData();
 		const name = fd.get('name');
 		const surname = fd.get('surname');
