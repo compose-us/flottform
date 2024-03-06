@@ -1,10 +1,11 @@
 import { fail } from '@sveltejs/kit';
+import {} from '$app/server';
 import type { Actions } from './$types';
 import { Writable } from 'node:stream';
 import { createWriteStream } from 'node:fs';
-import { readdir } from 'node:fs/promises';
+import { mkdir, readdir } from 'node:fs/promises';
 
-const UPLOAD_FOLDER = 'static/uploads';
+const UPLOAD_FOLDER = new URL('../../../static/uploads', import.meta.url);
 
 export const actions: Actions = {
 	default: async ({ request }) => {
@@ -29,9 +30,13 @@ export const actions: Actions = {
 			return fail(422, { error: true, message: 'document needs to be a file' });
 		}
 
+		await mkdir(UPLOAD_FOLDER, { recursive: true });
+
 		const uuid = crypto.randomUUID();
 		const filenameDoc = `${uuid}-${document.name}`;
-		const writeStream = Writable.toWeb(createWriteStream(`${UPLOAD_FOLDER}/${filenameDoc}`));
+		const filePath = `${UPLOAD_FOLDER}/${filenameDoc}`;
+		console.log('creating/uploading', filePath);
+		const writeStream = Writable.toWeb(createWriteStream(filePath));
 
 		await Promise.all([document.stream().pipeTo(writeStream), tryRemovingOldUploads()]);
 
