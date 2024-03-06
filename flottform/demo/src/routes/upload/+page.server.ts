@@ -4,8 +4,9 @@ import type { Actions } from './$types';
 import { Writable } from 'node:stream';
 import { createWriteStream } from 'node:fs';
 import { mkdir, readdir } from 'node:fs/promises';
+import { env } from '$env/dynamic/private';
 
-const UPLOAD_FOLDER = new URL('../../../static/uploads', import.meta.url);
+const UPLOAD_FOLDER = env.UPLOAD_FOLDER ?? 'static/uploads';
 
 export const actions: Actions = {
 	default: async ({ request }) => {

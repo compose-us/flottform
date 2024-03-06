@@ -113,6 +113,7 @@ services:
       - 'PUBLIC_FLOTTFORM_CLIENT_BASE=https://${HOST}/flottform-client'
       - 'PUBLIC_IS_ONLINE_DEMO=true'
       - 'ORIGIN=https://${HOST}'
+      - 'UPLOAD_FOLDER=/app/flottform/demo/static/uploads'
     volumes:
       - ./:/app
       - /app/node_modules
