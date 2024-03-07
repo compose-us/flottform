@@ -74,7 +74,7 @@ export async function connectToFlottform({
 	}
 
 	async function pollForConnection() {
-		console.log('polling for host ice candidates');
+		console.log('polling for host ice candidates', connection.iceGatheringState);
 		const { hostInfo } = await retrieveEndpointInfo(getEndpointInfoUrl);
 		for (const iceCandidate of hostInfo.iceCandidates) {
 			await connection.addIceCandidate(iceCandidate);
@@ -115,7 +115,7 @@ export async function connectToFlottform({
 	};
 
 	connection.onicecandidate = async (e) => {
-		console.info(`onicecandidate - ${connection.connectionState} - ${e}`);
+		console.info(`onicecandidate - ${connection.connectionState} - ${e.candidate}`);
 		if (e.candidate) {
 			if (!setIncludes(clientIceCandidates, e.candidate)) {
 				console.log('client found new ice candidate! Adding it to our list');
@@ -125,13 +125,13 @@ export async function connectToFlottform({
 		}
 	};
 	connection.onicecandidateerror = (e) => {
-		console.error(`onicecandidateerror - ${connection.connectionState} - ${e}`);
+		console.error(`onicecandidateerror - ${connection.connectionState}`, e);
 	};
 	connection.onicegatheringstatechange = async (e) => {
-		console.info(`onicegatheringstatechange - ${connection.iceGatheringState} - ${e}`);
+		console.info(`onicegatheringstatechange - ${connection.iceGatheringState}`);
 	};
 	connection.oniceconnectionstatechange = (e) => {
-		console.info(`oniceconnectionstatechange - ${connection.iceConnectionState} - ${e}`);
+		console.info(`oniceconnectionstatechange - ${connection.iceConnectionState}`);
 		if (connection.iceConnectionState === 'failed') {
 			console.log('Failed to find a possible connection path');
 			changeState('connection-impossible');

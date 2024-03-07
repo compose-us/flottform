@@ -68,7 +68,7 @@ export function createFlottformInput(
 
 		let session = await connection.createOffer();
 		let hostIceCandidates = new Set<RTCIceCandidateInit>();
-		connection.setLocalDescription(session);
+		await connection.setLocalDescription(session);
 
 		const response = await fetch(`${baseApi}/create`, {
 			method: 'POST',
@@ -108,14 +108,14 @@ export function createFlottformInput(
 		}
 
 		async function pollForConnection() {
-			console.log('polling for client ice candidates');
+			console.log('polling for client ice candidates', connection.iceGatheringState);
 			const { clientInfo } = await retrieveEndpointInfo(getEndpointInfoUrl);
 
 			if (clientInfo && state === 'waiting-for-client') {
 				console.log('Found a client that wants to connect!');
-				connection.setRemoteDescription(clientInfo.session);
 				state = 'waiting-for-ice';
 				createChannelButton.innerHTML = 'Waiting for data channel connection';
+				await connection.setRemoteDescription(clientInfo.session);
 			}
 
 			for (const iceCandidate of clientInfo?.iceCandidates ?? []) {
