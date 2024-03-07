@@ -60,14 +60,14 @@ export function createFlottformInput(
 		if (openPeerConnection) {
 			openPeerConnection.close();
 		}
+		const hostIceCandidates = new Set<RTCIceCandidateInit>();
 		const connection = new RTCPeerConnection(rtcConfiguration);
 		openPeerConnection = connection;
 		channelNumber++;
 		const channelName = `file-${inputField.id ?? inputField.getAttribute('name') ?? channelNumber}`;
 		const dataChannel = connection.createDataChannel(channelName);
 
-		let session = await connection.createOffer();
-		let hostIceCandidates = new Set<RTCIceCandidateInit>();
+		const session = await connection.createOffer();
 		await connection.setLocalDescription(session);
 
 		const response = await fetch(`${baseApi}/create`, {
@@ -126,7 +126,7 @@ export function createFlottformInput(
 		async function putHostInfo() {
 			try {
 				console.log('Updating host info with new list of ice candidates');
-				await fetch(putHostInfoUrl, {
+				const response = await fetch(putHostInfoUrl, {
 					method: 'PUT',
 					mode: 'cors',
 					headers: { 'Content-Type': 'application/json' },
@@ -136,6 +136,9 @@ export function createFlottformInput(
 						session
 					})
 				});
+				if (!response.ok) {
+					throw Error('Could not update host info');
+				}
 			} catch (err) {
 				onError(err as Error);
 			}
