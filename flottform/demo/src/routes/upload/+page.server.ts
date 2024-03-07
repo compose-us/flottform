@@ -76,7 +76,7 @@ async function tryRemovingOldUploads(): Promise<void> {
 			const fileStats = await stat(fileName);
 			const lastEdited = fileStats.mtimeMs || fileStats.atimeMs || fileStats.ctimeMs;
 			const twoHoursAgo = +new Date() - 1000 * 60 * 60 * 2;
-			if (lastEdited > twoHoursAgo) {
+			if (lastEdited < twoHoursAgo) {
 				await unlink(fileName);
 			}
 		}
