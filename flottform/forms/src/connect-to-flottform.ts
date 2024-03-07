@@ -3,8 +3,6 @@ import {
 	POLL_TIME_IN_MS,
 	generateSecretKey,
 	type ClientState,
-	type SafeEndpointInfo,
-	addIceCandidatesToConnection,
 	retrieveEndpointInfo,
 	setIncludes
 } from './internal';
@@ -104,7 +102,7 @@ export async function connectToFlottform({
 		if (connection.connectionState === 'connected') {
 			stopPollingForIceCandidates();
 			if (currentState === 'connecting-to-host') {
-				changeState('waiting-for-file');
+				changeState('connected');
 			}
 		}
 		if (connection.connectionState === 'disconnected') {
