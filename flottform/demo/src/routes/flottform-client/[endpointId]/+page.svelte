@@ -90,7 +90,7 @@
 					>
 				</button>
 			{:else if currentState === 'error'}
-				<h2 class="animate-ping">Ouch!</h2>
+				<h2 class="">Ouch!</h2>
 				<p>There was an error connecting to flottform! 😬</p>
 				<p>Please try again with a new QR code by clicking the button again on the main form.</p>
 			{/if}

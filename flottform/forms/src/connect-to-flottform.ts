@@ -1,8 +1,12 @@
 import {
 	DEFAULT_WEBRTC_CONFIG,
+	POLL_TIME_IN_MS,
 	generateSecretKey,
 	type ClientState,
-	type SafeEndpointInfo
+	type SafeEndpointInfo,
+	addIceCandidatesToConnection,
+	retrieveEndpointInfo,
+	setIncludes
 } from './internal';
 
 export async function connectToFlottform({
@@ -11,7 +15,8 @@ export async function connectToFlottform({
 	flottformApi,
 	onError = () => {},
 	onStateChange = () => {},
-	configuration = DEFAULT_WEBRTC_CONFIG
+	configuration = DEFAULT_WEBRTC_CONFIG,
+	pollTimeForIceInMs = POLL_TIME_IN_MS
 }: {
 	endpointId: string;
 	fileInput: HTMLInputElement;
@@ -19,6 +24,7 @@ export async function connectToFlottform({
 	onError?: (error: Error) => void;
 	onStateChange?: (state: ClientState) => void;
 	configuration?: RTCConfiguration;
+	pollTimeForIceInMs?: number;
 }): Promise<{
 	createSendFileToPeer: (options: {
 		onProgress?: (percentage: number) => void;
@@ -30,38 +36,76 @@ export async function connectToFlottform({
 
 	let channel: RTCDataChannel | null = null;
 
-	const response = await fetch(getEndpointInfoUrl);
-	const result = (await response.json()) as SafeEndpointInfo;
 	const clientKey = generateSecretKey();
-	let iceCandidates: RTCIceCandidateInit[] = [];
+	const clientIceCandidates = new Set<RTCIceCandidateInit>();
 
 	const connection = new RTCPeerConnection(configuration);
 
-	const { hostInfo } = result;
+	const { hostInfo } = await retrieveEndpointInfo(getEndpointInfoUrl);
+
 	await connection.setRemoteDescription(hostInfo.session);
 	const session = await connection.createAnswer();
 	await connection.setLocalDescription(session);
 
-	for (const iceCandidate of hostInfo.iceCandidates) {
-		await connection.addIceCandidate(iceCandidate);
+	await putClientInfo();
+
+	let pollForIceTimer: ReturnType<typeof globalThis.setTimeout> | null = null;
+	startPollingForIceCandidates();
+	async function startPollingForIceCandidates() {
+		if (pollForIceTimer) {
+			clearTimeout(pollForIceTimer);
+		}
+
+		await pollForIceCandidates();
+
+		pollForIceTimer = setTimeout(startPollingForIceCandidates, pollTimeForIceInMs);
 	}
-	await fetch(putClientInfoUrl, {
-		method: 'PUT',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({
-			clientKey,
-			iceCandidates,
-			session
-		})
-	});
+
+	async function pollForIceCandidates() {
+		console.log('polling for ice candidates');
+		const { hostInfo } = await retrieveEndpointInfo(getEndpointInfoUrl);
+		for (const iceCandidate of hostInfo.iceCandidates) {
+			await connection.addIceCandidate(iceCandidate);
+		}
+	}
+
+	function stopPollingForIce() {
+		if (pollForIceTimer) {
+			clearTimeout(pollForIceTimer);
+		}
+	}
+
+	async function putClientInfo() {
+		console.log('Updating client info with new list of ice candidates');
+		const response = await fetch(putClientInfoUrl, {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				clientKey,
+				iceCandidates: [...clientIceCandidates],
+				session
+			})
+		});
+		if (!response.ok) {
+			throw Error('Could not update client info. Did another peer already connect?');
+		}
+	}
 
 	connection.onconnectionstatechange = (e) => {
 		console.info(`onconnectionstatechange - ${connection.connectionState} - ${e}`);
 	};
-	connection.onicecandidate = (e) => {
+	connection.onicecandidate = async (e) => {
 		console.info(`onicecandidate - ${connection.connectionState} - ${e}`);
 		if (e.candidate) {
-			iceCandidates.push(e.candidate);
+			if (!setIncludes(clientIceCandidates, e.candidate)) {
+				console.log('client found new ice candidate! Adding it to our list');
+				clientIceCandidates.add(e.candidate);
+				try {
+					await putClientInfo();
+				} catch (err) {
+					onError(err as Error);
+				}
+			}
 		}
 	};
 	connection.onicecandidateerror = (e) => {
@@ -73,18 +117,9 @@ export async function connectToFlottform({
 	connection.onicegatheringstatechange = async (e) => {
 		console.info(`onicegatheringstatechange - ${connection.iceGatheringState} - ${e}`);
 		if (connection.iceGatheringState === 'complete') {
-			try {
-				await fetch(putClientInfoUrl, {
-					method: 'PUT',
-					body: JSON.stringify({
-						clientKey,
-						iceCandidates,
-						session
-					})
-				});
-			} catch (err) {
-				onError(err as Error);
-			}
+			stopPollingForIce();
+		} else {
+			startPollingForIceCandidates();
 		}
 	};
 	connection.onnegotiationneeded = (e) => {
@@ -107,6 +142,8 @@ export async function connectToFlottform({
 			onStateChange('waiting-for-file');
 		};
 	};
+
+	await addIceCandidatesToConnection(connection, hostInfo.iceCandidates);
 
 	const createSendFileToPeer =
 		({ onProgress }: { onProgress?: (percentage: number) => void }) =>

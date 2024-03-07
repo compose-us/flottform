@@ -1,7 +1,11 @@
 import { toDataURL } from 'qrcode';
-import { DEFAULT_WEBRTC_CONFIG, type SafeEndpointInfo } from './internal';
-
-const POLL_TIMEOUT = 1000;
+import {
+	DEFAULT_WEBRTC_CONFIG,
+	POLL_TIME_IN_MS,
+	retrieveEndpointInfo,
+	setIncludes,
+	type SafeEndpointInfo
+} from './internal';
 
 let channelNumber = 0;
 
@@ -10,11 +14,15 @@ export function createFlottformInput(
 	{
 		flottformApi,
 		createClientUrl,
-		configuration = DEFAULT_WEBRTC_CONFIG
+		rtcConfiguration = DEFAULT_WEBRTC_CONFIG,
+		pollTimeForIceInMs = POLL_TIME_IN_MS,
+		onError = () => {}
 	}: {
 		flottformApi: string | URL;
 		createClientUrl: (params: { endpointId: string }) => Promise<string>;
-		configuration?: RTCConfiguration;
+		rtcConfiguration?: RTCConfiguration;
+		onError?: (e: Error) => void;
+		pollTimeForIceInMs?: number;
 	}
 ): void {
 	const baseApi = (flottformApi instanceof URL ? flottformApi : new URL(flottformApi))
@@ -23,7 +31,7 @@ export function createFlottformInput(
 
 	let state:
 		| 'new'
-		| 'waiting-for-answer'
+		| 'waiting-for-client'
 		| 'waiting-for-ice'
 		| 'waiting-for-file'
 		| 'done'
@@ -36,7 +44,7 @@ export function createFlottformInput(
 	const createChannelQrCode = document.createElement('img');
 	const createChannelLinkWithOffer = document.createElement('a');
 	createChannelLinkWithOffer.setAttribute('target', '_blank');
-	createChannelQrCode.style.display = 'none';
+	createChannelLinkArea.style.display = 'none';
 	createChannelLinkArea.appendChild(createChannelQrCode);
 	createChannelLinkArea.appendChild(createChannelLinkWithOffer);
 	createChannelElement.appendChild(createChannelLinkArea);
@@ -50,29 +58,15 @@ export function createFlottformInput(
 		if (openPeerConnection) {
 			openPeerConnection.close();
 		}
-		const peerConnection = new RTCPeerConnection(configuration);
-		openPeerConnection = peerConnection;
+		const connection = new RTCPeerConnection(rtcConfiguration);
+		openPeerConnection = connection;
 		channelNumber++;
 		const channelName = `file-${inputField.id ?? inputField.getAttribute('name') ?? channelNumber}`;
-		const dataChannel = peerConnection.createDataChannel(channelName);
+		const dataChannel = connection.createDataChannel(channelName);
 
-		let hostOffer = await peerConnection.createOffer();
-		let myIceCandidates: RTCIceCandidateInit[] = [];
-		peerConnection.setLocalDescription(hostOffer);
-
-		peerConnection.onicecandidate = async (e) => {
-			if (e.candidate) {
-				myIceCandidates.push(e.candidate);
-			}
-		};
-		peerConnection.onicecandidateerror = async (e) => {
-			console.error('peerConnection.onicecandidateerror', e);
-		};
-		peerConnection.oniceconnectionstatechange = async (e) => {
-			if (peerConnection.iceConnectionState === 'failed') {
-				console.log('Failed to find a possible connection path');
-			}
-		};
+		let session = await connection.createOffer();
+		let hostIceCandidates = new Set<RTCIceCandidateInit>();
+		connection.setLocalDescription(session);
 
 		const response = await fetch(`${baseApi}/create`, {
 			method: 'POST',
@@ -81,51 +75,110 @@ export function createFlottformInput(
 				Accept: 'application/json',
 				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify({ session: hostOffer })
+			body: JSON.stringify({ session })
 		});
 
 		const { endpointId, hostKey } = await response.json();
 		console.log('Created endpoint', { endpointId, hostKey });
-		const pollPeerLink = `${baseApi}/${endpointId}`;
-		const putHostLink = `${baseApi}/${endpointId}/host`;
+		const getEndpointInfoUrl = `${baseApi}/${endpointId}`;
+		const putHostInfoUrl = `${baseApi}/${endpointId}/host`;
 		const connectLink = await createClientUrl({ endpointId });
 		createChannelQrCode.setAttribute('src', await toDataURL(connectLink));
-		createChannelQrCode.style.display = 'block';
 		createChannelLinkWithOffer.setAttribute('href', connectLink);
 		createChannelLinkWithOffer.innerHTML = connectLink;
+		createChannelLinkArea.style.display = 'block';
 
-		await putHostInfo(putHostLink, hostKey, hostOffer, myIceCandidates);
+		let pollForIceTimer: ReturnType<typeof globalThis.setTimeout> | null = null;
+		startPollingForIceCandidates();
+		async function stopPollingForIceCandidates() {
+			if (pollForIceTimer) {
+				clearTimeout(pollForIceTimer);
+			}
+			pollForIceTimer = null;
+		}
+		async function startPollingForIceCandidates() {
+			if (pollForIceTimer) {
+				clearTimeout(pollForIceTimer);
+			}
 
-		state = 'waiting-for-answer';
-		createChannelButton.innerHTML = 'Receive answer';
+			await pollForConnection();
 
-		await waitForPeerConnection(pollPeerLink);
+			pollForIceTimer = setTimeout(startPollingForIceCandidates, pollTimeForIceInMs);
+		}
 
-		async function waitForPeerConnection(pollPeerLink: string) {
-			console.log('waitForPeerConnection');
-			while (
-				peerConnection.iceGatheringState !== 'complete' ||
-				peerConnection.connectionState !== 'connected'
-			) {
-				await new Promise<void>((r) => setTimeout(r, POLL_TIMEOUT));
+		async function pollForConnection() {
+			console.log('polling for connection');
+			const { clientInfo } = await retrieveEndpointInfo(getEndpointInfoUrl);
 
-				const response = await fetch(pollPeerLink);
-				if (!response.ok) {
-					console.log('no client found');
-					continue;
-				}
-				const { clientInfo } = (await response.json()) as SafeEndpointInfo;
-				if (!clientInfo) {
-					continue;
-				}
-				if (peerConnection.currentRemoteDescription === null) {
-					await peerConnection.setRemoteDescription(clientInfo.session);
-				}
-				for (const iceCandidate of clientInfo.iceCandidates) {
-					await peerConnection.addIceCandidate(iceCandidate);
-				}
+			if (clientInfo && state === 'waiting-for-client') {
+				console.log('Client tries to connect');
+				connection.setRemoteDescription(clientInfo.session);
+				state = 'waiting-for-ice';
+				createChannelButton.innerHTML = 'Waiting for data channel connection';
+			}
+
+			for (const iceCandidate of clientInfo?.iceCandidates ?? []) {
+				await connection.addIceCandidate(iceCandidate);
 			}
 		}
+
+		async function putHostInfo() {
+			try {
+				console.log('Updating host info with new list of ice candidates');
+				await fetch(putHostInfoUrl, {
+					method: 'PUT',
+					mode: 'cors',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						hostKey,
+						iceCandidates: [...hostIceCandidates],
+						session
+					})
+				});
+			} catch (err) {
+				onError(err as Error);
+			}
+		}
+
+		connection.onconnectionstatechange = (e) => {
+			console.log('new connection state =', connection.connectionState);
+			if (connection.connectionState === 'connected') {
+				stopPollingForIceCandidates();
+			}
+			if (connection.connectionState === 'disconnected') {
+				startPollingForIceCandidates();
+			}
+			if (connection.connectionState === 'failed') {
+				stopPollingForIceCandidates();
+				state = 'error';
+				createChannelButton.innerHTML = 'Client connection failed!';
+			}
+		};
+		connection.onicecandidate = async (e) => {
+			if (e.candidate) {
+				if (!setIncludes(hostIceCandidates, e.candidate)) {
+					console.log('host found new ice candidate! Adding it to our list');
+					hostIceCandidates.add(e.candidate);
+					await putHostInfo();
+				}
+			}
+		};
+		connection.onicecandidateerror = async (e) => {
+			console.error('peerConnection.onicecandidateerror', e);
+		};
+		connection.onicegatheringstatechange = async (e) => {
+			console.info(`onicegatheringstatechange - ${connection.iceGatheringState} - ${e}`);
+		};
+		connection.oniceconnectionstatechange = async (e) => {
+			if (connection.iceConnectionState === 'failed') {
+				console.log('Failed to find a possible connection path');
+			}
+		};
+
+		await putHostInfo();
+
+		state = 'waiting-for-client';
+		createChannelButton.innerHTML = 'Waiting for client to connect';
 
 		const arrayBuffers: ArrayBuffer[] = [];
 		let hasMetaInformation = false;
@@ -134,8 +187,21 @@ export function createFlottformInput(
 		let size = 0;
 		let currentSize = 0;
 
+		dataChannel.onopen = (e) => {
+			console.log('data channel opened');
+			state = 'waiting-for-file';
+			createChannelLinkArea.style.display = 'none';
+			createChannelButton.innerHTML = 'Waiting for file';
+		};
+
+		dataChannel.onclose = (e) => {
+			console.log('data channel closed');
+		};
+
 		dataChannel.onerror = (e) => {
 			console.log('channel.onerror', e);
+			state = 'error';
+			createChannelButton.innerHTML = 'Error during file transfer';
 		};
 
 		dataChannel.onmessage = async (e) => {
@@ -173,17 +239,4 @@ export function createFlottformInput(
 	});
 	createChannelElement.appendChild(createChannelButton);
 	inputField.parentElement!.after(createChannelElement);
-}
-
-async function putHostInfo(
-	putHostLink: string,
-	hostKey: string,
-	session: RTCSessionDescriptionInit,
-	iceCandidates: RTCIceCandidateInit[]
-): Promise<void> {
-	await fetch(putHostLink, {
-		method: 'PUT',
-		mode: 'cors',
-		body: JSON.stringify({ hostKey, session, iceCandidates })
-	});
 }
