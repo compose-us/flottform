@@ -32,6 +32,7 @@ export function createFlottformInput(
 	let state:
 		| 'new'
 		| 'waiting-for-client'
+		| 'connection-impossible'
 		| 'waiting-for-ice'
 		| 'waiting-for-file'
 		| 'done'
@@ -170,8 +171,12 @@ export function createFlottformInput(
 			console.info(`onicegatheringstatechange - ${connection.iceGatheringState} - ${e}`);
 		};
 		connection.oniceconnectionstatechange = async (e) => {
+			console.info(`oniceconnectionstatechange - ${connection.iceConnectionState} - ${e}`);
 			if (connection.iceConnectionState === 'failed') {
 				console.log('Failed to find a possible connection path');
+				state = 'connection-impossible';
+				createChannelButton.innerHTML =
+					'Connection to this client with the current network environment is impossible';
 			}
 		};
 

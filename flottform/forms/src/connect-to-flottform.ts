@@ -15,7 +15,7 @@ export async function connectToFlottform({
 	flottformApi,
 	onError = () => {},
 	onStateChange = () => {},
-	configuration = DEFAULT_WEBRTC_CONFIG,
+	rtcConfiguration = DEFAULT_WEBRTC_CONFIG,
 	pollTimeForIceInMs = POLL_TIME_IN_MS
 }: {
 	endpointId: string;
@@ -23,7 +23,7 @@ export async function connectToFlottform({
 	flottformApi: string;
 	onError?: (error: Error) => void;
 	onStateChange?: (state: ClientState) => void;
-	configuration?: RTCConfiguration;
+	rtcConfiguration?: RTCConfiguration;
 	pollTimeForIceInMs?: number;
 }): Promise<{
 	createSendFileToPeer: (options: {
@@ -31,6 +31,11 @@ export async function connectToFlottform({
 	}) => () => Promise<void>;
 }> {
 	console.log('connecting to flottform', endpointId);
+	let currentState: ClientState = 'init';
+	const changeState = (state: ClientState) => {
+		currentState = state;
+		onStateChange(currentState);
+	};
 	const getEndpointInfoUrl = `${flottformApi}/${endpointId}`;
 	const putClientInfoUrl = `${flottformApi}/${endpointId}/client`;
 
@@ -39,39 +44,42 @@ export async function connectToFlottform({
 	const clientKey = generateSecretKey();
 	const clientIceCandidates = new Set<RTCIceCandidateInit>();
 
-	const connection = new RTCPeerConnection(configuration);
+	const connection = new RTCPeerConnection(rtcConfiguration);
 
+	changeState('retrieving-info-from-endpoint');
 	const { hostInfo } = await retrieveEndpointInfo(getEndpointInfoUrl);
 
 	await connection.setRemoteDescription(hostInfo.session);
 	const session = await connection.createAnswer();
 	await connection.setLocalDescription(session);
 
+	changeState('sending-client-info');
 	await putClientInfo();
 
+	changeState('connecting-to-host');
 	let pollForIceTimer: ReturnType<typeof globalThis.setTimeout> | null = null;
 	startPollingForIceCandidates();
+	async function stopPollingForIceCandidates() {
+		if (pollForIceTimer) {
+			clearTimeout(pollForIceTimer);
+		}
+		pollForIceTimer = null;
+	}
 	async function startPollingForIceCandidates() {
 		if (pollForIceTimer) {
 			clearTimeout(pollForIceTimer);
 		}
 
-		await pollForIceCandidates();
+		await pollForConnection();
 
 		pollForIceTimer = setTimeout(startPollingForIceCandidates, pollTimeForIceInMs);
 	}
 
-	async function pollForIceCandidates() {
+	async function pollForConnection() {
 		console.log('polling for ice candidates');
 		const { hostInfo } = await retrieveEndpointInfo(getEndpointInfoUrl);
 		for (const iceCandidate of hostInfo.iceCandidates) {
 			await connection.addIceCandidate(iceCandidate);
-		}
-	}
-
-	function stopPollingForIce() {
-		if (pollForIceTimer) {
-			clearTimeout(pollForIceTimer);
 		}
 	}
 
@@ -93,62 +101,58 @@ export async function connectToFlottform({
 
 	connection.onconnectionstatechange = (e) => {
 		console.info(`onconnectionstatechange - ${connection.connectionState} - ${e}`);
+		if (connection.connectionState === 'connected') {
+			stopPollingForIceCandidates();
+			if (currentState === 'connecting-to-host') {
+				changeState('waiting-for-file');
+			}
+		}
+		if (connection.connectionState === 'disconnected') {
+			startPollingForIceCandidates();
+		}
+		if (connection.connectionState === 'failed') {
+			stopPollingForIceCandidates();
+			changeState('disconnected');
+		}
 	};
+
 	connection.onicecandidate = async (e) => {
 		console.info(`onicecandidate - ${connection.connectionState} - ${e}`);
 		if (e.candidate) {
 			if (!setIncludes(clientIceCandidates, e.candidate)) {
 				console.log('client found new ice candidate! Adding it to our list');
 				clientIceCandidates.add(e.candidate);
-				try {
-					await putClientInfo();
-				} catch (err) {
-					onError(err as Error);
-				}
+				await putClientInfo();
 			}
 		}
 	};
 	connection.onicecandidateerror = (e) => {
-		console.info(`onicecandidateerror - ${connection.connectionState} - ${e}`);
-	};
-	connection.oniceconnectionstatechange = (e) => {
-		console.info(`oniceconnectionstatechange - ${connection.iceConnectionState} - ${e}`);
+		console.error(`onicecandidateerror - ${connection.connectionState} - ${e}`);
 	};
 	connection.onicegatheringstatechange = async (e) => {
 		console.info(`onicegatheringstatechange - ${connection.iceGatheringState} - ${e}`);
-		if (connection.iceGatheringState === 'complete') {
-			stopPollingForIce();
-		} else {
-			startPollingForIceCandidates();
+	};
+	connection.oniceconnectionstatechange = (e) => {
+		console.info(`oniceconnectionstatechange - ${connection.iceConnectionState} - ${e}`);
+		if (connection.iceConnectionState === 'failed') {
+			console.log('Failed to find a possible connection path');
+			changeState('connection-impossible');
 		}
 	};
-	connection.onnegotiationneeded = (e) => {
-		console.info(`onnegotiationneeded - ${connection.connectionState} - ${e}`);
-	};
-	connection.onsignalingstatechange = (e) => {
-		console.info(`onsignalingstatechange - ${connection.signalingState} - ${e}`);
-	};
-	connection.ontrack = (e) => {
-		console.info(`ontrack - ${connection.connectionState} - ${e}`);
-	};
-	connection.onconnectionstatechange = (e) => {
-		console.info(`onconnectionstatechange: ${e}`);
-	};
+
 	connection.ondatachannel = (e) => {
 		console.info(`ondatachannel: ${e.channel}`);
 		channel = e.channel;
 		channel.onopen = (e) => {
 			console.info(`ondatachannel - onopen: ${e.type}`);
-			onStateChange('waiting-for-file');
+			changeState('waiting-for-file');
 		};
 	};
-
-	await addIceCandidatesToConnection(connection, hostInfo.iceCandidates);
 
 	const createSendFileToPeer =
 		({ onProgress }: { onProgress?: (percentage: number) => void }) =>
 		async () => {
-			onStateChange('sending-file');
+			changeState('sending');
 			const file = fileInput.files?.item(0);
 			if (!file) {
 				console.log('no file?!?!');
@@ -167,7 +171,7 @@ export async function connectToFlottform({
 			};
 			channel.send(JSON.stringify(fileMeta));
 			channel.onerror = (e) => {
-				onStateChange('error');
+				changeState('error');
 				console.log('channel.onerror', e);
 			};
 			const maxChunkSize = 16384;
@@ -183,7 +187,7 @@ export async function connectToFlottform({
 				channel.send(ab.slice(i * maxChunkSize, end));
 			}
 			console.log('sent file!', ab);
-			onStateChange('done');
+			changeState('done');
 		};
 
 	return { createSendFileToPeer };

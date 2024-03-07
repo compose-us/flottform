@@ -16,7 +16,17 @@ type EndpointInfo = {
 };
 export type SafeEndpointInfo = Omit<EndpointInfo, 'hostKey' | 'clientKey'>;
 
-export type ClientState = 'loading' | 'waiting-for-file' | 'sending-file' | 'done' | 'error';
+export type ClientState =
+	| 'init'
+	| 'retrieving-info-from-endpoint' // first request to server
+	| 'sending-client-info' // initial request to endpoint
+	| 'connecting-to-host' // initial connection
+	| 'connection-impossible' // if a connection is not possible due to network restrictions
+	| 'waiting-for-file' // waiting for user input, having a connection
+	| 'sending' // sending file over
+	| 'disconnected' // failed after having a connection
+	| 'done' // done with sending
+	| 'error';
 
 export const POLL_TIME_IN_MS: number = 1000;
 
