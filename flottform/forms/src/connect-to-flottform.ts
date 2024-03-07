@@ -74,7 +74,7 @@ export async function connectToFlottform({
 	}
 
 	async function pollForConnection() {
-		console.log('polling for ice candidates');
+		console.log('polling for host ice candidates');
 		const { hostInfo } = await retrieveEndpointInfo(getEndpointInfoUrl);
 		for (const iceCandidate of hostInfo.iceCandidates) {
 			await connection.addIceCandidate(iceCandidate);

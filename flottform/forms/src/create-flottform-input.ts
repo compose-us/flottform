@@ -108,11 +108,11 @@ export function createFlottformInput(
 		}
 
 		async function pollForConnection() {
-			console.log('polling for connection');
+			console.log('polling for client ice candidates');
 			const { clientInfo } = await retrieveEndpointInfo(getEndpointInfoUrl);
 
 			if (clientInfo && state === 'waiting-for-client') {
-				console.log('Client tries to connect');
+				console.log('Found a client that wants to connect!');
 				connection.setRemoteDescription(clientInfo.session);
 				state = 'waiting-for-ice';
 				createChannelButton.innerHTML = 'Waiting for data channel connection';
