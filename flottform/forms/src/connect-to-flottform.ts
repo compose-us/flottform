@@ -58,7 +58,9 @@ export async function connectToFlottform({
 		}
 		if (connection.connectionState === 'failed') {
 			stopPollingForIceCandidates();
-			changeState('disconnected');
+			if (currentState !== 'done') {
+				changeState('disconnected');
+			}
 		}
 	};
 
