@@ -39,6 +39,7 @@ export function createFlottformInput(
 		| 'error' = 'new';
 
 	let openPeerConnection: RTCPeerConnection | null = null;
+	let pollForIceTimer: ReturnType<typeof globalThis.setTimeout> | null = null;
 
 	const createChannelElement = document.createElement('div');
 	const createChannelLinkArea = document.createElement('div');
@@ -89,7 +90,6 @@ export function createFlottformInput(
 		createChannelLinkWithOffer.innerHTML = connectLink;
 		createChannelLinkArea.style.display = 'block';
 
-		let pollForIceTimer: ReturnType<typeof globalThis.setTimeout> | null = null;
 		startPollingForIceCandidates();
 		async function stopPollingForIceCandidates() {
 			if (pollForIceTimer) {
@@ -152,6 +152,7 @@ export function createFlottformInput(
 			if (connection.connectionState === 'failed') {
 				stopPollingForIceCandidates();
 				state = 'error';
+				createChannelLinkArea.style.display = 'none';
 				createChannelButton.innerHTML = 'Client connection failed!';
 			}
 		};
@@ -175,6 +176,7 @@ export function createFlottformInput(
 			if (connection.iceConnectionState === 'failed') {
 				console.log('Failed to find a possible connection path');
 				state = 'connection-impossible';
+				createChannelLinkArea.style.display = 'none';
 				createChannelButton.innerHTML =
 					'Connection to this client with the current network environment is impossible';
 			}
