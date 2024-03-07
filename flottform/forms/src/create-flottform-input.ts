@@ -68,7 +68,6 @@ export function createFlottformInput(
 		const dataChannel = connection.createDataChannel(channelName);
 
 		const session = await connection.createOffer();
-		await connection.setLocalDescription(session);
 
 		const response = await fetch(`${baseApi}/create`, {
 			method: 'POST',
@@ -84,27 +83,21 @@ export function createFlottformInput(
 		console.log('Created endpoint', { endpointId, hostKey });
 		const getEndpointInfoUrl = `${baseApi}/${endpointId}`;
 		const putHostInfoUrl = `${baseApi}/${endpointId}/host`;
-		const connectLink = await createClientUrl({ endpointId });
-		createChannelQrCode.setAttribute('src', await toDataURL(connectLink));
-		createChannelLinkWithOffer.setAttribute('href', connectLink);
-		createChannelLinkWithOffer.innerHTML = connectLink;
-		createChannelLinkArea.style.display = 'block';
 
-		startPollingForIceCandidates();
-		async function stopPollingForIceCandidates() {
+		async function stopPollingForConnection() {
 			if (pollForIceTimer) {
 				clearTimeout(pollForIceTimer);
 			}
 			pollForIceTimer = null;
 		}
-		async function startPollingForIceCandidates() {
+		async function startPollingForConnection() {
 			if (pollForIceTimer) {
 				clearTimeout(pollForIceTimer);
 			}
 
 			await pollForConnection();
 
-			pollForIceTimer = setTimeout(startPollingForIceCandidates, pollTimeForIceInMs);
+			pollForIceTimer = setTimeout(startPollingForConnection, pollTimeForIceInMs);
 		}
 
 		async function pollForConnection() {
@@ -144,22 +137,23 @@ export function createFlottformInput(
 			}
 		}
 
-		connection.onconnectionstatechange = (e) => {
-			console.log('new connection state =', connection.connectionState);
+		connection.onconnectionstatechange = () => {
+			console.info(`onconnectionstatechange - ${connection.connectionState}`);
 			if (connection.connectionState === 'connected') {
-				stopPollingForIceCandidates();
+				stopPollingForConnection();
 			}
 			if (connection.connectionState === 'disconnected') {
-				startPollingForIceCandidates();
+				startPollingForConnection();
 			}
 			if (connection.connectionState === 'failed') {
-				stopPollingForIceCandidates();
+				stopPollingForConnection();
 				state = 'error';
 				createChannelLinkArea.style.display = 'none';
 				createChannelButton.innerHTML = 'Client connection failed!';
 			}
 		};
 		connection.onicecandidate = async (e) => {
+			console.info(`onicecandidate - ${connection.connectionState} - ${e.candidate}`);
 			if (e.candidate) {
 				if (!setIncludes(hostIceCandidates, e.candidate)) {
 					console.log('host found new ice candidate! Adding it to our list');
@@ -185,7 +179,14 @@ export function createFlottformInput(
 			}
 		};
 
+		await connection.setLocalDescription(session);
 		await putHostInfo();
+		startPollingForConnection();
+		const connectLink = await createClientUrl({ endpointId });
+		createChannelQrCode.setAttribute('src', await toDataURL(connectLink));
+		createChannelLinkWithOffer.setAttribute('href', connectLink);
+		createChannelLinkWithOffer.innerHTML = connectLink;
+		createChannelLinkArea.style.display = 'block';
 
 		state = 'waiting-for-client';
 		createChannelButton.innerHTML = 'Waiting for client to connect';
