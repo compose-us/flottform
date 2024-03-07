@@ -8,7 +8,7 @@
 	let sendFileToPeer = () => {};
 	let fileInput: HTMLInputElement;
 	let button: HTMLButtonElement;
-	let currentState: ClientState = 'loading';
+	let currentState: ClientState = 'init';
 	let currentPercentage = 0;
 
 	onMount(async () => {
@@ -39,14 +39,16 @@
 </script>
 
 <div class="max-w-screen-xl mx-auto p-8 box-border grid grid-cols-1 gap-8">
-	<h1>Flottform connector</h1>
-	<p>Please send your file here</p>
+	<h1>Flottform client</h1>
+	<p>Use this form to upload a file from this device to the form on the main device.</p>
+
+	<div>Connection state: {currentState}</div>
 
 	<form action="" on:submit={sendFileToPeer}>
 		<div class="flex flex-col gap-4">
 			<FileInput id="document" name="document" bind:fileInput />
 
-			{#if currentState === 'loading' || currentState === 'sending-file'}
+			{#if currentState === 'sending'}
 				<div class="h-24 items-center">
 					<svg
 						viewBox="0 0 100 100"
@@ -76,7 +78,7 @@
 					</svg>
 					<p>Your file is successfully sent</p>
 				</div>
-			{:else if currentState === 'waiting-for-file'}
+			{:else if currentState === 'connected'}
 				<button
 					type="submit"
 					bind:this={button}
@@ -90,7 +92,7 @@
 					>
 				</button>
 			{:else if currentState === 'error'}
-				<h2 class="">Ouch!</h2>
+				<h2 class="animate-bounce">Ouch!</h2>
 				<p>There was an error connecting to flottform! 😬</p>
 				<p>Please try again with a new QR code by clicking the button again on the main form.</p>
 			{/if}

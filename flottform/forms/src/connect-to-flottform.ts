@@ -142,10 +142,10 @@ export async function connectToFlottform({
 
 	connection.ondatachannel = (e) => {
 		console.info(`ondatachannel: ${e.channel}`);
+		changeState('connected');
 		channel = e.channel;
 		channel.onopen = (e) => {
 			console.info(`ondatachannel - onopen: ${e.type}`);
-			changeState('waiting-for-file');
 		};
 	};
 
