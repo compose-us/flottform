@@ -41,8 +41,8 @@
 		</a>
 	</div>
 	<p class="mt-6 italic">
-		All uploaded files are deleted every two hours. We do not save or use them; you upload them only
-		for testing purposes.
+		All uploaded files will be deleted after a short period of time. While we do not store them
+		permanently and clean up often, please do not upload anything confidential or otherwise
+		problematic.
 	</p>
 </div>
-<!-- <pre>{JSON.stringify(form, null, 2)}</pre> -->

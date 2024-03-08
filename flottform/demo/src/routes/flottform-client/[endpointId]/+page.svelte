@@ -39,10 +39,8 @@
 </script>
 
 <div class="max-w-screen-xl mx-auto p-8 box-border grid grid-cols-1 gap-8">
-	<h1>Flottform client</h1>
-	<p>Use this form to upload a file from this device to the form on the main device.</p>
-
-	<div>Connection state: {currentState}</div>
+	<h1>Flottform "Return and complaints" client</h1>
+	<p>Use this form to send a file from this device to the open form on the main device.</p>
 
 	<form action="" on:submit={sendFileToPeer}>
 		<div class="flex flex-col gap-4">
@@ -98,6 +96,8 @@
 			{/if}
 		</div>
 	</form>
+
+	<div>Connection state: {currentState}</div>
 </div>
 
 <style lang="postcss">

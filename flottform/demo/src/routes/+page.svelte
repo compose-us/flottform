@@ -135,6 +135,10 @@
 			One of our products broke down or didn't arrive in the shape you expected it to. Please let us
 			know about the issue below and we will try our best to support you!
 		</p>
+		<p class="text-xs">
+			<sup>*</sup> This is a demo. Your data will only be stored temporarily. Uploads will be cleaned
+			up every few hours.
+		</p>
 		<form action="{base}/upload" method="POST" enctype="multipart/form-data" class="grid gap-8">
 			<div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
 				<div class="flex flex-col">
