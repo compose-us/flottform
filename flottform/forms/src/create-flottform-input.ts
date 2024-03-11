@@ -1,6 +1,7 @@
 import { toDataURL } from 'qrcode';
 import {
 	DEFAULT_WEBRTC_CONFIG,
+	FlottformState,
 	Logger,
 	POLL_TIME_IN_MS,
 	retrieveEndpointInfo,
@@ -9,56 +10,157 @@ import {
 
 let channelNumber = 0;
 
-export function createFlottformInput(
-	inputField: HTMLInputElement,
-	{
-		flottformApi,
-		createClientUrl,
-		rtcConfiguration = DEFAULT_WEBRTC_CONFIG,
-		pollTimeForIceInMs = POLL_TIME_IN_MS,
-		onError = () => {},
-		logger = console
-	}: {
-		flottformApi: string | URL;
-		createClientUrl: (params: { endpointId: string }) => Promise<string>;
-		rtcConfiguration?: RTCConfiguration;
-		onError?: (e: Error) => void;
-		pollTimeForIceInMs?: number;
-		logger?: Logger;
-	}
-): void {
+export function createFlottformInput({
+	flottformApi,
+	createClientUrl,
+	rtcConfiguration = DEFAULT_WEBRTC_CONFIG,
+	pollTimeForIceInMs = POLL_TIME_IN_MS,
+	inputField,
+	onError = () => {},
+	onProgress = ({ currentSize, totalSize }) => {
+		if (!inputField) {
+			return;
+		}
+		const createChannelElement = inputField.nextElementSibling!;
+		const createChannelButton =
+			createChannelElement.querySelector<HTMLElement>('.flottform-button')!;
+		createChannelButton.innerHTML = `Receiving file ${Math.round((currentSize / totalSize) * 100)}%`;
+	},
+	onResult = (files) => {
+		if (inputField) {
+			inputField.files = files;
+		}
+	},
+	onStateChange = (state, details) => {
+		if (!inputField) {
+			return;
+		}
+
+		const getElements = () => {
+			const createChannelElement = inputField.nextElementSibling!;
+			const createChannelButton =
+				createChannelElement.querySelector<HTMLElement>('.flottform-button')!;
+			const createChannelLinkArea =
+				createChannelElement.querySelector<HTMLElement>('.flottform-link-area')!;
+			const createChannelQrCode =
+				createChannelElement.querySelector<HTMLElement>('.flottform-qr-code')!;
+			const createChannelLinkWithOffer =
+				createChannelElement.querySelector<HTMLElement>('.flottform-link-offer')!;
+			return {
+				createChannelElement,
+				createChannelButton,
+				createChannelLinkArea,
+				createChannelQrCode,
+				createChannelLinkWithOffer
+			};
+		};
+
+		const mapper: Record<FlottformState, (details?: any) => void> = {
+			new: (details: ReturnType<typeof createFlottformInput>) => {
+				const createChannelElement = document.createElement('div');
+				const createChannelLinkArea = document.createElement('div');
+				const createChannelQrCode = document.createElement('img');
+				const createChannelLinkWithOffer = document.createElement('a');
+				createChannelElement.setAttribute('class', 'flottform-parent');
+				createChannelElement.style.position = 'absolute';
+				createChannelElement.style.top = (inputField?.offsetTop ?? 0) + 'px';
+				createChannelElement.style.left =
+					(inputField?.offsetLeft ?? 0) + (inputField?.offsetWidth ?? 0) + 16 + 'px';
+				createChannelElement.style.width = `calc(100vw - ${inputField?.offsetWidth ?? 0}px)`;
+				createChannelQrCode.setAttribute('class', 'flottform-qr-code');
+				createChannelLinkWithOffer.setAttribute('class', 'flottform-link-offer');
+				createChannelLinkWithOffer.setAttribute('target', '_blank');
+				createChannelLinkArea.setAttribute('class', 'flottform-link-area');
+				createChannelLinkArea.style.display = 'none';
+				createChannelLinkArea.appendChild(createChannelQrCode);
+				createChannelLinkArea.appendChild(createChannelLinkWithOffer);
+				createChannelElement.appendChild(createChannelLinkArea);
+				createChannelLinkArea.classList.add('qrCodeWrapper');
+
+				const createChannelButton = document.createElement('button');
+				createChannelButton.setAttribute('type', 'button');
+				createChannelButton.setAttribute('class', 'flottform-button');
+				createChannelButton.innerHTML = 'Load file from other device';
+				createChannelButton.classList.add('qrCodeButton');
+				createChannelButton.addEventListener('click', details.createChannel);
+				createChannelElement.appendChild(createChannelButton);
+				inputField?.after(createChannelElement);
+			},
+			'waiting-for-client': (details: { qrCode: string; link: string }) => {
+				const {
+					createChannelQrCode,
+					createChannelLinkWithOffer,
+					createChannelLinkArea,
+					createChannelButton
+				} = getElements();
+				createChannelQrCode.setAttribute('src', details.qrCode);
+				createChannelLinkWithOffer.setAttribute('href', details.link);
+				createChannelLinkWithOffer.innerHTML = details.link;
+				createChannelLinkArea.style.display = 'block';
+				createChannelButton.innerHTML = 'Waiting for client to connect';
+			},
+			'waiting-for-file': () => {
+				const { createChannelLinkArea, createChannelButton } = getElements();
+				createChannelLinkArea.style.display = 'none';
+				createChannelButton.innerHTML = 'Waiting for file';
+			},
+			'waiting-for-ice': () => {
+				const { createChannelButton } = getElements();
+				createChannelButton.innerHTML = 'Waiting for data channel connection';
+			},
+			'receiving-data': () => {
+				const { createChannelButton } = getElements();
+				createChannelButton.innerHTML = 'Receiving data!';
+			},
+			done: () => {
+				const { createChannelButton } = getElements();
+				createChannelButton.innerHTML = `Open new connection`;
+			},
+			'error-connection-failed': () => {
+				const { createChannelLinkArea, createChannelButton } = getElements();
+				createChannelLinkArea.style.display = 'none';
+				createChannelButton.innerHTML = 'Client connection failed!';
+			},
+			'error-connection-impossible': () => {
+				const { createChannelLinkArea, createChannelButton } = getElements();
+				createChannelLinkArea.style.display = 'none';
+				createChannelButton.innerHTML =
+					'Connection to this client with the current network environment is impossible';
+			},
+			'error-file-transfer': () => {
+				const { createChannelButton } = getElements();
+				createChannelButton.innerHTML = 'Error during file transfer';
+			}
+		};
+		mapper[state](details);
+	},
+	logger = console
+}: {
+	flottformApi: string | URL;
+	createClientUrl: (params: { endpointId: string }) => Promise<string>;
+	rtcConfiguration?: RTCConfiguration;
+	inputField?: HTMLInputElement;
+	onError?: (e: Error) => void;
+	onProgress?: (detail: { currentSize: number; totalSize: number }) => void;
+	onResult?: (files: FileList) => void;
+	onStateChange?: <T extends FlottformState>(state: T, details?: any) => void;
+	pollTimeForIceInMs?: number;
+	logger?: Logger;
+}): { createChannel: () => void } {
 	const baseApi = (flottformApi instanceof URL ? flottformApi : new URL(flottformApi))
 		.toString()
 		.replace(/\/$/, '');
 
-	let state:
-		| 'new'
-		| 'waiting-for-client'
-		| 'connection-impossible'
-		| 'waiting-for-ice'
-		| 'waiting-for-file'
-		| 'done'
-		| 'error' = 'new';
+	let state: FlottformState = 'new';
+	const changeState: typeof onStateChange = (newState, details) => {
+		state = newState;
+		onStateChange(newState, details);
+	};
 
 	let openPeerConnection: RTCPeerConnection | null = null;
 	let pollForIceTimer: ReturnType<typeof globalThis.setTimeout> | null = null;
 
-	const createChannelElement = document.createElement('div');
-	const createChannelLinkArea = document.createElement('div');
-	const createChannelQrCode = document.createElement('img');
-	const createChannelLinkWithOffer = document.createElement('a');
-	createChannelLinkWithOffer.setAttribute('target', '_blank');
-	createChannelLinkArea.style.display = 'none';
-	createChannelLinkArea.appendChild(createChannelQrCode);
-	createChannelLinkArea.appendChild(createChannelLinkWithOffer);
-	createChannelElement.appendChild(createChannelLinkArea);
-	createChannelLinkArea.classList.add('qrCodeWrapper');
-
-	const createChannelButton = document.createElement('button');
-	createChannelButton.setAttribute('type', 'button');
-	createChannelButton.innerHTML = 'Load file from other device';
-	createChannelButton.classList.add('qrCodeButton');
-	createChannelButton.addEventListener('click', async () => {
+	const createChannel = async () => {
 		if (openPeerConnection) {
 			openPeerConnection.close();
 		}
@@ -66,7 +168,7 @@ export function createFlottformInput(
 		const connection = new RTCPeerConnection(rtcConfiguration);
 		openPeerConnection = connection;
 		channelNumber++;
-		const channelName = `file-${inputField.id ?? inputField.getAttribute('name') ?? channelNumber}`;
+		const channelName = `data-channel-${channelNumber}`;
 		const dataChannel = connection.createDataChannel(channelName);
 
 		const session = await connection.createOffer();
@@ -108,8 +210,7 @@ export function createFlottformInput(
 
 			if (clientInfo && state === 'waiting-for-client') {
 				logger.log('Found a client that wants to connect!');
-				state = 'waiting-for-ice';
-				createChannelButton.innerHTML = 'Waiting for data channel connection';
+				changeState('waiting-for-ice');
 				await connection.setRemoteDescription(clientInfo.session);
 			}
 
@@ -149,9 +250,7 @@ export function createFlottformInput(
 			}
 			if (connection.connectionState === 'failed') {
 				stopPollingForConnection();
-				state = 'error';
-				createChannelLinkArea.style.display = 'none';
-				createChannelButton.innerHTML = 'Client connection failed!';
+				changeState('error-connection-failed');
 			}
 		};
 		connection.onicecandidate = async (e) => {
@@ -174,10 +273,7 @@ export function createFlottformInput(
 			logger.info(`oniceconnectionstatechange - ${connection.iceConnectionState} - ${e}`);
 			if (connection.iceConnectionState === 'failed') {
 				logger.log('Failed to find a possible connection path');
-				state = 'connection-impossible';
-				createChannelLinkArea.style.display = 'none';
-				createChannelButton.innerHTML =
-					'Connection to this client with the current network environment is impossible';
+				changeState('error-connection-impossible');
 			}
 		};
 
@@ -185,15 +281,10 @@ export function createFlottformInput(
 		await putHostInfo();
 		startPollingForConnection();
 		const connectLink = await createClientUrl({ endpointId });
-		createChannelQrCode.setAttribute('src', await toDataURL(connectLink));
-		createChannelLinkWithOffer.setAttribute('href', connectLink);
-		createChannelLinkWithOffer.innerHTML = connectLink;
-		createChannelLinkArea.style.display = 'block';
-
-		state = 'waiting-for-client';
-		createChannelButton.innerHTML = 'Waiting for client to connect';
+		changeState('waiting-for-client', { qrCode: await toDataURL(connectLink), link: connectLink });
 
 		const arrayBuffers: ArrayBuffer[] = [];
+		let didReceiveSomething = false;
 		let hasMetaInformation = false;
 		let fileName = 'no-name';
 		let fileType = 'application/octet-stream';
@@ -202,9 +293,7 @@ export function createFlottformInput(
 
 		dataChannel.onopen = (e) => {
 			logger.log('data channel opened');
-			state = 'waiting-for-file';
-			createChannelLinkArea.style.display = 'none';
-			createChannelButton.innerHTML = 'Waiting for file';
+			changeState('waiting-for-file');
 		};
 
 		dataChannel.onclose = (e) => {
@@ -213,11 +302,13 @@ export function createFlottformInput(
 
 		dataChannel.onerror = (e) => {
 			logger.log('channel.onerror', e);
-			state = 'error';
-			createChannelButton.innerHTML = 'Error during file transfer';
+			changeState('error-file-transfer');
 		};
 
 		dataChannel.onmessage = async (e) => {
+			if (!didReceiveSomething) {
+				changeState('receiving-data');
+			}
 			if (!hasMetaInformation) {
 				const fileMeta = JSON.parse(e.data) as {
 					lastModified?: number;
@@ -236,20 +327,21 @@ export function createFlottformInput(
 			const ab = data instanceof Blob ? await data.arrayBuffer() : (data as ArrayBuffer);
 			arrayBuffers.push(ab);
 			currentSize += ab.byteLength;
-			createChannelButton.innerHTML = `Receiving file ${Math.round((currentSize / size) * 100)}%`;
+			onProgress({ currentSize, totalSize: size });
 
 			if (currentSize === size) {
 				const fileForForm = new File(arrayBuffers, fileName);
 				const dt = new DataTransfer();
 				dt.items.add(fileForForm);
-				inputField.files = dt.files;
 
-				state = 'done';
-				createChannelButton.innerHTML = `Open new connection`;
+				onResult(dt.files);
+				changeState('done');
 				dataChannel.close();
 			}
 		};
-	});
-	createChannelElement.appendChild(createChannelButton);
-	inputField.parentElement!.after(createChannelElement);
+	};
+
+	const returnValue = { createChannel };
+	changeState('new', returnValue);
+	return returnValue;
 }
