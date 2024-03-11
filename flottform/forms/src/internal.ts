@@ -28,6 +28,15 @@ export type ClientState =
 	| 'done' // done with sending
 	| 'error';
 
+export type FlottformState =
+	| 'new'
+	| 'waiting-for-client'
+	| 'connection-impossible'
+	| 'waiting-for-ice'
+	| 'waiting-for-file'
+	| 'done'
+	| 'error';
+
 export type Logger = {
 	debug: (...args: any[]) => void;
 	info: (...args: any[]) => void;
