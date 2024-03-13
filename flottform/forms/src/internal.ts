@@ -35,9 +35,7 @@ export type FlottformState =
 	| 'waiting-for-file'
 	| 'receiving-data'
 	| 'done'
-	| 'error-connection-failed'
-	| 'error-connection-impossible'
-	| 'error-file-transfer';
+	| 'error';
 
 export type Logger = {
 	debug: (...args: any[]) => void;

@@ -116,20 +116,20 @@ export function createFlottformInput({
 				const { createChannelButton } = getElements();
 				createChannelButton.innerHTML = `Open new connection`;
 			},
-			'error-connection-failed': () => {
+			error: (details) => {
+				logger.error(details);
 				const { createChannelLinkArea, createChannelButton } = getElements();
 				createChannelLinkArea.style.display = 'none';
-				createChannelButton.innerHTML = 'Client connection failed!';
-			},
-			'error-connection-impossible': () => {
-				const { createChannelLinkArea, createChannelButton } = getElements();
-				createChannelLinkArea.style.display = 'none';
-				createChannelButton.innerHTML =
-					'Connection to this client with the current network environment is impossible';
-			},
-			'error-file-transfer': () => {
-				const { createChannelButton } = getElements();
-				createChannelButton.innerHTML = 'Error during file transfer';
+				let errorMessage = 'Connection failed - please retry!';
+				if (details.message === 'connection-failed') {
+					errorMessage = 'Client connection failed!';
+				} else if (details.message === 'connection-impossible') {
+					errorMessage =
+						'Connection to this client with the current network environment is impossible';
+				} else if (details.message === 'file-transfer') {
+					errorMessage = 'Error during file transfer';
+				}
+				createChannelButton.innerHTML = errorMessage;
 			}
 		};
 		mapper[state](details);
@@ -250,7 +250,7 @@ export function createFlottformInput({
 			}
 			if (connection.connectionState === 'failed') {
 				stopPollingForConnection();
-				changeState('error-connection-failed');
+				changeState('error', { message: 'connection-failed' });
 			}
 		};
 		connection.onicecandidate = async (e) => {
@@ -273,7 +273,7 @@ export function createFlottformInput({
 			logger.info(`oniceconnectionstatechange - ${connection.iceConnectionState} - ${e}`);
 			if (connection.iceConnectionState === 'failed') {
 				logger.log('Failed to find a possible connection path');
-				changeState('error-connection-impossible');
+				changeState('error', { message: 'connection-impossible' });
 			}
 		};
 
@@ -302,7 +302,7 @@ export function createFlottformInput({
 
 		dataChannel.onerror = (e) => {
 			logger.log('channel.onerror', e);
-			changeState('error-file-transfer');
+			changeState('error', { message: 'file-transfer' });
 		};
 
 		dataChannel.onmessage = async (e) => {
