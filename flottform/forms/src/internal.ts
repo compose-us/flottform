@@ -28,6 +28,14 @@ export type ClientState =
 	| 'done' // done with sending
 	| 'error';
 
+export type Logger = {
+	debug: (...args: any[]) => void;
+	info: (...args: any[]) => void;
+	log: (...args: any[]) => void;
+	warn: (...args: any[]) => void;
+	error: (...args: any[]) => void;
+};
+
 export const POLL_TIME_IN_MS: number = 1000;
 
 export const DEFAULT_WEBRTC_CONFIG: RTCConfiguration = {

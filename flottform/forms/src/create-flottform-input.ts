@@ -1,10 +1,10 @@
 import { toDataURL } from 'qrcode';
 import {
 	DEFAULT_WEBRTC_CONFIG,
+	Logger,
 	POLL_TIME_IN_MS,
 	retrieveEndpointInfo,
-	setIncludes,
-	type SafeEndpointInfo
+	setIncludes
 } from './internal';
 
 let channelNumber = 0;
@@ -16,13 +16,15 @@ export function createFlottformInput(
 		createClientUrl,
 		rtcConfiguration = DEFAULT_WEBRTC_CONFIG,
 		pollTimeForIceInMs = POLL_TIME_IN_MS,
-		onError = () => {}
+		onError = () => {},
+		logger = console
 	}: {
 		flottformApi: string | URL;
 		createClientUrl: (params: { endpointId: string }) => Promise<string>;
 		rtcConfiguration?: RTCConfiguration;
 		onError?: (e: Error) => void;
 		pollTimeForIceInMs?: number;
+		logger?: Logger;
 	}
 ): void {
 	const baseApi = (flottformApi instanceof URL ? flottformApi : new URL(flottformApi))
@@ -80,7 +82,7 @@ export function createFlottformInput(
 		});
 
 		const { endpointId, hostKey } = await response.json();
-		console.log('Created endpoint', { endpointId, hostKey });
+		logger.log('Created endpoint', { endpointId, hostKey });
 		const getEndpointInfoUrl = `${baseApi}/${endpointId}`;
 		const putHostInfoUrl = `${baseApi}/${endpointId}/host`;
 
@@ -101,11 +103,11 @@ export function createFlottformInput(
 		}
 
 		async function pollForConnection() {
-			console.log('polling for client ice candidates', connection.iceGatheringState);
+			logger.log('polling for client ice candidates', connection.iceGatheringState);
 			const { clientInfo } = await retrieveEndpointInfo(getEndpointInfoUrl);
 
 			if (clientInfo && state === 'waiting-for-client') {
-				console.log('Found a client that wants to connect!');
+				logger.log('Found a client that wants to connect!');
 				state = 'waiting-for-ice';
 				createChannelButton.innerHTML = 'Waiting for data channel connection';
 				await connection.setRemoteDescription(clientInfo.session);
@@ -118,7 +120,7 @@ export function createFlottformInput(
 
 		async function putHostInfo() {
 			try {
-				console.log('Updating host info with new list of ice candidates');
+				logger.log('Updating host info with new list of ice candidates');
 				const response = await fetch(putHostInfoUrl, {
 					method: 'PUT',
 					mode: 'cors',
@@ -138,7 +140,7 @@ export function createFlottformInput(
 		}
 
 		connection.onconnectionstatechange = () => {
-			console.info(`onconnectionstatechange - ${connection.connectionState}`);
+			logger.info(`onconnectionstatechange - ${connection.connectionState}`);
 			if (connection.connectionState === 'connected') {
 				stopPollingForConnection();
 			}
@@ -153,25 +155,25 @@ export function createFlottformInput(
 			}
 		};
 		connection.onicecandidate = async (e) => {
-			console.info(`onicecandidate - ${connection.connectionState} - ${e.candidate}`);
+			logger.info(`onicecandidate - ${connection.connectionState} - ${e.candidate}`);
 			if (e.candidate) {
 				if (!setIncludes(hostIceCandidates, e.candidate)) {
-					console.log('host found new ice candidate! Adding it to our list');
+					logger.log('host found new ice candidate! Adding it to our list');
 					hostIceCandidates.add(e.candidate);
 					await putHostInfo();
 				}
 			}
 		};
 		connection.onicecandidateerror = async (e) => {
-			console.error('peerConnection.onicecandidateerror', e);
+			logger.error('peerConnection.onicecandidateerror', e);
 		};
 		connection.onicegatheringstatechange = async (e) => {
-			console.info(`onicegatheringstatechange - ${connection.iceGatheringState} - ${e}`);
+			logger.info(`onicegatheringstatechange - ${connection.iceGatheringState} - ${e}`);
 		};
 		connection.oniceconnectionstatechange = async (e) => {
-			console.info(`oniceconnectionstatechange - ${connection.iceConnectionState} - ${e}`);
+			logger.info(`oniceconnectionstatechange - ${connection.iceConnectionState} - ${e}`);
 			if (connection.iceConnectionState === 'failed') {
-				console.log('Failed to find a possible connection path');
+				logger.log('Failed to find a possible connection path');
 				state = 'connection-impossible';
 				createChannelLinkArea.style.display = 'none';
 				createChannelButton.innerHTML =
@@ -199,18 +201,18 @@ export function createFlottformInput(
 		let currentSize = 0;
 
 		dataChannel.onopen = (e) => {
-			console.log('data channel opened');
+			logger.log('data channel opened');
 			state = 'waiting-for-file';
 			createChannelLinkArea.style.display = 'none';
 			createChannelButton.innerHTML = 'Waiting for file';
 		};
 
 		dataChannel.onclose = (e) => {
-			console.log('data channel closed');
+			logger.log('data channel closed');
 		};
 
 		dataChannel.onerror = (e) => {
-			console.log('channel.onerror', e);
+			logger.log('channel.onerror', e);
 			state = 'error';
 			createChannelButton.innerHTML = 'Error during file transfer';
 		};
