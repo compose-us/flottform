@@ -48,22 +48,13 @@
 
 			{#if currentState === 'sending'}
 				<div class="h-24 items-center">
-					<svg
-						viewBox="0 0 100 100"
-						xmlns="http://www.w3.org/2000/svg"
-						class="w-12 h-1w-12 spinner-svg"
-					>
+					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" class="w-12 spinner-svg">
 						<circle cx="50" cy="50" r="45" class="spinner" />
 					</svg>
 				</div>
 			{:else if currentState === 'done'}
 				<div class="flex gap-6">
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						viewBox="0 0 32 32"
-						version="1.1"
-						class="w-12 h-1w-12"
-					>
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" version="1.1" class="w-12">
 						<path
 							d="M 28.28125 6.28125 L 11 23.5625 L 3.71875 16.28125 L 2.28125 17.71875 L 10.28125 25.71875 L 11 26.40625 L 11.71875 25.71875 L 29.71875 7.71875 Z "
 							class="checkmark"

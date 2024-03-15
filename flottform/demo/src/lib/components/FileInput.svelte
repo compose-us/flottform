@@ -5,7 +5,7 @@
 		id,
 		name,
 		fileInput,
-		label = 'Please upload a photo of a broken part',
+		label = 'Please upload your photo',
 		class: inputClass = '',
 		...rest
 	} = $props<
@@ -36,14 +36,11 @@
 			fileReader.readAsDataURL(file[0]);
 		}
 	};
-	$effect(() => {
-		console.log(previewImage);
-	});
 </script>
 
-<div>
+<div class="flex flex-col gap-4">
 	{#if previewImage}
-		<img src={previewImage} alt="Preview" class="h-48 w-full max-w-80" />
+		<img src={previewImage} alt="Preview" class="h-auto w-full max-w-80" />
 	{/if}
 	<label for={id}>{label}</label>
 	<div class="h-24 w-full max-w-80 relative flex items-center justify-center border-primary-blue">
