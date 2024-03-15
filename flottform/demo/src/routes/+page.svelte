@@ -293,18 +293,20 @@
 	.drag {
 		@apply border-2 border-dotted border-primary-blue;
 	}
-	form :global(.qrCodeButton) {
-		background: var(--cus-color-blue);
-		padding: 0.5rem 0.75rem;
-		color: #fff;
-		font-weight: 700;
-		border: none;
-		border-radius: 5px;
-		cursor: pointer;
-		display: inline-block;
+	form :global(.flottform-button):hover {
+		box-shadow: 0 2px 4px 0 #1a3066;
 	}
-	form :global(.qrCodeWrapper) {
-		margin-bottom: 1rem;
+	:global(.flottform-link-dialog[open]) {
+		@apply rounded-lg w-full h-full px-16 py-24 border border-primary-blue flex flex-col gap-12 text-lg items-center;
+	}
+	:global(.refresh-connection-button) {
+		@apply border border-primary-blue px-3 py-2 rounded place-self-end;
+	}
+	:global(.flottform-link-wrapper) {
+		@apply flex items-center text-4xl font-display font-bold;
+	}
+	:global(.flottform-link-offer) {
+		@apply text-base font-sans font-normal;
 	}
 	.first,
 	.second {
