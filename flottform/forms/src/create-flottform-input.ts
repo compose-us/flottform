@@ -7,6 +7,21 @@ import {
 	retrieveEndpointInfo,
 	setIncludes
 } from './internal';
+import {
+	Colors,
+	changeBackgroundOnState,
+	closeDialogButtonCss,
+	closeSvg,
+	createChannelButtonCss,
+	createChannelElementCss,
+	createChannelQrCodeCss,
+	createChannelStatusWrapperCss,
+	defaultColors,
+	dialogCss,
+	flottformSvg,
+	refreshConnectionButtonCss,
+	simulateHoverEffect
+} from './flottform-styles';
 
 let channelNumber = 0;
 const noop = () => {};
@@ -14,8 +29,9 @@ const noop = () => {};
 const createDefaultOnStateChange = (options: {
 	inputField?: HTMLElement;
 	logger: Logger;
+	colors?: Colors;
 }): (<T extends FlottformState>(state: T, details?: any) => void) => {
-	const { inputField, logger } = options;
+	const { inputField, logger, colors } = options;
 	if (!inputField) {
 		return noop;
 	}
@@ -26,8 +42,9 @@ const createDefaultOnStateChange = (options: {
 				createChannelElement.querySelector<HTMLElement>('.flottform-button')!;
 			const createChannelLinkDialog =
 				document.querySelector<HTMLDialogElement>('.flottform-link-dialog')!;
-			const createChannelStatusWrapper =
-				createChannelLinkDialog.querySelector<HTMLElement>('.flottform-link-wrapper')!;
+			const createChannelStatusWrapper = createChannelLinkDialog.querySelector<HTMLElement>(
+				'.flottform-status-wrapper'
+			)!;
 			const createChannelLinkArea =
 				createChannelLinkDialog.querySelector<HTMLElement>('.flottform-link-area')!;
 			const createChannelQrCode =
@@ -60,19 +77,19 @@ const createDefaultOnStateChange = (options: {
 				const createChannelQrCode = document.createElement('img');
 				const createChannelLinkWithOffer = document.createElement('a');
 				createChannelElement.setAttribute('class', 'flottform-parent');
-				createChannelElement.style.position = 'absolute';
-				createChannelElement.style.top = (inputField?.offsetTop ?? 0) + 'px';
-				createChannelElement.style.left =
-					(inputField?.offsetLeft ?? 0) + (inputField?.offsetWidth ?? 0) + 16 + 'px';
+				createChannelElement.style.cssText = createChannelElementCss(inputField);
 				createChannelQrCode.setAttribute('class', 'flottform-qr-code');
 				createChannelLinkWithOffer.setAttribute('class', 'flottform-link-offer');
 				createChannelLinkWithOffer.setAttribute('target', '_blank');
 				createChannelLinkDialog.setAttribute('class', 'flottform-link-dialog');
-				createChannelStatusWrapper.setAttribute('class', 'flottform-link-wrapper');
+				createChannelStatusWrapper.setAttribute('class', 'flottform-status-wrapper');
 				createDialogDescription.setAttribute('class', 'flottform-dialog-description');
-				closeDialogButton.innerHTML = '✖️';
+				closeDialogButton.innerHTML = closeSvg(colors);
 				closeDialogButton.setAttribute('class', 'close-dialog-button');
-				closeDialogButton.addEventListener('click', () => createChannelLinkDialog.close());
+				closeDialogButton.addEventListener('click', () => {
+					createChannelLinkDialog.close();
+					createChannelLinkDialog.style.display = 'none';
+				});
 				refreshConnectionButton.innerHTML = 'Refresh';
 				refreshConnectionButton.setAttribute('class', 'refresh-connection-button');
 				refreshConnectionButton.addEventListener('click', details.createChannel);
@@ -86,24 +103,20 @@ const createDefaultOnStateChange = (options: {
 				const createChannelButton = document.createElement('button');
 				createChannelButton.setAttribute('type', 'button');
 				createChannelButton.setAttribute('class', 'flottform-button');
-				createChannelButton.innerHTML =
-					'<svg xmlns="http://www.w3.org/2000/svg" width="12" height="24" viewBox="0 0 32 74" fill="#1a3066"><path d="M29.2146 12.4C28.9001 12.2308 28.5069 12.1038 28.0351 12.0192C27.6027 11.8922 27.1505 11.8287 26.6788 11.8287C25.3027 11.8287 24.3395 12.2731 23.7891 13.1618C23.2387 14.0081 22.8455 15.1084 22.6096 16.4626L22.4917 17.2244H29.0377L30.1287 26.6192L21.0174 27.4444L17.1842 50.6139L13.3542 73.7835H0.200073L4.03326 50.6139L7.86648 27.4444H2.55894L4.21018 17.2244H9.3408L9.51772 16.2087C9.87155 14.1351 10.363 12.1673 10.992 10.3052C11.6604 8.44322 12.5843 6.81394 13.7637 5.41742C14.9825 3.97858 16.5355 2.85713 18.4226 2.05307C20.3097 1.2067 22.649 0.783508 25.4403 0.783508C26.3446 0.783508 27.3668 0.868146 28.5069 1.03742C29.6471 1.16438 30.5906 1.39713 31.3376 1.73568L29.2146 12.4Z" fill="#1a3066"/></svg>';
-				closeDialogButton.style.cssText = `
-			position: absolute;
-			top: 1rem;
-			right: 2rem;
-			padding: 1rem;`;
-				createChannelButton.style.cssText = `
-			background: #fff;
-			border: 1px solid #1a3066;
-			padding: 0.75rem 1rem;
-			color: #1a3066;
-			font-weight: 700;
-			border-radius: 5px;
-			cursor: pointer;
-			display: inline-block;`;
+				createChannelButton.innerHTML = flottformSvg(colors);
+				closeDialogButton.style.cssText = closeDialogButtonCss(colors);
+				createChannelButton.style.cssText = createChannelButtonCss(colors);
+				createChannelLinkDialog.style.cssText = dialogCss(colors);
+				createChannelQrCode.style.cssText = createChannelQrCodeCss(colors);
+				refreshConnectionButton.style.cssText = refreshConnectionButtonCss(colors);
+				createChannelStatusWrapper.style.cssText = createChannelStatusWrapperCss(colors);
 				createChannelButton.addEventListener('click', details.createChannel);
-				createChannelButton.addEventListener('click', () => createChannelLinkDialog.showModal());
+				createChannelButton.addEventListener('click', () => {
+					createChannelLinkDialog.showModal();
+					createChannelLinkDialog.style.display = 'flex';
+				});
+				simulateHoverEffect(createChannelButton, colors);
+				simulateHoverEffect(refreshConnectionButton, colors);
 				createChannelElement.appendChild(createChannelButton);
 				inputField?.after(createChannelElement);
 			},
@@ -127,7 +140,7 @@ const createDefaultOnStateChange = (options: {
 				createChannelLinkWithOffer.innerHTML = details.link;
 				createChannelStatusWrapper.innerHTML = 'Upload a file';
 				createDialogDescription.innerHTML = 'Use this QR-Code or Link on your other device.';
-				createChannelButton.style.background = '#F9F871';
+				createChannelButton.style.background = changeBackgroundOnState(state, colors);
 			},
 			'waiting-for-file': () => {
 				const {
@@ -142,7 +155,7 @@ const createDefaultOnStateChange = (options: {
 				createChannelStatusWrapper.innerHTML = 'Connected!';
 				createDialogDescription.innerHTML =
 					'Another device is connected. Start the data transfer from your other device';
-				createChannelButton.style.background = '#D4F1EF';
+				createChannelButton.style.background = changeBackgroundOnState(state, colors);
 			},
 			'waiting-for-ice': () => {
 				const { createDialogDescription } = getElements();
@@ -154,18 +167,19 @@ const createDefaultOnStateChange = (options: {
 				createChannelStatusWrapper.innerHTML = 'Receiving data';
 				createDialogDescription.innerHTML =
 					'Another device is sending data. Waiting for incoming data transfer to complete';
-				createChannelButton.style.background = '#7EA4FF';
+				createChannelButton.style.background = changeBackgroundOnState(state, colors);
 			},
 			done: () => {
 				const { createChannelStatusWrapper, createDialogDescription, createChannelButton } =
 					getElements();
 				createChannelStatusWrapper.innerHTML = `Done!`;
 				createDialogDescription.innerHTML = `You have received a file from another device. Please close this dialog to finish your form.`;
-				createChannelButton.style.background = '#FFF';
+				createChannelButton.style.background = changeBackgroundOnState(state, colors);
 			},
 			error: (details) => {
 				logger.error(details);
-				const { createChannelStatusWrapper, createDialogDescription } = getElements();
+				const { createChannelStatusWrapper, createDialogDescription, createChannelButton } =
+					getElements();
 				let errorMessage = 'Connection failed - please retry!';
 				if (details.message === 'connection-failed') {
 					errorMessage = 'Client connection failed!';
@@ -177,6 +191,7 @@ const createDefaultOnStateChange = (options: {
 				}
 				createChannelStatusWrapper.innerHTML = 'Oops! Something went wrong';
 				createDialogDescription.innerHTML = errorMessage;
+				createChannelButton.style.background = changeBackgroundOnState('error', colors);
 			}
 		};
 		mapper[state](details);
@@ -194,8 +209,9 @@ export function createFlottformInput({
 		const createChannelElement = inputField!.nextElementSibling!;
 		const createChannelLinkDialog =
 			document.querySelector<HTMLDialogElement>('.flottform-link-dialog')!;
-		const createChannelStatusWrapper =
-			createChannelLinkDialog.querySelector<HTMLElement>('.flottform-link-wrapper')!;
+		const createChannelStatusWrapper = createChannelLinkDialog.querySelector<HTMLElement>(
+			'.flottform-status-wrapper'
+		)!;
 		createChannelStatusWrapper.innerHTML = `Receiving ${Math.round((currentSize / totalSize) * 100)}%`;
 		const createChannelButton =
 			createChannelElement.querySelector<HTMLElement>('.flottform-button')!;
@@ -208,7 +224,8 @@ export function createFlottformInput({
 	},
 	onStateChange = noop,
 	logger = console,
-	useDefaultUi = true
+	useDefaultUi = true,
+	colors = defaultColors
 }: {
 	flottformApi: string | URL;
 	createClientUrl: (params: { endpointId: string }) => Promise<string>;
@@ -221,12 +238,13 @@ export function createFlottformInput({
 	pollTimeForIceInMs?: number;
 	logger?: Logger;
 	useDefaultUi?: boolean;
+	colors?: Colors;
 }): { createChannel: () => void } {
 	const baseApi = (flottformApi instanceof URL ? flottformApi : new URL(flottformApi))
 		.toString()
 		.replace(/\/$/, '');
 	const internalOnStateChange = useDefaultUi
-		? createDefaultOnStateChange({ inputField, logger })
+		? createDefaultOnStateChange({ inputField, logger, colors })
 		: noop;
 
 	let state: FlottformState = 'new';
