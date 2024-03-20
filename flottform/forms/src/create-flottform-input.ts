@@ -8,7 +8,7 @@ import {
 	setIncludes
 } from './internal';
 import {
-	Colors,
+	Styles,
 	changeBackgroundOnState,
 	closeDialogButtonCss,
 	closeSvg,
@@ -16,7 +16,7 @@ import {
 	createChannelElementCss,
 	createChannelQrCodeCss,
 	createChannelStatusWrapperCss,
-	defaultColors,
+	defaultStyles,
 	dialogCss,
 	flottformSvg,
 	refreshConnectionButtonCss,
@@ -29,9 +29,9 @@ const noop = () => {};
 const createDefaultOnStateChange = (options: {
 	inputField?: HTMLElement;
 	logger: Logger;
-	colors?: Colors;
+	styles?: Styles;
 }): (<T extends FlottformState>(state: T, details?: any) => void) => {
-	const { inputField, logger, colors } = options;
+	const { inputField, logger, styles } = options;
 	if (!inputField) {
 		return noop;
 	}
@@ -84,7 +84,7 @@ const createDefaultOnStateChange = (options: {
 				createChannelLinkDialog.setAttribute('class', 'flottform-link-dialog');
 				createChannelStatusWrapper.setAttribute('class', 'flottform-status-wrapper');
 				createDialogDescription.setAttribute('class', 'flottform-dialog-description');
-				closeDialogButton.innerHTML = closeSvg(colors);
+				closeDialogButton.innerHTML = closeSvg(styles);
 				closeDialogButton.setAttribute('class', 'close-dialog-button');
 				closeDialogButton.addEventListener('click', () => {
 					createChannelLinkDialog.close();
@@ -103,20 +103,20 @@ const createDefaultOnStateChange = (options: {
 				const createChannelButton = document.createElement('button');
 				createChannelButton.setAttribute('type', 'button');
 				createChannelButton.setAttribute('class', 'flottform-button');
-				createChannelButton.innerHTML = flottformSvg(colors);
-				closeDialogButton.style.cssText = closeDialogButtonCss(colors);
-				createChannelButton.style.cssText = createChannelButtonCss(colors);
-				createChannelLinkDialog.style.cssText = dialogCss(colors);
-				createChannelQrCode.style.cssText = createChannelQrCodeCss(colors);
-				refreshConnectionButton.style.cssText = refreshConnectionButtonCss(colors);
-				createChannelStatusWrapper.style.cssText = createChannelStatusWrapperCss(colors);
+				createChannelButton.innerHTML = flottformSvg(styles);
+				closeDialogButton.style.cssText = closeDialogButtonCss(styles);
+				createChannelButton.style.cssText = createChannelButtonCss(styles);
+				createChannelLinkDialog.style.cssText = dialogCss(styles);
+				createChannelQrCode.style.cssText = createChannelQrCodeCss(styles);
+				refreshConnectionButton.style.cssText = refreshConnectionButtonCss(styles);
+				createChannelStatusWrapper.style.cssText = createChannelStatusWrapperCss(styles);
 				createChannelButton.addEventListener('click', details.createChannel);
 				createChannelButton.addEventListener('click', () => {
 					createChannelLinkDialog.showModal();
 					createChannelLinkDialog.style.display = 'flex';
 				});
-				simulateHoverEffect(createChannelButton, colors);
-				simulateHoverEffect(refreshConnectionButton, colors);
+				simulateHoverEffect(createChannelButton, styles);
+				simulateHoverEffect(refreshConnectionButton, styles);
 				createChannelElement.appendChild(createChannelButton);
 				inputField?.after(createChannelElement);
 			},
@@ -140,7 +140,7 @@ const createDefaultOnStateChange = (options: {
 				createChannelLinkWithOffer.innerHTML = details.link;
 				createChannelStatusWrapper.innerHTML = 'Upload a file';
 				createDialogDescription.innerHTML = 'Use this QR-Code or Link on your other device.';
-				createChannelButton.style.background = changeBackgroundOnState(state, colors);
+				createChannelButton.style.background = changeBackgroundOnState(state, styles);
 			},
 			'waiting-for-file': () => {
 				const {
@@ -155,7 +155,7 @@ const createDefaultOnStateChange = (options: {
 				createChannelStatusWrapper.innerHTML = 'Connected!';
 				createDialogDescription.innerHTML =
 					'Another device is connected. Start the data transfer from your other device';
-				createChannelButton.style.background = changeBackgroundOnState(state, colors);
+				createChannelButton.style.background = changeBackgroundOnState(state, styles);
 			},
 			'waiting-for-ice': () => {
 				const { createDialogDescription } = getElements();
@@ -167,14 +167,14 @@ const createDefaultOnStateChange = (options: {
 				createChannelStatusWrapper.innerHTML = 'Receiving data';
 				createDialogDescription.innerHTML =
 					'Another device is sending data. Waiting for incoming data transfer to complete';
-				createChannelButton.style.background = changeBackgroundOnState(state, colors);
+				createChannelButton.style.background = changeBackgroundOnState(state, styles);
 			},
 			done: () => {
 				const { createChannelStatusWrapper, createDialogDescription, createChannelButton } =
 					getElements();
 				createChannelStatusWrapper.innerHTML = `Done!`;
 				createDialogDescription.innerHTML = `You have received a file from another device. Please close this dialog to finish your form.`;
-				createChannelButton.style.background = changeBackgroundOnState(state, colors);
+				createChannelButton.style.background = changeBackgroundOnState(state, styles);
 			},
 			error: (details) => {
 				logger.error(details);
@@ -191,7 +191,7 @@ const createDefaultOnStateChange = (options: {
 				}
 				createChannelStatusWrapper.innerHTML = 'Oops! Something went wrong';
 				createDialogDescription.innerHTML = errorMessage;
-				createChannelButton.style.background = changeBackgroundOnState('error', colors);
+				createChannelButton.style.background = changeBackgroundOnState('error', styles);
 			}
 		};
 		mapper[state](details);
@@ -225,7 +225,7 @@ export function createFlottformInput({
 	onStateChange = noop,
 	logger = console,
 	useDefaultUi = true,
-	colors = defaultColors
+	styles = defaultStyles
 }: {
 	flottformApi: string | URL;
 	createClientUrl: (params: { endpointId: string }) => Promise<string>;
@@ -238,13 +238,13 @@ export function createFlottformInput({
 	pollTimeForIceInMs?: number;
 	logger?: Logger;
 	useDefaultUi?: boolean;
-	colors?: Colors;
+	styles?: Styles;
 }): { createChannel: () => void } {
 	const baseApi = (flottformApi instanceof URL ? flottformApi : new URL(flottformApi))
 		.toString()
 		.replace(/\/$/, '');
 	const internalOnStateChange = useDefaultUi
-		? createDefaultOnStateChange({ inputField, logger, colors })
+		? createDefaultOnStateChange({ inputField, logger, styles })
 		: noop;
 
 	let state: FlottformState = 'new';

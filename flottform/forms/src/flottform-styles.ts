@@ -1,6 +1,6 @@
 import { FlottformState } from './internal';
 
-export type Colors = {
+type Colors = {
 	primaryColor?: string;
 	fontColor?: string;
 	stateBackground?: {
@@ -13,15 +13,15 @@ export type Colors = {
 	};
 };
 
-export type Fonts = {
+type Fonts = {
 	fontFamily?: string;
 	fontWeight?: string;
 	fontSize?: string;
 };
 
-export type Styles = Colors & Fonts
+export type Styles = Colors & Fonts;
 
-export const defaultColors = {
+const defaultColors = {
 	primaryColor: '#1a3066',
 	fontColor: '#000',
 	stateBackground: {
@@ -33,6 +33,14 @@ export const defaultColors = {
 		error: '#F57C6B'
 	}
 };
+
+const defaultFonts = {
+	fontFamily: 'Raleway',
+	fontWeight: '700',
+	fontSize: '1.125rem'
+};
+
+export const defaultStyles: Styles = { ...defaultColors, ...defaultFonts };
 
 export const simulateHoverEffect = (element: HTMLElement, styles?: Styles) => {
 	element.addEventListener(
@@ -65,7 +73,7 @@ export const createChannelButtonCss = (styles?: Styles) => `
 border: 1px solid ${styles?.primaryColor || defaultColors.primaryColor};
 padding: 0.75rem 1rem;
 color: ${styles?.primaryColor || defaultColors.primaryColor};
-font-weight: 700;
+font-weight: ${styles?.fontWeight || defaultFonts.fontWeight};
 border-radius: 5px;
 cursor: pointer;
 display: inline-block;`;
@@ -85,16 +93,16 @@ padding-right: 2rem;
 padding-top: 4rem;
 padding-bottom: 4rem;
 box-sizing: border-box;
-font-size: 1.125rem;
+font-size: ${styles?.fontSize || defaultFonts.fontSize};
 line-height: 1.75rem;`;
 
 export const createChannelQrCodeCss = (styles?: Styles) => `max-wigth: 100%;
 width: 350px`;
 
 export const createChannelStatusWrapperCss = (styles?: Styles) => `
-font-family: Raleway, ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-font-weight: 700;
-font-size: 2.25rem;
+font-family: ${styles?.fontFamily || defaultFonts.fontFamily}, ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+font-weight: ${styles?.fontWeight || defaultFonts.fontWeight};
+font-size: calc(${styles?.fontSize || defaultFonts.fontSize} * 2);
 line-height: 2.5rem;
 display: flex;
 align-items: center;
