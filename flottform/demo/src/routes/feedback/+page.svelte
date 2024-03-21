@@ -1,11 +1,27 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+
 	let form: HTMLFormElement;
 
 	let status: 'sending' | 'success' | 'failed' | '' = $state('');
+	let errorDetails: string = $state('');
 
 	let contactChoice = $state('email');
 
-	const handleSubmit = async () => {
+	let hasInteractions = $state(false);
+	let submittedTooFast = true;
+
+	onMount(() => {
+		form.addEventListener('submit', handleSubmit);
+		form.addEventListener('mousemove', () => (hasInteractions = true));
+		form.addEventListener('keypress', () => (hasInteractions = true));
+		setTimeout(() => {
+			submittedTooFast = false;
+		}, 7000);
+	});
+
+	const handleSubmit = async (e: SubmitEvent) => {
+		e.preventDefault();
 		status = 'sending';
 		const formData = new FormData(form);
 		const data = {
@@ -16,6 +32,23 @@
 			feedbackImprovements: formData.get('feedbackImprovements')
 		};
 
+		if (formData.get('phone')) {
+			status = 'failed';
+			errorDetails =
+				'It seems that you found a field that was intentionally hidden. Are you a bot? 🤖';
+			return;
+		}
+		if (hasInteractions === false) {
+			status = 'failed';
+			errorDetails =
+				'It seems that you submitted the form without any mouse or keyboard interactions. Are you a bot? 🤖';
+			return;
+		}
+		if (submittedTooFast) {
+			status = 'failed';
+			errorDetails = 'It seems that you submitted the form whitin 7 seconds. Are you a bot? 🤖';
+			return;
+		}
 		const response = await fetch('feedback', {
 			method: 'POST',
 			headers: {
@@ -26,6 +59,7 @@
 
 		const { message } = await response.json();
 		status = message;
+
 		if (status === 'success') {
 			setTimeout(() => {
 				status = '';
@@ -44,6 +78,9 @@
 		</div>
 	{:else if status === 'failed'}
 		<p>Ooops...😣 Something went wrong. Please reload the page and try again later</p>
+		{#if errorDetails}
+			<p>{errorDetails}</p>
+		{/if}
 	{:else if status === 'success'}
 		<div class="place-self-center relative">
 			<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" class="w-12">
@@ -63,14 +100,10 @@
 		</div>
 		<h2 class="text-center">Thank you!</h2>
 	{:else}
-		<form
-			class="grid grid-cols-1 gap-4 max-w-screen-sm"
-			bind:this={form}
-			method="POST"
-			on:submit|preventDefault={handleSubmit}
-		>
+		<form class="grid grid-cols-1 gap-4 max-w-screen-sm" bind:this={form} method="POST">
 			<div class="flex flex-col gap-2">
-				<label for="name">Name <span class="text-sm text-red-700">*</span></label>
+				<label for="name">Name <span aria-hidden="true" class="text-sm text-red-700">*</span></label
+				>
 				<input
 					type="text"
 					name="name"
@@ -144,7 +177,8 @@
 
 			<div class="flex flex-col gap-2">
 				<label for="feedbackPositive"
-					>What do you like about Flottform 🚀 ? <span class="text-sm text-red-700">*</span>
+					>What do you like about Flottform?
+					<span aria-hidden="true">🚀 <span class="text-sm text-red-700">*</span></span>
 				</label>
 				<textarea
 					name="feedbackPositive"
@@ -156,7 +190,8 @@
 			</div>
 			<div class="flex flex-col gap-2">
 				<label for="feedbackImprovements"
-					>What can we improve? ⚙️ <span class="text-sm text-red-700">*</span>
+					>What can we improve?
+					<span aria-hidden="true">⚙️ <span class="text-sm text-red-700">*</span></span>
 				</label>
 				<textarea
 					name="feedbackImprovements"
@@ -166,6 +201,13 @@
 					class="border border-primary-blue rounded px-2 py-1"
 				/>
 			</div>
+			<input
+				type="phone"
+				name="phone"
+				id="phone"
+				class="absolute -z-40 -left-[9999px]"
+				tabindex="-1"
+			/>
 			<div class="text-right">
 				<button type="submit" class="bg-primary-blue px-4 py-2 rounded text-white">Submit</button>
 			</div>
