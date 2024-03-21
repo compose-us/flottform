@@ -101,6 +101,13 @@
 		<h2 class="text-center">Thank you!</h2>
 	{:else}
 		<form class="grid grid-cols-1 gap-4 max-w-screen-sm" bind:this={form} method="POST">
+			<p class="italic text-xs">
+				* Please know that we use your data solely for internal analysis and improvement of our
+				service, and it's stored securely in our private GitHub project. We guarantee that your
+				information will not be shared with third parties or used for marketing purposes. There will
+				be no promotional mailings or advertising campaigns targeted based on your feedback. We'll
+				only contact you if you've provided us with your contact details.
+			</p>
 			<div class="flex flex-col gap-2">
 				<label for="name">Name <span aria-hidden="true" class="text-sm text-red-700">*</span></label
 				>
