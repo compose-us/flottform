@@ -1,8 +1,8 @@
-import { SECRET_GITHUB_TOKEN, SECRET_GITHUB_URL } from '$env/static/private';
+import { CREATE_ISSUE_TOKEN, CREATE_ISSUE_URL } from '$env/static/private';
 import { json } from '@sveltejs/kit';
 
-const REPO_URL = `${SECRET_GITHUB_URL}/issues`;
-const accessToken = SECRET_GITHUB_TOKEN || '';
+const REPO_URL = `${CREATE_ISSUE_URL}/issues`;
+const accessToken = CREATE_ISSUE_TOKEN || '';
 
 export const POST = async ({ request }) => {
 	const { userName, contact, feedbackPositive, feedbackImprovements, contactChoice } =
