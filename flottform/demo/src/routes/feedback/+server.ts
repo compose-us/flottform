@@ -4,20 +4,27 @@ import { json } from '@sveltejs/kit';
 const REPO_URL = `${CREATE_ISSUE_URL}/issues`;
 const accessToken = CREATE_ISSUE_TOKEN || '';
 
-export const POST = async ({ request }) => {
-	const { userName, contact, feedbackPositive, feedbackImprovements, contactChoice } =
-		await request.json();
-	const issueBody = `**Name**: ${userName}
-**${contactChoice === 'email' ? '📧 Email' : contactChoice === 'linkedin' ? '📟 LinkedIn' : '🐦 X / Twitter'}**: ${contact || '-'}
-	
-**🚀 That's how cool Flottform is:** 
-${feedbackPositive}
+const sanitizeUserInput = (text: string): string => {
+	return text.replace(/([_*\[(#`])/g, '\$1');
+}
 
-**⚙️ That's how we can improve it:**
-${feedbackImprovements}`;
+export const POST = async ({ fetch, request }) => {
+	const { userName, email, linkedin, twitter, feedbackPositive, feedbackImprovements, contactChoice } =
+		await request.json();
+	const issueBody = `**Name**: ${sanitizeUserInput(userName)}
+**📧 E-Mail**: ${sanitizeUserInput(email) || '-'}
+**📟 LinkedIn**: ${sanitizeUserInput(linkedin) || '-'}
+**🐦 X / Twitter**: ${sanitizeUserInput(twitter) || '-'}
+**Preferred way of contact**: ${sanitizeUserInput(contactChoice)}
+	
+**🚀 What they like about Flottform:**
+${sanitizeUserInput(feedbackPositive)}
+
+**⚙️ What they think we can improve:**
+${sanitizeUserInput(feedbackImprovements)}`;
 
 	const data = {
-		title: `Feedback from ${userName}`,
+		title: `Feedback from ${sanitizeUserInput(userName)}`,
 		body: issueBody,
 		labels: [':nerd_face: feedback']
 	};

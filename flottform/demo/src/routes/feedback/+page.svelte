@@ -1,7 +1,8 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
 
-	let form: HTMLFormElement;
+	let form = $state<HTMLFormElement>();
 
 	let status: 'sending' | 'success' | 'failed' | '' = $state('');
 	let errorDetails: string = $state('');
@@ -9,12 +10,12 @@
 	let contactChoice = $state('email');
 
 	let hasInteractions = $state(false);
-	let submittedTooFast = true;
+	let submittedTooFast = $state(true);
 
 	onMount(() => {
-		form.addEventListener('submit', handleSubmit);
-		form.addEventListener('mousemove', () => (hasInteractions = true));
-		form.addEventListener('keypress', () => (hasInteractions = true));
+		form!.addEventListener('submit', handleSubmit);
+		form!.addEventListener('mousemove', () => (hasInteractions = true));
+		form!.addEventListener('keypress', () => (hasInteractions = true));
 		setTimeout(() => {
 			submittedTooFast = false;
 		}, 7000);
@@ -27,7 +28,9 @@
 		const data = {
 			userName: formData.get('name'),
 			contactChoice,
-			contact: formData.get(contactChoice),
+			email: formData.get('email'),
+			linkedin: formData.get('linkedin'),
+			twitter: formData.get('twitter'),
 			feedbackPositive: formData.get('feedbackPositive'),
 			feedbackImprovements: formData.get('feedbackImprovements')
 		};
@@ -49,7 +52,7 @@
 			errorDetails = 'It seems that you submitted the form whitin 7 seconds. Are you a bot? 🤖';
 			return;
 		}
-		const response = await fetch('feedback', {
+		const response = await fetch(`${base}/feedback`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
@@ -57,14 +60,14 @@
 			body: JSON.stringify(data)
 		});
 
+		if (!response.ok) {
+			status = 'failed';
+			errorDetails = 'There was an error posting the feedback form... 😬';
+			return;
+		}
+
 		const { message } = await response.json();
 		status = message;
-
-		if (status === 'success') {
-			setTimeout(() => {
-				status = '';
-			}, 3000);
-		}
 	};
 </script>
 
@@ -103,10 +106,10 @@
 		<form class="grid grid-cols-1 gap-4 max-w-screen-sm" bind:this={form} method="POST">
 			<p class="italic text-xs">
 				* Please know that we use your data solely for internal analysis and improvement of our
-				service, and it's stored securely in our private GitHub project. We guarantee that your
-				information will not be shared with third parties or used for marketing purposes. There will
-				be no promotional mailings or advertising campaigns targeted based on your feedback. We'll
-				only contact you if you've provided us with your contact details.
+				service, and it's stored securely in a private GitHub project. We won't share your
+				information with other third parties or use it for marketing purposes. There will be no
+				promotional mailings or advertising campaigns targeted based on your feedback. We'll only
+				contact you if you've provided us with your contact details.
 			</p>
 			<div class="flex flex-col gap-2">
 				<label for="name">Name <span aria-hidden="true" class="text-sm text-red-700">*</span></label
@@ -121,7 +124,7 @@
 			</div>
 			<div class="flex flex-col gap-2">
 				<fieldset>
-					<legend>Do you want us to contact you via:</legend>
+					<legend>What's your preferred way of contact?</legend>
 					<div class="grid grid-cols-3 gap-1">
 						<label
 							for="contactChoice1"
@@ -134,7 +137,7 @@
 								value="email"
 								bind:group={contactChoice}
 							/>
-							Email
+							E-Mail
 						</label>
 						<label
 							for="contactChoice2"
@@ -157,7 +160,7 @@
 								type="radio"
 								id="contactChoice3"
 								name="contact"
-								value="X"
+								value="twitter"
 								bind:group={contactChoice}
 							/>
 							X / Twitter
@@ -167,17 +170,31 @@
 			</div>
 
 			<div class="flex flex-col gap-2">
-				<label for="email" class="flex flex-col gap-2"
-					>{contactChoice === 'email'
-						? 'Email'
-						: contactChoice === 'linkedin'
-							? 'LinkedIn'
-							: 'X / Twitter'}</label
-				>
+				<label for="email" class="flex flex-col gap-2">E-Mail</label>
 				<input
-					type={contactChoice === 'email' ? 'email' : 'text'}
-					name={contactChoice}
-					id={contactChoice}
+					type="email"
+					name="email"
+					id="email"
+					class="border border-primary-blue rounded px-2 py-1"
+				/>
+			</div>
+
+			<div class="flex flex-col gap-2">
+				<label for="linkedin" class="flex flex-col gap-2">LinkedIn</label>
+				<input
+					type="text"
+					name="linkedin"
+					id="linkedin"
+					class="border border-primary-blue rounded px-2 py-1"
+				/>
+			</div>
+
+			<div class="flex flex-col gap-2">
+				<label for="twitter" class="flex flex-col gap-2">X / Twitter</label>
+				<input
+					type="text"
+					name="twitter"
+					id="twitter"
 					class="border border-primary-blue rounded px-2 py-1"
 				/>
 			</div>
