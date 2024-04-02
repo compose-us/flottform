@@ -5,7 +5,7 @@ const REPO_URL = `${CREATE_ISSUE_URL}/issues`;
 const accessToken = CREATE_ISSUE_TOKEN || '';
 
 const sanitizeUserInput = (text: string): string => {
-	return text.replace(/([_*\[(#`])/g, '\$1');
+	return text.replace(/([\\_*[\](){}\-#`])/g, '\\$1').replace(/<(.*?)>/g,'&lt;$1&gt;');;
 }
 
 export const POST = async ({ fetch, request }) => {
