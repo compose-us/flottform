@@ -5,18 +5,25 @@ const REPO_URL = `${CREATE_ISSUE_URL}/issues`;
 const accessToken = CREATE_ISSUE_TOKEN || '';
 
 const sanitizeUserInput = (text: string): string => {
-	return text.replace(/([\\_*[\](){}\-#`])/g, '\\$1').replace(/<(.*?)>/g,'&lt;$1&gt;');;
-}
+	return text.replace(/([\\_*[\](){}\-#`])/g, '\\$1').replace(/<(.*?)>/g, '&lt;$1&gt;');
+};
 
 export const POST = async ({ fetch, request }) => {
-	const { userName, email, linkedin, twitter, feedbackPositive, feedbackImprovements, contactChoice } =
-		await request.json();
+	const {
+		userName,
+		email,
+		linkedin,
+		twitter,
+		feedbackPositive,
+		feedbackImprovements,
+		contactChoice
+	} = await request.json();
 	const issueBody = `**Name**: ${sanitizeUserInput(userName)}
 **📧 E-Mail**: ${sanitizeUserInput(email) || '-'}
 **📟 LinkedIn**: ${sanitizeUserInput(linkedin) || '-'}
 **🐦 X / Twitter**: ${sanitizeUserInput(twitter) || '-'}
 **Preferred way of contact**: ${sanitizeUserInput(contactChoice)}
-	
+
 **🚀 What they like about Flottform:**
 ${sanitizeUserInput(feedbackPositive)}
 
