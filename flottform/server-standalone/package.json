@@ -4,6 +4,20 @@
 	"private": true,
 	"description": "Flottform standalone server as node service",
 	"author": "compose.us GmbH",
+	"type": "module",
+	"files": [
+		"src",
+		"dist"
+	],
+	"main": "./dist/index.umd.cjs",
+	"module": "./dist/index.js",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/index.umd.cjs"
+		}
+	},
+	"types": "./dist/src/index.d.ts",
 	"keywords": [
 		"flottform",
 		"forms",
@@ -11,39 +25,32 @@
 		"webrtc"
 	],
 	"scripts": {
-		"dev": "vite dev --port 5177",
+		"dev": "pnpm run '/^dev:.*/'",
+		"dev:fastify": "nodemon ./dist/index.js",
+		"dev:vite": "vite build --watch",
 		"build": "vite build",
 		"preview": "vite preview",
-		"test": "pnpm run test:integration && pnpm run test:unit",
-		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
-		"test:integration": "playwright test",
+		"test": "pnpm run test:unit",
 		"test:unit": "vitest"
 	},
-	"devDependencies": {
-		"@flottform/server": "workspace:^",
-		"@playwright/test": "^1.28.1",
-		"@sveltejs/adapter-node": "^4.0.1",
-		"@sveltejs/kit": "^2.0.0",
-		"@sveltejs/vite-plugin-svelte": "^3.0.0",
-		"@types/eslint": "8.56.0",
-		"@typescript-eslint/eslint-plugin": "^6.0.0",
-		"@typescript-eslint/parser": "^6.0.0",
-		"@vitejs/plugin-basic-ssl": "^1.1.0",
-		"eslint": "^8.56.0",
-		"eslint-config-prettier": "^9.1.0",
-		"eslint-plugin-svelte": "^2.36.0-next.4",
-		"prettier": "^3.1.1",
-		"prettier-plugin-svelte": "^3.1.2",
-		"svelte": "^5.0.0-next.1",
-		"svelte-check": "^3.6.0",
-		"tslib": "^2.4.1",
-		"typescript": "^5.0.0",
-		"vite": "^5.0.3",
-		"vitest": "^1.2.0",
-		"zod": "^3.22.4"
+	"dependencies": {
+		"@fastify/websocket": "^10.0.1",
+		"fastify": "^4.26.2"
 	},
-	"type": "module"
+	"devDependencies": {
+		"@playwright/test": "^1.28.1",
+		"@rollup/plugin-run": "^3.0.2",
+		"@types/qrcode": "^1.5.5",
+		"@vitejs/plugin-basic-ssl": "^1.1.0",
+		"@vitest/browser": "^1.3.1",
+		"nodemon": "^3.1.0",
+		"pino-pretty": "^11.0.0",
+		"qrcode": "^1.5.3",
+		"vite": "^5.0.3",
+		"vite-plugin-dts": "^3.7.3",
+		"vitest": "^1.3.1",
+		"webdriverio": "^8.32.3"
+	}
 }
