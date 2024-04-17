@@ -239,10 +239,9 @@
 					/>
 				</div>
 			</div>
-			<div class="grid gap-6 grid-cols-1 sm:grid-cols-2">
-				<div class="">
-					<FileInput id="document" name="document" {fileInput} />
-				</div>
+			<div class="grid gap-6 grid-cols-1 sm:grid-cols-[390px_1fr]">
+				<FileInput id="document" name="document" {fileInput} />
+
 				{#if highlighted}
 					<div class="text-primary-green hidden sm:flex flex-col">
 						<svg
