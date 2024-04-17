@@ -31,9 +31,9 @@ export type ClientState =
 export type FlottformState =
 	| 'new'
 	| 'waiting-for-client'
-	| 'connection-impossible'
 	| 'waiting-for-ice'
 	| 'waiting-for-file'
+	| 'receiving-data'
 	| 'done'
 	| 'error';
 

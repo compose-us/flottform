@@ -293,19 +293,6 @@
 	.drag {
 		@apply border-2 border-dotted border-primary-blue;
 	}
-	form :global(.qrCodeButton) {
-		background: var(--cus-color-blue);
-		padding: 0.5rem 0.75rem;
-		color: #fff;
-		font-weight: 700;
-		border: none;
-		border-radius: 5px;
-		cursor: pointer;
-		display: inline-block;
-	}
-	form :global(.qrCodeWrapper) {
-		margin-bottom: 1rem;
-	}
 	.first,
 	.second {
 		stroke-dasharray: 1;

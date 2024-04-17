@@ -7,8 +7,196 @@ import {
 	retrieveEndpointInfo,
 	setIncludes
 } from './internal';
+import {
+	Styles,
+	changeBackgroundOnState,
+	closeDialogButtonCss,
+	closeSvg,
+	createChannelButtonCss,
+	createChannelElementCss,
+	createChannelQrCodeCss,
+	createChannelStatusWrapperCss,
+	defaultStyles,
+	dialogCss,
+	flottformSvg,
+	refreshConnectionButtonCss,
+	simulateHoverEffect
+} from './flottform-styles';
 
 let channelNumber = 0;
+const noop = () => {};
+
+const createDefaultOnStateChange = (options: {
+	inputField?: HTMLElement;
+	logger: Logger;
+	styles?: Styles;
+}): (<T extends FlottformState>(state: T, details?: any) => void) => {
+	const { inputField, logger, styles } = options;
+	if (!inputField) {
+		return noop;
+	}
+	return (state, details) => {
+		const getElements = () => {
+			const createChannelElement = inputField.nextElementSibling!;
+			const createChannelButton =
+				createChannelElement.querySelector<HTMLElement>('.flottform-button')!;
+			const createChannelLinkDialog =
+				document.querySelector<HTMLDialogElement>('.flottform-link-dialog')!;
+			const createChannelStatusWrapper = createChannelLinkDialog.querySelector<HTMLElement>(
+				'.flottform-status-wrapper'
+			)!;
+			const createChannelLinkArea =
+				createChannelLinkDialog.querySelector<HTMLElement>('.flottform-link-area')!;
+			const createChannelQrCode =
+				createChannelLinkDialog.querySelector<HTMLElement>('.flottform-qr-code')!;
+			const createChannelLinkWithOffer =
+				createChannelLinkDialog.querySelector<HTMLElement>('.flottform-link-offer')!;
+			const createDialogDescription = createChannelLinkDialog.querySelector<HTMLElement>(
+				'.flottform-dialog-description'
+			)!;
+			return {
+				createChannelElement,
+				createChannelButton,
+				createChannelLinkDialog,
+				createChannelStatusWrapper,
+				createChannelLinkArea,
+				createChannelQrCode,
+				createChannelLinkWithOffer,
+				createDialogDescription
+			};
+		};
+
+		const mapper: Record<FlottformState, (details?: any) => void> = {
+			new: (details: ReturnType<typeof createFlottformInput>) => {
+				const createChannelElement = document.createElement('div');
+				const createChannelLinkDialog = document.createElement('dialog');
+				const createChannelStatusWrapper = document.createElement('div');
+				const createDialogDescription = document.createElement('p');
+				const closeDialogButton = document.createElement('button');
+				const refreshConnectionButton = document.createElement('button');
+				const createChannelQrCode = document.createElement('img');
+				const createChannelLinkWithOffer = document.createElement('a');
+				createChannelElement.setAttribute('class', 'flottform-parent');
+				createChannelElement.style.cssText = createChannelElementCss(inputField);
+				createChannelQrCode.setAttribute('class', 'flottform-qr-code');
+				createChannelLinkWithOffer.setAttribute('class', 'flottform-link-offer');
+				createChannelLinkWithOffer.setAttribute('target', '_blank');
+				createChannelLinkDialog.setAttribute('class', 'flottform-link-dialog');
+				createChannelStatusWrapper.setAttribute('class', 'flottform-status-wrapper');
+				createDialogDescription.setAttribute('class', 'flottform-dialog-description');
+				closeDialogButton.innerHTML = closeSvg(styles);
+				closeDialogButton.setAttribute('class', 'close-dialog-button');
+				closeDialogButton.addEventListener('click', () => {
+					createChannelLinkDialog.close();
+					createChannelLinkDialog.style.display = 'none';
+				});
+				refreshConnectionButton.innerHTML = 'Refresh';
+				refreshConnectionButton.setAttribute('class', 'refresh-connection-button');
+				refreshConnectionButton.addEventListener('click', details.createChannel);
+				createChannelLinkDialog.appendChild(createChannelStatusWrapper);
+				createChannelLinkDialog.appendChild(createChannelQrCode);
+				createChannelLinkDialog.appendChild(createChannelLinkWithOffer);
+				createChannelLinkDialog.appendChild(createDialogDescription);
+				createChannelLinkDialog.appendChild(closeDialogButton);
+				createChannelLinkDialog.appendChild(refreshConnectionButton);
+				document.body.appendChild(createChannelLinkDialog);
+				const createChannelButton = document.createElement('button');
+				createChannelButton.setAttribute('type', 'button');
+				createChannelButton.setAttribute('class', 'flottform-button');
+				createChannelButton.innerHTML = flottformSvg(styles);
+				closeDialogButton.style.cssText = closeDialogButtonCss(styles);
+				createChannelButton.style.cssText = createChannelButtonCss(styles);
+				createChannelLinkDialog.style.cssText = dialogCss(styles);
+				createChannelQrCode.style.cssText = createChannelQrCodeCss(styles);
+				refreshConnectionButton.style.cssText = refreshConnectionButtonCss(styles);
+				createChannelStatusWrapper.style.cssText = createChannelStatusWrapperCss(styles);
+				createChannelButton.addEventListener('click', details.createChannel);
+				createChannelButton.addEventListener('click', () => {
+					createChannelLinkDialog.showModal();
+					createChannelLinkDialog.style.display = 'flex';
+				});
+				simulateHoverEffect(createChannelButton, styles);
+				simulateHoverEffect(refreshConnectionButton, styles);
+				createChannelElement.appendChild(createChannelButton);
+				inputField?.after(createChannelElement);
+			},
+			'waiting-for-client': (details: {
+				qrCode: string;
+				link: string;
+				createChannel: ReturnType<typeof createFlottformInput>;
+			}) => {
+				const {
+					createChannelQrCode,
+					createChannelLinkWithOffer,
+					createDialogDescription,
+					createChannelButton,
+					createChannelStatusWrapper
+				} = getElements();
+				createChannelButton.removeEventListener('click', details.createChannel);
+				createChannelQrCode.style.display = 'block';
+				createChannelLinkWithOffer.style.display = 'block';
+				createChannelQrCode.setAttribute('src', details.qrCode);
+				createChannelLinkWithOffer.setAttribute('href', details.link);
+				createChannelLinkWithOffer.innerHTML = details.link;
+				createChannelStatusWrapper.innerHTML = 'Upload a file';
+				createDialogDescription.innerHTML = 'Use this QR-Code or Link on your other device.';
+				createChannelButton.style.background = changeBackgroundOnState(state, styles);
+			},
+			'waiting-for-file': () => {
+				const {
+					createDialogDescription,
+					createChannelStatusWrapper,
+					createChannelButton,
+					createChannelQrCode,
+					createChannelLinkWithOffer
+				} = getElements();
+				createChannelQrCode.style.display = 'none';
+				createChannelLinkWithOffer.style.display = 'none';
+				createChannelStatusWrapper.innerHTML = 'Connected!';
+				createDialogDescription.innerHTML =
+					'Another device is connected. Start the data transfer from your other device';
+				createChannelButton.style.background = changeBackgroundOnState(state, styles);
+			},
+			'waiting-for-ice': () => {
+				const { createDialogDescription } = getElements();
+				createDialogDescription.innerHTML = 'Waiting for data channel connection';
+			},
+			'receiving-data': () => {
+				const { createChannelStatusWrapper, createDialogDescription, createChannelButton } =
+					getElements();
+				createChannelStatusWrapper.innerHTML = 'Receiving data';
+				createDialogDescription.innerHTML =
+					'Another device is sending data. Waiting for incoming data transfer to complete';
+				createChannelButton.style.background = changeBackgroundOnState(state, styles);
+			},
+			done: () => {
+				const { createChannelStatusWrapper, createDialogDescription, createChannelButton } =
+					getElements();
+				createChannelStatusWrapper.innerHTML = `Done!`;
+				createDialogDescription.innerHTML = `You have received a file from another device. Please close this dialog to finish your form.`;
+				createChannelButton.style.background = changeBackgroundOnState(state, styles);
+			},
+			error: (details) => {
+				logger.error(details);
+				const { createChannelStatusWrapper, createDialogDescription, createChannelButton } =
+					getElements();
+				let errorMessage = 'Connection failed - please retry!';
+				if (details.message === 'connection-failed') {
+					errorMessage = 'Client connection failed!';
+				} else if (details.message === 'connection-impossible') {
+					errorMessage =
+						'Connection to this client with the current network environment is impossible';
+				} else if (details.message === 'file-transfer') {
+					errorMessage = 'Error during file transfer';
+				}
+				createChannelStatusWrapper.innerHTML = 'Oops! Something went wrong';
+				createDialogDescription.innerHTML = errorMessage;
+				createChannelButton.style.background = changeBackgroundOnState('error', styles);
+			}
+		};
+		mapper[state](details);
+	};
+};
 
 export function createFlottformInput({
 	flottformApi,
@@ -17,47 +205,53 @@ export function createFlottformInput({
 	pollTimeForIceInMs = POLL_TIME_IN_MS,
 	inputField,
 	onError = () => {},
+	onProgress = ({ currentSize, totalSize }) => {
+		const createChannelElement = inputField!.nextElementSibling!;
+		const createChannelLinkDialog =
+			document.querySelector<HTMLDialogElement>('.flottform-link-dialog')!;
+		const createChannelStatusWrapper = createChannelLinkDialog.querySelector<HTMLElement>(
+			'.flottform-status-wrapper'
+		)!;
+		createChannelStatusWrapper.innerHTML = `Receiving ${Math.round((currentSize / totalSize) * 100)}%`;
+		const createChannelButton =
+			createChannelElement.querySelector<HTMLElement>('.flottform-button')!;
+		createChannelButton.style.background = `conic-gradient(#7EA4FF ${Math.round((currentSize / totalSize) * 100)}%, #FFF ${Math.round((currentSize / totalSize) * 100)}%`;
+	},
 	onResult = (files) => {
 		if (inputField) {
 			inputField.files = files;
 		}
 	},
-	onStateChange = (state) => {
-		if (!inputField) {
-			return;
-		}
-		const createChannelElement = inputField.nextElementSibling!;
-		console.log(createChannelElement);
-		const createChannelButton = createChannelElement.querySelector('.flottform-button')!;
-		switch (state) {
-			case 'waiting-for-client':
-				createChannelButton.innerHTML = 'Waiting for client to connect';
-				return;
-			case 'waiting-for-ice':
-				createChannelButton.innerHTML = 'Waiting for data channel connection';
-				return;
-		}
-	},
-	logger = console
+	onStateChange = noop,
+	logger = console,
+	useDefaultUi = true,
+	styles = defaultStyles
 }: {
 	flottformApi: string | URL;
 	createClientUrl: (params: { endpointId: string }) => Promise<string>;
 	rtcConfiguration?: RTCConfiguration;
 	inputField?: HTMLInputElement;
 	onError?: (e: Error) => void;
+	onProgress?: (detail: { currentSize: number; totalSize: number }) => void;
 	onResult?: (files: FileList) => void;
-	onStateChange?: (state: FlottformState) => void;
+	onStateChange?: <T extends FlottformState>(state: T, details?: any) => void;
 	pollTimeForIceInMs?: number;
 	logger?: Logger;
+	useDefaultUi?: boolean;
+	styles?: Styles;
 }): { createChannel: () => void } {
 	const baseApi = (flottformApi instanceof URL ? flottformApi : new URL(flottformApi))
 		.toString()
 		.replace(/\/$/, '');
+	const internalOnStateChange = useDefaultUi
+		? createDefaultOnStateChange({ inputField, logger, styles })
+		: noop;
 
 	let state: FlottformState = 'new';
-	const changeState = (newState: FlottformState) => {
+	const changeState: typeof onStateChange = (newState, details) => {
 		state = newState;
-		onStateChange(newState);
+		internalOnStateChange(newState, details);
+		onStateChange(newState, details);
 	};
 
 	let openPeerConnection: RTCPeerConnection | null = null;
@@ -153,9 +347,7 @@ export function createFlottformInput({
 			}
 			if (connection.connectionState === 'failed') {
 				stopPollingForConnection();
-				state = 'error';
-				createChannelLinkArea.style.display = 'none';
-				createChannelButton.innerHTML = 'Client connection failed!';
+				changeState('error', { message: 'connection-failed' });
 			}
 		};
 		connection.onicecandidate = async (e) => {
@@ -178,10 +370,7 @@ export function createFlottformInput({
 			logger.info(`oniceconnectionstatechange - ${connection.iceConnectionState} - ${e}`);
 			if (connection.iceConnectionState === 'failed') {
 				logger.log('Failed to find a possible connection path');
-				state = 'connection-impossible';
-				createChannelLinkArea.style.display = 'none';
-				createChannelButton.innerHTML =
-					'Connection to this client with the current network environment is impossible';
+				changeState('error', { message: 'connection-impossible' });
 			}
 		};
 
@@ -189,14 +378,14 @@ export function createFlottformInput({
 		await putHostInfo();
 		startPollingForConnection();
 		const connectLink = await createClientUrl({ endpointId });
-		createChannelQrCode.setAttribute('src', await toDataURL(connectLink));
-		createChannelLinkWithOffer.setAttribute('href', connectLink);
-		createChannelLinkWithOffer.innerHTML = connectLink;
-		createChannelLinkArea.style.display = 'block';
-
-		changeState('waiting-for-client');
+		changeState('waiting-for-client', {
+			qrCode: await toDataURL(connectLink),
+			link: connectLink,
+			createChannel
+		});
 
 		const arrayBuffers: ArrayBuffer[] = [];
+		let didReceiveSomething = false;
 		let hasMetaInformation = false;
 		let fileName = 'no-name';
 		let fileType = 'application/octet-stream';
@@ -205,9 +394,7 @@ export function createFlottformInput({
 
 		dataChannel.onopen = (e) => {
 			logger.log('data channel opened');
-			state = 'waiting-for-file';
-			createChannelLinkArea.style.display = 'none';
-			createChannelButton.innerHTML = 'Waiting for file';
+			changeState('waiting-for-file');
 		};
 
 		dataChannel.onclose = (e) => {
@@ -216,11 +403,13 @@ export function createFlottformInput({
 
 		dataChannel.onerror = (e) => {
 			logger.log('channel.onerror', e);
-			state = 'error';
-			createChannelButton.innerHTML = 'Error during file transfer';
+			changeState('error', { message: 'file-transfer' });
 		};
 
 		dataChannel.onmessage = async (e) => {
+			if (!didReceiveSomething) {
+				changeState('receiving-data');
+			}
 			if (!hasMetaInformation) {
 				const fileMeta = JSON.parse(e.data) as {
 					lastModified?: number;
@@ -239,7 +428,7 @@ export function createFlottformInput({
 			const ab = data instanceof Blob ? await data.arrayBuffer() : (data as ArrayBuffer);
 			arrayBuffers.push(ab);
 			currentSize += ab.byteLength;
-			createChannelButton.innerHTML = `Receiving file ${Math.round((currentSize / size) * 100)}%`;
+			onProgress({ currentSize, totalSize: size });
 
 			if (currentSize === size) {
 				const fileForForm = new File(arrayBuffers, fileName);
@@ -247,39 +436,13 @@ export function createFlottformInput({
 				dt.items.add(fileForForm);
 
 				onResult(dt.files);
-
-				state = 'done';
-				createChannelButton.innerHTML = `Open new connection`;
+				changeState('done');
 				dataChannel.close();
 			}
 		};
 	};
 
-	const createChannelElement = document.createElement('div');
-	const createChannelLinkArea = document.createElement('div');
-	const createChannelQrCode = document.createElement('img');
-	const createChannelLinkWithOffer = document.createElement('a');
-	createChannelElement.setAttribute('class', 'flottform-parent');
-	createChannelElement.style.position = 'absolute';
-	createChannelElement.style.top = (inputField?.offsetTop ?? 0) + 'px';
-	createChannelElement.style.left =
-		(inputField?.offsetLeft ?? 0) + (inputField?.offsetWidth ?? 0) + 16 + 'px';
-	createChannelElement.style.width = `calc(100vw - ${inputField?.offsetWidth ?? 0}px)`;
-	createChannelLinkWithOffer.setAttribute('target', '_blank');
-	createChannelLinkArea.style.display = 'none';
-	createChannelLinkArea.appendChild(createChannelQrCode);
-	createChannelLinkArea.appendChild(createChannelLinkWithOffer);
-	createChannelElement.appendChild(createChannelLinkArea);
-	createChannelLinkArea.classList.add('qrCodeWrapper');
-
-	const createChannelButton = document.createElement('button');
-	createChannelButton.setAttribute('type', 'button');
-	createChannelButton.setAttribute('class', 'flottform-button');
-	createChannelButton.innerHTML = 'Load file from other device';
-	createChannelButton.classList.add('qrCodeButton');
-	createChannelButton.addEventListener('click', createChannel);
-	createChannelElement.appendChild(createChannelButton);
-	inputField?.after(createChannelElement);
-
-	return { createChannel };
+	const returnValue = { createChannel };
+	changeState('new', returnValue);
+	return returnValue;
 }
