@@ -3,6 +3,7 @@ import {
 	DEFAULT_WEBRTC_CONFIG,
 	FlottformState,
 	Logger,
+	FileMetaInfos,
 	POLL_TIME_IN_MS,
 	retrieveEndpointInfo,
 	setIncludes
@@ -198,14 +199,14 @@ const createDefaultOnStateChange = (options: {
 	};
 };
 
-export function createFlottformInput({
+export function createFlottformInput<ResultType = string | FileList | unknown>({
 	flottformApi,
 	createClientUrl,
 	rtcConfiguration = DEFAULT_WEBRTC_CONFIG,
 	pollTimeForIceInMs = POLL_TIME_IN_MS,
 	inputField,
 	onError = () => {},
-	onProgress = ({ currentSize, totalSize }) => {
+	onProgress = (inputField, { currentSize, totalSize }) => {
 		const createChannelElement = inputField!.nextElementSibling!;
 		const createChannelLinkDialog =
 			document.querySelector<HTMLDialogElement>('.flottform-link-dialog')!;
@@ -217,9 +218,31 @@ export function createFlottformInput({
 			createChannelElement.querySelector<HTMLElement>('.flottform-button')!;
 		createChannelButton.style.background = `conic-gradient(#7EA4FF ${Math.round((currentSize / totalSize) * 100)}%, #FFF ${Math.round((currentSize / totalSize) * 100)}%`;
 	},
-	onResult = (files) => {
-		if (inputField) {
-			inputField.files = files;
+	onResult = async (
+		inputField,
+		incoming: { fileMeta: FileMetaInfos; arrayBuffers: Array<ArrayBuffer> }
+	) => {
+		if (!inputField) {
+			logger.warn('no input field, no need to run onResult');
+			return;
+		}
+		if (incoming.fileMeta.data === 'input:file' || incoming.fileMeta.data === 'canvas:png') {
+			const fileName = incoming.fileMeta.name ?? 'no-name';
+			const fileType = incoming.fileMeta.type ?? 'application/octet-stream';
+
+			const fileForForm = new File(incoming.arrayBuffers, fileName, { type: fileType });
+			const dt = new DataTransfer();
+			dt.items.add(fileForForm);
+			inputField.files = dt.files;
+		}
+		if (incoming.fileMeta.data === 'input:text') {
+			const decoder = new TextDecoder();
+			let result = '';
+			for (const arrayBuffer of incoming.arrayBuffers) {
+				// TODO Test whether umlaute work on fragmented text - seem to work well
+				result += decoder.decode(arrayBuffer);
+			}
+			inputField.value = result;
 		}
 	},
 	onStateChange = noop,
@@ -230,10 +253,19 @@ export function createFlottformInput({
 	flottformApi: string | URL;
 	createClientUrl: (params: { endpointId: string }) => Promise<string>;
 	rtcConfiguration?: RTCConfiguration;
-	inputField?: HTMLInputElement;
+	inputField?: HTMLInputElement | HTMLCanvasElement;
 	onError?: (e: Error) => void;
-	onProgress?: (detail: { currentSize: number; totalSize: number }) => void;
-	onResult?: (files: FileList) => void;
+	onProgress?: (
+		inputField: HTMLInputElement | HTMLCanvasElement,
+		detail: { currentSize: number; totalSize: number }
+	) => void;
+	onResult?: (
+		inputField: HTMLInputElement | HTMLCanvasElement,
+		incoming: {
+			fileMeta: FileMetaInfos;
+			arrayBuffers: Array<ArrayBuffer>;
+		}
+	) => Promise<void>;
 	onStateChange?: <T extends FlottformState>(state: T, details?: any) => void;
 	pollTimeForIceInMs?: number;
 	logger?: Logger;
@@ -386,10 +418,7 @@ export function createFlottformInput({
 
 		const arrayBuffers: ArrayBuffer[] = [];
 		let didReceiveSomething = false;
-		let hasMetaInformation = false;
-		let fileName = 'no-name';
-		let fileType = 'application/octet-stream';
-		let size = 0;
+		let fileMeta: FileMetaInfos | undefined = undefined;
 		let currentSize = 0;
 
 		dataChannel.onopen = (e) => {
@@ -410,34 +439,30 @@ export function createFlottformInput({
 			if (!didReceiveSomething) {
 				changeState('receiving-data');
 			}
-			if (!hasMetaInformation) {
-				const fileMeta = JSON.parse(e.data) as {
-					lastModified?: number;
-					name?: string;
-					size: number;
-					type?: string;
-				};
-				size = fileMeta.size;
-				fileName = fileMeta.name ?? fileName;
-				fileType = fileMeta.type ?? fileType;
-				hasMetaInformation = true;
+
+			if (!fileMeta) {
+				fileMeta = JSON.parse(e.data) as FileMetaInfos;
 				return;
 			}
+			const size = fileMeta.size;
 
 			const data = e.data;
 			const ab = data instanceof Blob ? await data.arrayBuffer() : (data as ArrayBuffer);
 			arrayBuffers.push(ab);
 			currentSize += ab.byteLength;
-			onProgress({ currentSize, totalSize: size });
+			onProgress(inputField, { currentSize, totalSize: size });
 
 			if (currentSize === size) {
-				const fileForForm = new File(arrayBuffers, fileName);
-				const dt = new DataTransfer();
-				dt.items.add(fileForForm);
-
-				onResult(dt.files);
+				try {
+					await onResult(inputField, { fileMeta, arrayBuffers });
+				} catch (e) {
+					logger.error('Could not complete onResult', e);
+					changeState('error', e);
+					return;
+				} finally {
+					dataChannel.close();
+				}
 				changeState('done');
-				dataChannel.close();
 			}
 		};
 	};

@@ -45,6 +45,14 @@ export type Logger = {
 	error: (...args: any[]) => void;
 };
 
+export type FileMetaInfos = {
+	data: string;
+	lastModified?: number;
+	name?: string;
+	size: number;
+	type?: string;
+};
+
 export const POLL_TIME_IN_MS: number = 1000;
 
 export const DEFAULT_WEBRTC_CONFIG: RTCConfiguration = {
