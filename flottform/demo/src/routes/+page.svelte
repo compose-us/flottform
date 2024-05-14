@@ -105,9 +105,10 @@
 		const fileInputFields = document.querySelectorAll(
 			'input[type=file]'
 		) as NodeListOf<HTMLInputElement>;
-		createFlottformInput(fileInputFields[0], {
+		const { createChannel } = createFlottformInput({
 			flottformApi: sdpExchangeServerBase,
-			createClientUrl
+			createClientUrl,
+			inputField: fileInputFields[0]
 		});
 	});
 </script>
@@ -238,10 +239,9 @@
 					/>
 				</div>
 			</div>
-			<div class="grid gap-6 grid-cols-1 sm:grid-cols-2">
-				<div class="">
-					<FileInput id="document" name="document" {fileInput} />
-				</div>
+			<div class="grid gap-6 grid-cols-1 sm:grid-cols-[390px_1fr]">
+				<FileInput id="document" name="document" {fileInput} />
+
 				{#if highlighted}
 					<div class="text-primary-green hidden sm:flex flex-col">
 						<svg
@@ -291,19 +291,6 @@
 <style lang="postcss">
 	.drag {
 		@apply border-2 border-dotted border-primary-blue;
-	}
-	form :global(.qrCodeButton) {
-		background: var(--cus-color-blue);
-		padding: 0.5rem 0.75rem;
-		color: #fff;
-		font-weight: 700;
-		border: none;
-		border-radius: 5px;
-		cursor: pointer;
-		display: inline-block;
-	}
-	form :global(.qrCodeWrapper) {
-		margin-bottom: 1rem;
 	}
 	.first,
 	.second {

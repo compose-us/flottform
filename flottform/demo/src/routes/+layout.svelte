@@ -1,8 +1,19 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import '../app.postcss';
 </script>
 
 <slot />
+<footer class="w-full px-4 py-4 bg-gray-200 bg-opacity-50 mt-auto">
+	<ul class="max-w-screen-xl mx-auto flex justify-center gap-8">
+		<li>
+			<a href="{base}/">Demo</a>
+		</li>
+		<li>
+			<a href="{base}/feedback">Feedback</a>
+		</li>
+	</ul>
+</footer>
 
 <style>
 	:root {
