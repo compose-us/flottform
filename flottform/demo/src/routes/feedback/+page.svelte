@@ -210,7 +210,7 @@
 					rows="5"
 					required
 					class="border border-primary-blue rounded px-2 py-1"
-				/>
+				></textarea>
 			</div>
 			<div class="flex flex-col gap-2">
 				<label for="feedbackImprovements"
@@ -223,7 +223,7 @@
 					rows="5"
 					required
 					class="border border-primary-blue rounded px-2 py-1"
-				/>
+				></textarea>
 			</div>
 			<input
 				type="phone"
