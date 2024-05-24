@@ -25,8 +25,8 @@
 
 <div class="max-w-screen-xl mx-auto p-8 box-border grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-0">
 	<div class="sm:col-span-2 order-2 md:order-1 gap-4 flex flex-col">
-        <h1>Test page to send files</h1>
-		<form action="{base}/upload" method="POST" enctype="multipart/form-data">
+		<h1>Test page to send files</h1>
+		<form action="{base}/tests/upload" method="POST" enctype="multipart/form-data">
 			<FileInput id="document" name="document" {fileInput} />
 			<button
 				type="submit"
