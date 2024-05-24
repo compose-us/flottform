@@ -14,7 +14,8 @@ export const GET: RequestHandler = async ({ params }) => {
 		return json(endpointInfos, {
 			headers: {
 				'Access-Control-Allow-Origin': '*',
-				'Access-Control-Allow-Methods': 'GET,DELETE,OPTIONS'
+				'Access-Control-Allow-Methods': 'GET,DELETE,OPTIONS',
+				'Access-Control-Allow-Headers': '*'
 			}
 		});
 	} catch (err) {
@@ -52,7 +53,8 @@ export const DELETE: RequestHandler = async ({ params, request }) => {
 			{
 				headers: {
 					'Access-Control-Allow-Origin': '*',
-					'Access-Control-Allow-Methods': 'GET,DELETE,OPTIONS'
+					'Access-Control-Allow-Methods': 'GET,DELETE,OPTIONS',
+					'Access-Control-Allow-Headers': '*'
 				}
 			}
 		);
@@ -68,7 +70,8 @@ export const OPTIONS: RequestHandler = async () => {
 	return text('', {
 		headers: {
 			'Access-Control-Allow-Origin': '*',
-			'Access-Control-Allow-Methods': 'GET,DELETE,OPTIONS'
+			'Access-Control-Allow-Methods': 'GET,DELETE,OPTIONS',
+			'Access-Control-Allow-Headers': '*'
 		}
 	});
 };

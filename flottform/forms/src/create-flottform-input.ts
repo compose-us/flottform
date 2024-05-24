@@ -352,7 +352,6 @@ export function createFlottformInput<ResultType = string | FileList | unknown>({
 				logger.log('Updating host info with new list of ice candidates');
 				const response = await fetch(putHostInfoUrl, {
 					method: 'PUT',
-					mode: 'cors',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({
 						hostKey,

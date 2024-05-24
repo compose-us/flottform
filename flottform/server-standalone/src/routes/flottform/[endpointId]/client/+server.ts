@@ -30,7 +30,8 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 		return json(endpoint, {
 			headers: {
 				'Access-Control-Allow-Origin': '*',
-				'Access-Control-Allow-Methods': 'PUT,OPTIONS'
+				'Access-Control-Allow-Methods': 'PUT,OPTIONS',
+				'Access-Control-Allow-Headers': '*'
 			}
 		});
 	} catch (err) {
@@ -45,7 +46,8 @@ export const OPTIONS: RequestHandler = async () => {
 	return text('', {
 		headers: {
 			'Access-Control-Allow-Origin': '*',
-			'Access-Control-Allow-Methods': 'PUT,OPTIONS'
+			'Access-Control-Allow-Methods': 'PUT,OPTIONS',
+			'Access-Control-Allow-Headers': '*'
 		}
 	});
 };

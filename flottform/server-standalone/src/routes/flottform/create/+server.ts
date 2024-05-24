@@ -21,7 +21,8 @@ export const POST: RequestHandler = async ({ request }) => {
 	return json(endpoint, {
 		headers: {
 			'Access-Control-Allow-Origin': '*',
-			'Access-Control-Allow-Methods': 'POST,OPTIONS'
+			'Access-Control-Allow-Methods': 'POST,OPTIONS',
+			'Access-Control-Allow-Headers': '*'
 		}
 	});
 };
@@ -30,7 +31,8 @@ export const OPTIONS: RequestHandler = async () => {
 	return text('', {
 		headers: {
 			'Access-Control-Allow-Origin': '*',
-			'Access-Control-Allow-Methods': 'POST,OPTIONS'
+			'Access-Control-Allow-Methods': 'POST,OPTIONS',
+			'Access-Control-Allow-Headers': '*'
 		}
 	});
 };
