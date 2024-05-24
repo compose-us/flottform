@@ -19,7 +19,7 @@ export async function connectToFlottform({
 	logger = console
 }: {
 	endpointId: string;
-	fileInput: HTMLInputElement;
+	fileInput: HTMLInputElement | HTMLCanvasElement;
 	flottformApi: string;
 	onError?: (error: Error) => void;
 	onStateChange?: (state: ClientState) => void;
@@ -112,44 +112,88 @@ export async function connectToFlottform({
 	changeState('connecting-to-host');
 	startPollingForIceCandidates();
 
-	const createSendFileToPeer =
-		({ onProgress }: { onProgress?: (percentage: number) => void }) =>
-		async () => {
-			changeState('sending');
+	//serialize data
+
+	type FileMetaInfos = { size: number };
+	const serializeData = async (
+		fileInput: HTMLInputElement | HTMLCanvasElement
+	): Promise<{
+		fileMeta: FileMetaInfos;
+		arrayBuffer: ArrayBuffer;
+	}> => {
+		if (fileInput instanceof HTMLInputElement) {
+			logger.log(fileInput.value);
 			const file = fileInput.files?.item(0);
 			if (!file) {
-				logger.log('no file?!?!');
-				return;
+				const arrayBuffer = new TextEncoder().encode(fileInput.value);
+				const fileMeta = {
+					data: 'input:text',
+					size: arrayBuffer.byteLength
+				};
+				return { arrayBuffer, fileMeta };
 			}
-			if (!channel) {
-				logger.log('no channel?!?!');
-				return;
+			const arrayBuffer = await file.arrayBuffer();
+			if (!arrayBuffer) {
+				logger.log('no array buffer');
+				throw Error('no array buffer in file input element');
 			}
-
 			const fileMeta = {
+				data: 'input:file',
 				lastModified: file.lastModified,
 				name: file.name,
 				type: file.type,
 				size: file.size
 			};
+			return { fileMeta, arrayBuffer };
+		}
+		const arrayBuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
+			fileInput.toBlob(async (blob) => {
+				if (!blob) {
+					reject(Error('no blob in canvas'));
+					return;
+				}
+				const arrayBuffer = await blob?.arrayBuffer();
+				if (!arrayBuffer) {
+					reject(Error('no array buffer in blob'));
+					return;
+				}
+				resolve(arrayBuffer);
+			}, 'image/png');
+		});
+
+		const fileMeta = {
+			data: 'canvas:png',
+			lastModified: Date.now(),
+			name: 'canvas.png',
+			type: 'image/png',
+			size: arrayBuffer.byteLength
+		};
+
+		return { fileMeta, arrayBuffer };
+	};
+
+	const createSendFileToPeer =
+		({ onProgress }: { onProgress?: (percentage: number) => void }) =>
+		async () => {
+			const sendProgress = onProgress ?? logger.log;
+			if (!channel) {
+				logger.log('no channel?!?!');
+				return;
+			}
+			const { fileMeta, arrayBuffer } = await serializeData(fileInput);
+			const maxChunkSize = 16384;
 			channel.send(JSON.stringify(fileMeta));
 			channel.onerror = (e) => {
 				changeState('error');
 				logger.log('channel.onerror', e);
 			};
-			const maxChunkSize = 16384;
-			const ab = await file.arrayBuffer();
-			if (!ab) {
-				logger.log('no array buffer');
-				return;
-			}
 
-			for (let i = 0; i * maxChunkSize <= ab.byteLength; i++) {
-				(onProgress ?? logger.log)(i / (ab.byteLength / maxChunkSize));
+			for (let i = 0; i * maxChunkSize <= arrayBuffer.byteLength; i++) {
+				sendProgress(i / (arrayBuffer.byteLength / maxChunkSize));
 				const end = (i + 1) * maxChunkSize;
-				channel.send(ab.slice(i * maxChunkSize, end));
+				channel.send(arrayBuffer.slice(i * maxChunkSize, end));
 			}
-			logger.log('sent file!', ab);
+			logger.log('sent file!', arrayBuffer);
 			changeState('done');
 		};
 
