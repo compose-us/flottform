@@ -155,6 +155,7 @@ services:
       - 'PUBLIC_FLOTTFORM_SERVER_BASE=https://demo.flottform.io/flottform'
       - 'PUBLIC_FLOTTFORM_CLIENT_BASE=https://where-are-you.at/now'
       - 'PUBLIC_IS_ONLINE_DEMO=true'
+      - 'ORIGIN=https://where-are-you.at'
     volumes:
       - /app/node_modules
       - /app/flottform/demo/node_modules
