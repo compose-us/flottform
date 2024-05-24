@@ -304,7 +304,6 @@ export function createFlottformInput<ResultType = string | FileList | unknown>({
 
 		const response = await fetch(`${baseApi}/create`, {
 			method: 'POST',
-			mode: 'cors',
 			headers: {
 				Accept: 'application/json',
 				'Content-Type': 'application/json'
