@@ -15,7 +15,8 @@
 		"forms": "pnpm --filter @flottform/forms",
 		"demo": "pnpm --filter @flottform/demo",
 		"server": "pnpm --filter @flottform/server",
-		"server-standalone": "pnpm --filter @flottform/server-standalone"
+		"server-standalone": "pnpm --filter @flottform/server-standalone",
+		"where-are-you-at": "pnpm --filter where-are-you-at"
 	},
 	"packageManager": "pnpm@8.15.2",
 	"devDependencies": {
