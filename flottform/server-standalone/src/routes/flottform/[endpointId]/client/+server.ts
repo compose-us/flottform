@@ -27,7 +27,12 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 		const db = await retrieveFlottformDatabase();
 		const endpoint = await db.putClientInfo({ endpointId, session, iceCandidates, clientKey });
 
-		return json(endpoint);
+		return json(endpoint, {
+			headers: {
+				'Access-Control-Allow-Origin': '*',
+				'Access-Control-Allow-Methods': 'PUT,OPTIONS'
+			}
+		});
 	} catch (err) {
 		if (err instanceof ZodError) {
 			return error(400, 'Could not parse body: ' + err.message);

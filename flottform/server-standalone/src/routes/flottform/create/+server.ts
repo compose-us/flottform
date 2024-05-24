@@ -18,7 +18,12 @@ export const POST: RequestHandler = async ({ request }) => {
 	const db = await retrieveFlottformDatabase();
 	const endpoint = await db.createEndpoint({ session });
 
-	return json(endpoint);
+	return json(endpoint, {
+		headers: {
+			'Access-Control-Allow-Origin': '*',
+			'Access-Control-Allow-Methods': 'POST,OPTIONS'
+		}
+	});
 };
 
 export const OPTIONS: RequestHandler = async () => {
