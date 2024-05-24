@@ -6,6 +6,10 @@ const config: PlaywrightTestConfig = {
 		port: 4173,
 		ignoreHTTPSErrors: true
 	},
+	use: {
+		ignoreHTTPSErrors: true,
+		baseURL: 'https://localhost:4173'
+	},
 	testDir: 'tests',
 	testMatch: /(.+\.)?(test|spec)\.[jt]s/
 };
