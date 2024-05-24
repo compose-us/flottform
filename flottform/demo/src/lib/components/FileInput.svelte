@@ -4,7 +4,7 @@
 	let {
 		id,
 		name,
-		fileInput,
+		fileInput = $bindable(),
 		label = 'Please upload your photo',
 		class: inputClass = '',
 		...rest
