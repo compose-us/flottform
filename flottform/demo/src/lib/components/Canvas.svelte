@@ -3,15 +3,15 @@
 	export let canvasElement: HTMLCanvasElement;
 
 	let isPainting = false;
-	let lineWidth = 4;
+	let lineWidth = 2;
 	let startX = 0;
 	let startY = 0;
 
 	let context: CanvasRenderingContext2D | null;
 	let ongoingTouches: {
 		identifier: number;
-		pageX: number;
-		pageY: number;
+		x: number;
+		y: number;
 	}[] = [];
 
 	onMount(() => {
@@ -19,16 +19,26 @@
 		return context;
 	});
 
-	function copyTouch({
-		identifier,
-		pageX,
-		pageY
-	}: {
-		identifier: number;
-		pageX: number;
-		pageY: number;
-	}) {
-		return { identifier, pageX, pageY };
+	function getRelativeMousePos(e: MouseEvent) {
+		const rect = canvasElement.getBoundingClientRect();
+		return {
+			x: (e.clientX - rect.left) * (canvasElement.width / rect.width),
+			y: (e.clientY - rect.top) * (canvasElement.height / rect.height)
+		};
+	}
+
+	function getRelativeTouchPos(touch: Touch) {
+		const rect = canvasElement.getBoundingClientRect();
+		return {
+			x: (touch.clientX - rect.left) * (canvasElement.width / rect.width),
+			y: (touch.clientY - rect.top) * (canvasElement.height / rect.height)
+		};
+	}
+
+	function copyTouch(touch: Touch) {
+		const { identifier } = touch;
+		const { x, y } = getRelativeTouchPos(touch);
+		return { identifier, x, y };
 	}
 
 	function ongoingTouchIndexById(idToFind: number) {
@@ -43,34 +53,26 @@
 	}
 
 	function handleMouseDown(e: MouseEvent) {
+		const { x, y } = getRelativeMousePos(e);
+		startX = x;
+		startY = y;
 		isPainting = true;
 		if (!context) {
 			return;
 		}
-		startX = e.pageX - canvasElement.offsetLeft;
-		startY = e.pageY - canvasElement.offsetTop;
 		context.beginPath();
-		context.arc(
-			e.pageX - canvasElement.offsetLeft,
-			e.pageY - canvasElement.offsetTop,
-			lineWidth,
-			0,
-			0,
-			false
-		);
+		context.arc(x, y, lineWidth, 0, 0, false);
 		context.fill();
 	}
 
 	function handleMouseMove(e: MouseEvent) {
+		const { x, y } = getRelativeMousePos(e);
 		if (!isPainting) {
 			return;
 		}
-
 		if (context) {
 			context.lineWidth = lineWidth;
 			context.lineCap = 'round';
-			const x = e.pageX - canvasElement.offsetLeft;
-			const y = e.pageY - canvasElement.offsetTop;
 			context.beginPath();
 			context.moveTo(startX, startY);
 			context.lineTo(x, y);
@@ -93,16 +95,11 @@
 			if (!context) {
 				return;
 			}
+			const touchPos = getRelativeTouchPos(touches[i]);
 			ongoingTouches.push(copyTouch(touches[i]));
 			context.beginPath();
-			context.arc(
-				touches[i].pageX - canvasElement.offsetLeft,
-				touches[i].pageY - canvasElement.offsetTop,
-				lineWidth,
-				0,
-				0,
-				false
-			);
+			context.arc(touchPos.x, touchPos.y, 2, 0, 0, false);
+
 			context.fill();
 		}
 	}
@@ -114,15 +111,10 @@
 				return;
 			}
 			if (index >= 0) {
+				const newTouchPos = getRelativeTouchPos(touches[i]);
 				context.beginPath();
-				context.moveTo(
-					ongoingTouches[index].pageX - canvasElement.offsetLeft,
-					ongoingTouches[index].pageY - canvasElement.offsetTop
-				);
-				context.lineTo(
-					touches[i].pageX - canvasElement.offsetLeft,
-					touches[i].pageY - canvasElement.offsetTop
-				);
+				context.moveTo(ongoingTouches[index].x, ongoingTouches[index].y);
+				context.lineTo(newTouchPos.x, newTouchPos.y);
 				context.lineWidth = lineWidth;
 				context.stroke();
 				ongoingTouches.splice(index, 1, copyTouch(touches[i]));
@@ -139,16 +131,11 @@
 				return;
 			}
 			if (index >= 0) {
+				const newTouchPos = getRelativeTouchPos(touches[i]);
 				context.lineWidth = lineWidth;
 				context.beginPath();
-				context.moveTo(
-					ongoingTouches[index].pageX - canvasElement.offsetLeft,
-					ongoingTouches[index].pageY - canvasElement.offsetTop
-				);
-				context.lineTo(
-					touches[i].pageX - canvasElement.offsetLeft,
-					touches[i].pageY - canvasElement.offsetTop
-				);
+				context.moveTo(ongoingTouches[index].x, ongoingTouches[index].y);
+				context.lineTo(newTouchPos.x, newTouchPos.y);
 				context.fillRect(
 					touches[i].pageX - canvasElement.offsetLeft - lineWidth,
 					touches[i].pageY - canvasElement.offsetTop - lineWidth,
@@ -172,8 +159,9 @@
 </script>
 
 <canvas
+	id="canvas"
 	bind:this={canvasElement}
-	class="border-primary-blue rounded border touch-none min-h-0 min-w-0 w-96"
+	class="border-primary-blue rounded border touch-none min-h-0 min-w-0 w-full"
 	on:mousedown={handleMouseDown}
 	on:mouseup={handleMouseUp}
 	on:mousemove={handleMouseMove}
