@@ -1,15 +1,23 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import { onDestroy, onMount } from 'svelte';
+	import markerIcon from 'leaflet/dist/images/marker-icon.png';
+	import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+	import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
 	const { latitude, longitude } = $props<{ latitude: number; longitude: number }>();
 
-	export const tileProvider = 'https://{s}.tile.openstreetmap.de/tiles/osmde/{z}/{x}/{y}.png';
+	const tileProvider = 'https://{s}.tile.openstreetmap.de/tiles/osmde/{z}/{x}/{y}.png';
 
-	export const tileProviderAttribution = {
+	const tileProviderAttribution = {
 		attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
 	};
-
+	const customIcon = {
+		iconUrl: markerIcon,
+		iconRetinaUrl: markerIcon2x,
+		shadowUrl: markerShadow,
+		iconAnchor: [12.5, 41]
+	};
 	let mapInstance: L.Map | null;
 	let markerInstance: L.Marker | null;
 	const mapId = 'leaflet-map';
