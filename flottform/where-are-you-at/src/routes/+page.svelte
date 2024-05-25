@@ -65,13 +65,8 @@
 	});
 </script>
 
-<div class="w-full h-full">
-	<input
-		class:hidden={$currentState !== 'done'}
-		type="text"
-		name="position"
-		bind:this={inputField}
-	/>
+<div class="w-full min-h-dvh">
+	<input type="hidden" name="location" bind:this={inputField} />
 	{#if $currentState === 'new'}
 		<button on:click={createChannelHandler}>Ask your friend to share their location</button>
 	{:else if $currentState === 'waiting-for-client'}
