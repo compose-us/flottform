@@ -7,10 +7,13 @@
 <footer class="w-full px-4 py-4 bg-gray-200 bg-opacity-50 mt-auto">
 	<ul class="max-w-screen-xl mx-auto flex justify-center gap-8">
 		<li>
-			<a href="{base}/">Demo</a>
+			<a href="{base}/">New Demo</a>
 		</li>
 		<li>
 			<a href="{base}/feedback">Feedback</a>
+		</li>
+		<li>
+			Powered by <a href="https://flottform.io" rel="external">flottform.io</a>
 		</li>
 	</ul>
 </footer>
