@@ -65,7 +65,7 @@
 	});
 </script>
 
-<div>
+<div class="w-full h-full">
 	<input
 		class:hidden={$currentState !== 'done'}
 		type="text"
