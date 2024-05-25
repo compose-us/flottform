@@ -66,3 +66,24 @@
 
 <svelte:window on:resize={resizeMap} />
 <div id={mapId}>&nbsp;</div>
+
+<style>
+	div {
+		height: 100%;
+		width: 100%;
+	}
+
+	div :global(.marker-text) {
+		width: 100%;
+		text-align: center;
+		font-weight: 600;
+		background-color: #444;
+		color: #eee;
+		border-radius: 0.5rem;
+	}
+
+	div :global(.map-marker) {
+		width: 30px;
+		transform: translateX(-50%) translateY(-25%);
+	}
+</style>

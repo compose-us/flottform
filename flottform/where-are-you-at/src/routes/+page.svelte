@@ -84,7 +84,9 @@
 	{:else if $currentState === 'receiving-data'}
 		Receiving location
 	{:else if $currentState === 'done'}
-		<ShowLocation latitude={$latitude} longitude={$longitude} />
+		<div class="w-full h-[50vh] my-2 mx-auto">
+			<ShowLocation latitude={$latitude} longitude={$longitude} />
+		</div>
 	{:else if $currentState === 'error'}
 		ERROR ERROR ERROR ERROR ERROR ERROR ERROR ERROR ERROR ERROR--
 	{/if}
