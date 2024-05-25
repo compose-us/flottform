@@ -153,7 +153,7 @@ services:
       - 'PROTOCOL_HEADER=x-forwarded-proto'
       - 'HOST_HEADER=x-forwarded-host'
       - 'PUBLIC_FLOTTFORM_SERVER_BASE=https://demo.flottform.io/flottform'
-      - 'PUBLIC_FLOTTFORM_CLIENT_BASE=https://where-are-you.at/now'
+      - 'PUBLIC_FLOTTFORM_CLIENT_BASE=https://where-are-you.at/now/'
       - 'PUBLIC_IS_ONLINE_DEMO=true'
       - 'ORIGIN=https://where-are-you.at'
     volumes:
