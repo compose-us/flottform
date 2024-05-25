@@ -10,7 +10,7 @@
 	let fileInput: HTMLInputElement;
 
 	const clientBase =
-		env.PUBLIC_FLOTTFORM_CLIENT_BASE || 'https://192.168.168.60:5173/flottform-client';
+		env.PUBLIC_FLOTTFORM_CLIENT_BASE || 'https://172.16.23.56:5173/flottform-client';
 
 	const createClientUrl = async ({ endpointId }: { endpointId: string }) => {
 		if (browser) {
@@ -39,13 +39,13 @@
 	<div class="sm:col-span-2 order-2 md:order-1 gap-4 flex flex-col">
 		<h1>Test page to send canvas to file input</h1>
 		<form
-			action="{base}/tests/upload"
+			action="{base}/tests/upload?/files"
 			method="POST"
 			enctype="multipart/form-data"
 			class="grid gap-8"
 		>
 			<div class="grid gap-6 grid-cols-1 sm:grid-cols-2">
-				<FileInput id="document" name="document" {fileInput} />
+				<FileInput id="element-to-upload" name="element-to-upload" {fileInput} />
 			</div>
 			<button
 				type="submit"
