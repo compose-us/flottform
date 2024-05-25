@@ -7,7 +7,7 @@
 	const sdpExchangeServerBase =
 		env.PUBLIC_FLOTTFORM_SERVER_BASE || 'https://172.16.23.195:5177/flottform';
 
-	let currentState = $state();
+	let currentState = $state('start');
 	let fileInput: HTMLInputElement;
 	let updateCurrentPosition: () => void;
 
