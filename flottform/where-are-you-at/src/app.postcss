@@ -1,0 +1,44 @@
+@import '@fontsource/raleway';
+@import '@fontsource/raleway/600.css';
+@import '@fontsource/raleway/700.css';
+@import '@fontsource/raleway/800.css';
+@import '@fontsource/raleway/900.css';
+@import '@fontsource/roboto';
+@import '@fontsource/roboto/400.css';
+@import '@fontsource/roboto/500.css';
+@import '@fontsource/roboto/700.css';
+@import '@fontsource/roboto/900.css';
+@import '@fontsource/gochi-hand';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+	html,
+	body {
+		@apply text-base text-fonts-blue min-h-dvh flex flex-col;
+	}
+
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		@apply font-display font-black;
+	}
+
+	h1 {
+		@apply text-3xl sm:text-4xl;
+	}
+	h2 {
+		@apply text-2xl sm:text-3xl;
+	}
+	h3 {
+		@apply text-xl sm:text-2xl;
+	}
+	h4 {
+		@apply text-lg sm:text-xl;
+	}
+}
