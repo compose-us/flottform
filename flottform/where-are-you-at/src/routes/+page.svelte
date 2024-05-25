@@ -8,9 +8,9 @@
 	import ShowLocation from './ShowLocation.svelte';
 
 	const sdpExchangeServerBase =
-		env.PUBLIC_FLOTTFORM_SERVER_BASE || 'https://172.16.23.195:5177/flottform';
+		env.PUBLIC_FLOTTFORM_SERVER_BASE || 'https://192.168.168.60:5177/flottform';
 
-	const clientBase = env.PUBLIC_FLOTTFORM_CLIENT_BASE || 'https://172.16.23.195:5176/now/';
+	const clientBase = env.PUBLIC_FLOTTFORM_CLIENT_BASE || 'https://192.168.168.60:5176/now/';
 
 	const createClientUrl = async ({ endpointId }: { endpointId: string }) => {
 		if (!browser) {
@@ -65,13 +65,17 @@
 	});
 </script>
 
-<div class="w-full min-h-dvh">
+<div class="w-full min-h-svh grid place-items-center">
 	<input type="hidden" name="location" bind:this={inputField} />
 	{#if $currentState === 'new'}
-		<button on:click={createChannelHandler}>Ask your friend to share their location</button>
+		<button on:click={createChannelHandler} class="border border-primary-blue rounded px-4 py-2"
+			>Ask your friend to share their location</button
+		>
 	{:else if $currentState === 'waiting-for-client'}
-		<img bind:this={qrCodeImage} alt={$partnerLinkHref} src={$qrCodeData} />
-		<a bind:this={partnerLink} href={$partnerLinkHref} rel="external">{$partnerLinkHref}</a>
+		<div>
+			<img bind:this={qrCodeImage} alt={$partnerLinkHref} src={$qrCodeData} class="mx-auto" />
+			<a bind:this={partnerLink} href={$partnerLinkHref} rel="external">{$partnerLinkHref}</a>
+		</div>
 	{:else if $currentState === 'waiting-for-ice'}
 		Trying to establish a connection with your friend
 	{:else if $currentState === 'waiting-for-file'}
@@ -79,7 +83,7 @@
 	{:else if $currentState === 'receiving-data'}
 		Receiving location
 	{:else if $currentState === 'done'}
-		<div class="absolute inset-0">
+		<div class="h-3/4 max-w-3xl w-full">
 			<ShowLocation latitude={$latitude} longitude={$longitude} />
 		</div>
 	{:else if $currentState === 'error'}

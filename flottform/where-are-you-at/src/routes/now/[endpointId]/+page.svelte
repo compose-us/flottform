@@ -5,7 +5,7 @@
 	import { env } from '$env/dynamic/public';
 
 	const sdpExchangeServerBase =
-		env.PUBLIC_FLOTTFORM_SERVER_BASE || 'https://172.16.23.195:5177/flottform';
+		env.PUBLIC_FLOTTFORM_SERVER_BASE || 'https://192.168.168.60:5177/flottform';
 
 	let currentState = $state<'init' | 'start' | 'sending' | 'done' | 'error'>('init');
 	let fileInput: HTMLInputElement;
@@ -64,13 +64,17 @@
 	});
 </script>
 
-<div class="max-w-screen-xl mx-auto p-8 box-border grid grid-cols-1 gap-8">
+<div class="max-w-screen-xl mx-auto p-8 box-border grid grid-cols-1 gap-8 min-h-svh">
 	<input type="hidden" name="location" bind:this={fileInput} value="" />
 	{#if currentState === 'init'}
 		<h1>Trying to connect to host</h1>
 	{:else if currentState === 'start'}
 		<h1>Let me know your location, please!</h1>
-		<button on:click={updateCurrentPosition}>Send current location</button>
+		<div class="mx-auto">
+			<button on:click={updateCurrentPosition} class="border border-primary-blue rounded px-4 py-2"
+				>Send current location</button
+			>
+		</div>
 	{:else if currentState === 'sending'}
 		<h1>Sending location to your friend!</h1>
 	{:else if currentState === 'error'}
