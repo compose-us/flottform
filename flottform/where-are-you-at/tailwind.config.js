@@ -17,9 +17,9 @@ export default {
 			}
 		},
 		fontFamily: {
-			display: ['Raleway', ...defaultTheme.fontFamily.sans],
-			sans: ['Roboto', ...defaultTheme.fontFamily.sans],
-			handwriting: ['Gochi Hand', ...defaultTheme.fontFamily.mono]
+			display: [...defaultTheme.fontFamily.sans],
+			sans: [...defaultTheme.fontFamily.sans],
+			handwriting: [...defaultTheme.fontFamily.mono]
 		}
 	},
 	plugins: []
