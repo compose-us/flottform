@@ -7,9 +7,9 @@
 	const sdpExchangeServerBase =
 		env.PUBLIC_FLOTTFORM_SERVER_BASE || 'https://172.16.23.195:5177/flottform';
 
-	let currentState = $state<'start' | 'sending' | 'done' | 'error'>('start');
+	let currentState = $state<'init' | 'start' | 'sending' | 'done' | 'error'>('init');
 	let fileInput: HTMLInputElement;
-	let updateCurrentPosition: () => void;
+	let updateCurrentPosition = $state<() => void>();
 
 	onMount(async () => {
 		try {
@@ -17,6 +17,11 @@
 				endpointId: $page.params.endpointId,
 				fileInput,
 				flottformApi: sdpExchangeServerBase,
+				onStateChange(state) {
+					if (state === 'connected') {
+						currentState = 'start';
+					}
+				},
 				onError(error) {
 					currentState = 'error';
 					alert(`could not connect ${error}`);
@@ -60,9 +65,11 @@
 </script>
 
 <div class="max-w-screen-xl mx-auto p-8 box-border grid grid-cols-1 gap-8">
-	{#if currentState === 'start'}
+	<input type="hidden" name="location" bind:this={fileInput} value="" />
+	{#if currentState === 'init'}
+		<h1>Trying to connect to host</h1>
+	{:else if currentState === 'start'}
 		<h1>Let me know your location, please!</h1>
-		<input type="hidden" name="location" bind:this={fileInput} value="" />
 		<button on:click={updateCurrentPosition}>Send current location</button>
 	{:else if currentState === 'sending'}
 		<h1>Sending location to your friend!</h1>
