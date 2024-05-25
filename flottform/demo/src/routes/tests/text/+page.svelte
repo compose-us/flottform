@@ -7,7 +7,7 @@
 	import { env } from '$env/dynamic/public';
 
 	const clientBase =
-		env.PUBLIC_FLOTTFORM_CLIENT_BASE || 'https://192.168.168.60:5173/flottform-client';
+		env.PUBLIC_FLOTTFORM_CLIENT_BASE || 'https://172.16.23.56:5173/flottform-client';
 
 	const createClientUrl = async ({ endpointId }: { endpointId: string }) => {
 		if (browser) {
@@ -20,7 +20,7 @@
 
 	onMount(async () => {
 		const fileInputFields = document.querySelectorAll(
-			'#text-to-send'
+			'#element-to-upload'
 		) as NodeListOf<HTMLInputElement>;
 		const { createChannel } = createFlottformInput({
 			flottformApi: sdpExchangeServerBase,
@@ -37,14 +37,15 @@
 <div class="max-w-screen-xl mx-auto p-8 box-border grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-0">
 	<div class="sm:col-span-2 order-2 md:order-1 gap-4 flex flex-col">
 		<h1>Test page to send text</h1>
-		<form action="{base}/tests/upload" method="POST" enctype="multipart/form-data">
+		<form action="{base}/tests/upload?/text" method="POST" enctype="multipart/form-data">
 			<div class="flex flex-col">
 				<label for="text-to-upload">Write your text here</label>
 				<input
 					type="text"
 					class="border rounded px-4 py-2"
 					bind:this={textInput}
-					id="text-to-send"
+					id="element-to-upload"
+					name="element-to-upload"
 				/>
 			</div>
 			<button

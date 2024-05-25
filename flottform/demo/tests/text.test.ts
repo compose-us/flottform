@@ -32,9 +32,9 @@ test('Call Flottform and upload a text in a text field', async ({ page, context 
 	// Close dialog
 	await page.getByRole('dialog').locator('.close-dialog-button').click();
 	// Check if text is in input field
-	await expect(page.locator('#text-to-send')).toHaveValue(testText);
+	await expect(page.locator('#element-to-upload')).toHaveValue(testText);
 	// Send file to server
 	await page.getByRole('button', { name: 'Send' }).click();
 	// // Check that file is successfully uploaded
-	// await expect(page.getByRole('heading', { level: 2 })).toContainText('Upload done');
+	await expect(page.getByRole('heading', { level: 2 })).toContainText('Upload done');
 });

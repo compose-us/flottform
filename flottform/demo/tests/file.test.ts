@@ -37,5 +37,5 @@ test('Call Flottform and upload a file', async ({ page, context }) => {
 	// Send file to server
 	await page.getByRole('button', { name: 'Send' }).click();
 	// Check that file is successfully uploaded
-	// await expect(page.getByRole('heading', { level: 2 })).toContainText('Upload done');
+	await expect(page.getByRole('heading', { level: 2 })).toContainText('Upload done');
 });
