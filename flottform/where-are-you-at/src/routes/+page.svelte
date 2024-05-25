@@ -84,7 +84,7 @@
 	{:else if $currentState === 'receiving-data'}
 		Receiving location
 	{:else if $currentState === 'done'}
-		<div class="w-full h-[50vh] my-2 mx-auto">
+		<div class="w-full h-full my-2 mx-auto">
 			<ShowLocation latitude={$latitude} longitude={$longitude} />
 		</div>
 	{:else if $currentState === 'error'}
