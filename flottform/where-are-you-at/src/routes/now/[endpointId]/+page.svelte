@@ -7,6 +7,7 @@
 	const sdpExchangeServerBase =
 		env.PUBLIC_FLOTTFORM_SERVER_BASE || 'https://172.16.23.195:5177/flottform';
 
+	let currentState = $state();
 	let fileInput: HTMLInputElement;
 	let updateCurrentPosition: () => void;
 
@@ -36,10 +37,10 @@
 							speed: position.coords.speed
 						};
 						fileInput.value = JSON.stringify(coords);
-						alert(`should send ${fileInput.value}`);
+						currentState = 'sending';
 						try {
 							await send();
-							alert('location sent!');
+							currentState = 'done';
 						} catch (e) {
 							alert(`could not send location ${e}!`);
 						}
@@ -56,7 +57,13 @@
 </script>
 
 <div class="max-w-screen-xl mx-auto p-8 box-border grid grid-cols-1 gap-8">
-	<h1>Let me know your location, please!</h1>
-	<input type="hidden" name="location" bind:this={fileInput} value="" />
-	<button on:click={updateCurrentPosition}>Send current location</button>
+	{#if currentState === 'start'}
+		<h1>Let me know your location, please!</h1>
+		<input type="hidden" name="location" bind:this={fileInput} value="" />
+		<button on:click={updateCurrentPosition}>Send current location</button>
+	{:else if currentState === 'sending'}
+		<h1>Sending location to your friend!</h1>
+	{:else if currentState === 'done'}
+		<h1>Your friend should now get where you at!</h1>
+	{/if}
 </div>
