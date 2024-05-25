@@ -7,7 +7,7 @@
 	const sdpExchangeServerBase =
 		env.PUBLIC_FLOTTFORM_SERVER_BASE || 'https://172.16.23.195:5177/flottform';
 
-	let currentState = $state('start');
+	let currentState = $state<'start' | 'sending' | 'done' | 'error'>('start');
 	let fileInput: HTMLInputElement;
 	let updateCurrentPosition: () => void;
 
@@ -18,12 +18,14 @@
 				fileInput,
 				flottformApi: sdpExchangeServerBase,
 				onError(error) {
+					currentState = 'error';
 					alert(`could not connect ${error}`);
 				}
 			});
 			const send = await createSendFileToPeer({});
 
 			updateCurrentPosition = () => {
+				currentState = 'sending';
 				navigator.geolocation.getCurrentPosition(
 					async (position) => {
 						// cannot JSON.stringify position.coords directly
@@ -37,11 +39,11 @@
 							speed: position.coords.speed
 						};
 						fileInput.value = JSON.stringify(coords);
-						currentState = 'sending';
 						try {
 							await send();
 							currentState = 'done';
 						} catch (e) {
+							currentState = 'error';
 							alert(`could not send location ${e}!`);
 						}
 					},
@@ -51,6 +53,7 @@
 				);
 			};
 		} catch (err) {
+			currentState = 'error';
 			console.log('Error connecting to flottform', err);
 		}
 	});
@@ -63,6 +66,8 @@
 		<button on:click={updateCurrentPosition}>Send current location</button>
 	{:else if currentState === 'sending'}
 		<h1>Sending location to your friend!</h1>
+	{:else if currentState === 'error'}
+		<h1>There was a problem with the connection - please try again! 🤕</h1>
 	{:else if currentState === 'done'}
 		<h1>Your friend should now get where you at!</h1>
 	{/if}
