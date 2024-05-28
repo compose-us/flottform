@@ -53,7 +53,7 @@
 							}
 						},
 						(error) => {
-							console.log('Error getting position', error);
+							console.error('Error getting position', error);
 							if (error.code === 1) {
 								currentState = 'error-user-denied';
 								return;
@@ -63,12 +63,12 @@
 					);
 				} catch (err) {
 					currentState = 'error';
-					console.log('Error getting navigators current position', err);
+					console.error('Error getting navigators current position', err);
 				}
 			};
 		} catch (err) {
 			currentState = 'error';
-			console.log('Error connecting to flottform', err);
+			console.error('Error connecting to flottform', err);
 		}
 	});
 </script>
