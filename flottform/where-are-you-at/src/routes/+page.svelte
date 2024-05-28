@@ -42,6 +42,9 @@
 				inputField.value = result;
 			},
 			onStateChange: (state, details) => {
+				if ($currentState === 'done') {
+					return;
+				}
 				$currentState = state;
 				if (state === 'new') {
 					const { createChannel } = details;
