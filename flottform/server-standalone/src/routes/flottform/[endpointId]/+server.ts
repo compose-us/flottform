@@ -11,7 +11,13 @@ export const GET: RequestHandler = async ({ params }) => {
 	const db = await retrieveFlottformDatabase();
 	try {
 		const endpointInfos = await db.getEndpoint({ endpointId });
-		return json(endpointInfos);
+		return json(endpointInfos, {
+			headers: {
+				'Access-Control-Allow-Origin': '*',
+				'Access-Control-Allow-Methods': 'GET,DELETE,OPTIONS',
+				'Access-Control-Allow-Headers': '*'
+			}
+		});
 	} catch (err) {
 		if (err instanceof Error && err.message === 'Endpoint not found') {
 			return error(404, 'Endpoint not found');
@@ -42,7 +48,16 @@ export const DELETE: RequestHandler = async ({ params, request }) => {
 		const db = await retrieveFlottformDatabase();
 		await db.deleteEndpoint({ endpointId, hostKey });
 
-		return json({ success: true, endpointId });
+		return json(
+			{ success: true, endpointId },
+			{
+				headers: {
+					'Access-Control-Allow-Origin': '*',
+					'Access-Control-Allow-Methods': 'GET,DELETE,OPTIONS',
+					'Access-Control-Allow-Headers': '*'
+				}
+			}
+		);
 	} catch (err) {
 		if (err instanceof ZodError) {
 			return error(400, 'Could not parse body: ' + err.message);
@@ -55,7 +70,8 @@ export const OPTIONS: RequestHandler = async () => {
 	return text('', {
 		headers: {
 			'Access-Control-Allow-Origin': '*',
-			'Access-Control-Allow-Methods': 'GET,DELETE,OPTIONS'
+			'Access-Control-Allow-Methods': 'GET,DELETE,OPTIONS',
+			'Access-Control-Allow-Headers': '*'
 		}
 	});
 };

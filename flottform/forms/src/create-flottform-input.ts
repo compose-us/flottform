@@ -206,7 +206,7 @@ export function createFlottformInput<ResultType = string | FileList | unknown>({
 	pollTimeForIceInMs = POLL_TIME_IN_MS,
 	inputField,
 	onError = () => {},
-	onProgress = (inputField, { currentSize, totalSize }) => {
+	onProgress = ({ inputField, currentSize, totalSize }) => {
 		const createChannelElement = inputField!.nextElementSibling!;
 		const createChannelLinkDialog =
 			document.querySelector<HTMLDialogElement>('.flottform-link-dialog')!;
@@ -218,10 +218,11 @@ export function createFlottformInput<ResultType = string | FileList | unknown>({
 			createChannelElement.querySelector<HTMLElement>('.flottform-button')!;
 		createChannelButton.style.background = `conic-gradient(#7EA4FF ${Math.round((currentSize / totalSize) * 100)}%, #FFF ${Math.round((currentSize / totalSize) * 100)}%`;
 	},
-	onResult = async (
-		inputField,
-		incoming: { fileMeta: FileMetaInfos; arrayBuffers: Array<ArrayBuffer> }
-	) => {
+	onResult = async (incoming: {
+		inputField?: HTMLInputElement | HTMLCanvasElement;
+		fileMeta: FileMetaInfos;
+		arrayBuffers: Array<ArrayBuffer>;
+	}) => {
 		if (!inputField) {
 			logger.warn('no input field, no need to run onResult');
 			return;
@@ -255,17 +256,16 @@ export function createFlottformInput<ResultType = string | FileList | unknown>({
 	rtcConfiguration?: RTCConfiguration;
 	inputField?: HTMLInputElement | HTMLCanvasElement;
 	onError?: (e: Error) => void;
-	onProgress?: (
-		inputField: HTMLInputElement | HTMLCanvasElement,
-		detail: { currentSize: number; totalSize: number }
-	) => void;
-	onResult?: (
-		inputField: HTMLInputElement | HTMLCanvasElement,
-		incoming: {
-			fileMeta: FileMetaInfos;
-			arrayBuffers: Array<ArrayBuffer>;
-		}
-	) => Promise<void>;
+	onProgress?: (detail: {
+		inputField?: HTMLInputElement | HTMLCanvasElement;
+		currentSize: number;
+		totalSize: number;
+	}) => void;
+	onResult?: (incoming: {
+		inputField?: HTMLInputElement | HTMLCanvasElement;
+		fileMeta: FileMetaInfos;
+		arrayBuffers: Array<ArrayBuffer>;
+	}) => Promise<void>;
 	onStateChange?: <T extends FlottformState>(state: T, details?: any) => void;
 	pollTimeForIceInMs?: number;
 	logger?: Logger;
@@ -304,7 +304,6 @@ export function createFlottformInput<ResultType = string | FileList | unknown>({
 
 		const response = await fetch(`${baseApi}/create`, {
 			method: 'POST',
-			mode: 'cors',
 			headers: {
 				Accept: 'application/json',
 				'Content-Type': 'application/json'
@@ -353,7 +352,6 @@ export function createFlottformInput<ResultType = string | FileList | unknown>({
 				logger.log('Updating host info with new list of ice candidates');
 				const response = await fetch(putHostInfoUrl, {
 					method: 'PUT',
-					mode: 'cors',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({
 						hostKey,
@@ -450,11 +448,11 @@ export function createFlottformInput<ResultType = string | FileList | unknown>({
 			const ab = data instanceof Blob ? await data.arrayBuffer() : (data as ArrayBuffer);
 			arrayBuffers.push(ab);
 			currentSize += ab.byteLength;
-			onProgress(inputField, { currentSize, totalSize: size });
+			onProgress({ inputField, currentSize, totalSize: size });
 
 			if (currentSize === size) {
 				try {
-					await onResult(inputField, { fileMeta, arrayBuffers });
+					await onResult({ inputField, fileMeta, arrayBuffers });
 				} catch (e) {
 					logger.error('Could not complete onResult', e);
 					changeState('error', e);

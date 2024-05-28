@@ -8,6 +8,6 @@ RUN corepack enable && corepack prepare
 RUN pnpm install --frozen-lockfile
 COPY . ./
 RUN pnpm install --frozen-lockfile
-RUN pnpm -r build
+RUN pnpm -r run build
 
-CMD [ "pnpm", "-r", "--if-present", "--parallel", "run", "dev" ]
+# CMD [ "pnpm", "-r", "--if-present", "--parallel", "run", "dev" ]

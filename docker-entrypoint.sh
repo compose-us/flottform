@@ -1,7 +1,7 @@
 #!/bin/bash
 
 pnpm install
-pnpm -r run build
+# pnpm -r run build
 
 echo "ORIGIN=$ORIGIN"
 
