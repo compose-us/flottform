@@ -11,7 +11,7 @@
 		"webrtc"
 	],
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1",
+		"e2e": "pnpm demo run test:integration",
 		"forms": "pnpm --filter @flottform/forms",
 		"demo": "pnpm --filter @flottform/demo",
 		"server": "pnpm --filter @flottform/server",
