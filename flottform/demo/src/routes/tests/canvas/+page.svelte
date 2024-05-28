@@ -10,7 +10,7 @@
 	let fileInput: HTMLInputElement;
 
 	const clientBase =
-		env.PUBLIC_FLOTTFORM_CLIENT_BASE || 'https://172.16.23.56:5173/flottform-client';
+		env.PUBLIC_FLOTTFORM_CLIENT_BASE || 'https://192.168.178.23:5173/flottform-client';
 
 	const createClientUrl = async ({ endpointId }: { endpointId: string }) => {
 		if (browser) {

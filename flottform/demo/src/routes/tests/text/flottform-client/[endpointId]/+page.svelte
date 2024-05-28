@@ -6,6 +6,8 @@
 
 	let sendFileToPeer = () => {};
 	let textInput: HTMLInputElement;
+	let button: HTMLButtonElement;
+
 	let currentState: ClientState = 'init';
 	let currentPercentage = 0;
 
@@ -51,6 +53,20 @@
 					id="text-to-upload"
 				/>
 			</div>
+			{#if currentState === 'connected'}
+				<button
+					type="submit"
+					bind:this={button}
+					class="group relative w-fit cursor-pointer overflow-hidden rounded-md border-2 bg-primary-blue text-white border-primary-blue px-12 py-3 font-semibold disabled:border-gray-300 disabled:bg-gray-200 disabled:text-gray-500 disabled:pointer-events-none"
+				>
+					<span
+						class="ease absolute top-1/2 h-0 w-64 origin-center -translate-x-20 rotate-45 bg-white transition-all duration-300 group-hover:h-64 group-hover:-translate-y-32"
+					/>
+					<span class="ease relative transition duration-300 group-hover:text-primary-blue"
+						>Send file</span
+					>
+				</button>
+			{/if}
 		</div>
 	</form>
 
