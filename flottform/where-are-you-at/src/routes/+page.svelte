@@ -1,16 +1,11 @@
 <script lang="ts">
 	import { createFlottformInput } from '@flottform/forms';
-	import { env } from '$env/dynamic/public';
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
 	import { writable } from 'svelte/store';
 	import type { FlottformState } from '../../../forms/dist/internal';
 	import ShowLocation from './ShowLocation.svelte';
-
-	const sdpExchangeServerBase =
-		env.PUBLIC_FLOTTFORM_SERVER_BASE || 'https://192.168.168.60:5177/flottform';
-
-	const clientBase = env.PUBLIC_FLOTTFORM_CLIENT_BASE || 'https://192.168.168.60:5176/now/';
+	import { clientBase, sdpExchangeServerBase } from '$lib/api';
 
 	const createClientUrl = async ({ endpointId }: { endpointId: string }) => {
 		if (!browser) {
@@ -79,7 +74,7 @@
 	{:else if $currentState === 'waiting-for-ice'}
 		Trying to establish a connection with your friend
 	{:else if $currentState === 'waiting-for-file'}
-		Waiting for file
+		Waiting for friend to send their location
 	{:else if $currentState === 'receiving-data'}
 		Receiving location
 	{:else if $currentState === 'done'}
