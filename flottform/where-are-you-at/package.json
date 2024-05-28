@@ -1,5 +1,5 @@
 {
-	"name": "where-are-you-at",
+	"name": "@flottform/where-are-you-at",
 	"version": "0.0.1",
 	"private": true,
 	"scripts": {
