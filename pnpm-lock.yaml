@@ -277,10 +277,6 @@ importers:
         version: 3.22.4
 
   flottform/where-are-you-at:
-    dependencies:
-      leaflet:
-        specifier: ^1.9.4
-        version: 1.9.4
     devDependencies:
       '@flottform/forms':
         specifier: workspace:^
@@ -327,6 +323,9 @@ importers:
       eslint-plugin-svelte:
         specifier: ^2.36.0-next.4
         version: 2.36.0-next.5(eslint@8.56.0)(svelte@5.0.0-next.54)
+      leaflet:
+        specifier: ^1.9.4
+        version: 1.9.4
       postcss:
         specifier: ^8.4.35
         version: 8.4.35
@@ -3319,7 +3318,7 @@ packages:
 
   /leaflet@1.9.4:
     resolution: {integrity: sha512-nxS1ynzJOmOlHp+iL3FyWqK89GtNL8U8rvlMOsQdTTssxZwCXh8N2NB3GDQOL+YR3XnWyZAxwQixURb+FA74PA==}
-    dev: false
+    dev: true
 
   /levn@0.4.1:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
