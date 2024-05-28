@@ -63,9 +63,15 @@
 <div class="w-full min-h-svh grid place-items-center">
 	<input type="hidden" name="location" bind:this={inputField} />
 	{#if $currentState === 'new'}
-		<button on:click={createChannelHandler} class="border border-primary-blue rounded px-4 py-2"
-			>Ask your friend to share their location</button
+		<button
+			on:click={createChannelHandler}
+			disabled={createChannelHandler === undefined}
+			class="border border-primary-blue rounded px-4 py-2 disabled:bg-gray-200 flex gap-4"
 		>
+			{#if createChannelHandler === undefined}<span class="animate-spin">⏳</span>{/if}
+			Ask your friend to share their location
+			{#if createChannelHandler === undefined}<span class="animate-spin">⏳</span>{/if}
+		</button>
 	{:else if $currentState === 'waiting-for-client'}
 		<div>
 			<img bind:this={qrCodeImage} alt={$partnerLinkHref} src={$qrCodeData} class="mx-auto" />
@@ -82,6 +88,6 @@
 			<ShowLocation latitude={$latitude} longitude={$longitude} />
 		</div>
 	{:else if $currentState === 'error'}
-		ERROR ERROR ERROR ERROR ERROR ERROR ERROR ERROR ERROR ERROR--
+		Error connecting to friend
 	{/if}
 </div>
