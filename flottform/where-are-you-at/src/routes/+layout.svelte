@@ -1,8 +1,20 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import '../app.postcss';
+	import defaultPreviewImage from '$lib/images/preview-image.png';
+
+	let title = 'Where are you at';
+	let description = 'An easy way to share your location with friends';
 </script>
 
+<svelte:head>
+	<title>{title}</title>
+	<meta name="title" content={title} />
+	<meta name="description" content={description} />
+	<meta property="og:title" content={title} />
+	<meta property="og:description" content={description} />
+	<meta name="image" property="og:image" content={defaultPreviewImage} />
+</svelte:head>
 <slot />
 <footer class="w-full px-4 py-4 bg-gray-200 bg-opacity-50 mt-auto">
 	<ul class="max-w-screen-xl mx-auto flex justify-center gap-8">
