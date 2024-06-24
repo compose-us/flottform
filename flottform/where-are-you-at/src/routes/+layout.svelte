@@ -25,7 +25,11 @@
 			<a href="{base}/feedback">Feedback</a>
 		</li>
 		<li>
-			Powered by <a href="https://flottform.io" rel="external">flottform.io</a>
+			<a
+				href="https://flottform.io/updates/2024-06-03-new-hackathon-update"
+				target="_blank"
+				rel="external noopener noreferrer">How we did it?</a
+			>
 		</li>
 	</ul>
 </footer>
