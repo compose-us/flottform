@@ -201,7 +201,7 @@
 
 			<div class="flex flex-col gap-2">
 				<label for="feedbackPositive"
-					>What do you like about Flottform?
+					>What do you like about where-are-you.at?
 					<span aria-hidden="true">🚀 <span class="text-sm text-red-700">*</span></span>
 				</label>
 				<textarea

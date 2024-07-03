@@ -27,7 +27,7 @@ export const POST = async ({ fetch, request }) => {
 **🐦 X / Twitter**: ${sanitizeUserInput(twitter) || '-'}
 **Preferred way of contact**: ${sanitizeUserInput(contactChoice)}
 
-**🚀 What they like about Flottform:**
+**🚀 What they like about where-are-you.at:**
 ${sanitizeUserInput(feedbackPositive)}
 
 **⚙️ What they think we can improve:**
