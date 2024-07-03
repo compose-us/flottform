@@ -27,7 +27,7 @@ export const POST = async ({ fetch, request }) => {
 **🐦 X / Twitter**: ${sanitizeUserInput(twitter) || '-'}
 **Preferred way of contact**: ${sanitizeUserInput(contactChoice)}
 
-**🚀 What they like about Flottform:**
+**🚀 What they like about where-are-you.at:**
 ${sanitizeUserInput(feedbackPositive)}
 
 **⚙️ What they think we can improve:**
@@ -36,7 +36,7 @@ ${sanitizeUserInput(feedbackImprovements)}`;
 	const data = {
 		title: `Feedback from ${sanitizeUserInput(userName)}`,
 		body: issueBody,
-		labels: [':nerd_face: Feedback - Demo']
+		labels: [':nerd_face: Feedback - Location Tracker']
 	};
 
 	const response = await fetch(REPO_URL, {
