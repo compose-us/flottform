@@ -36,7 +36,7 @@ ${sanitizeUserInput(feedbackImprovements)}`;
 	const data = {
 		title: `Feedback from ${sanitizeUserInput(userName)}`,
 		body: issueBody,
-		labels: [':nerd_face: Feedback - Demo']
+		labels: [':nerd_face: Feedback - Location Tracker']
 	};
 
 	const response = await fetch(REPO_URL, {
