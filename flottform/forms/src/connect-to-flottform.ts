@@ -8,6 +8,13 @@ import {
 	Logger
 } from './internal';
 
+export type FlottformInstance = {
+	createSendFileToPeer: (options: {
+		onProgress?: (percentage: number) => void;
+	}) => () => Promise<void>;
+	state: ClientState;
+};
+
 export async function connectToFlottform({
 	endpointId,
 	fileInput,
@@ -26,11 +33,7 @@ export async function connectToFlottform({
 	rtcConfiguration?: RTCConfiguration;
 	pollTimeForIceInMs?: number;
 	logger?: Logger;
-}): Promise<{
-	createSendFileToPeer: (options: {
-		onProgress?: (percentage: number) => void;
-	}) => () => Promise<void>;
-}> {
+}): Promise<FlottformInstance> {
 	logger.log('connecting to flottform', endpointId);
 	let currentState: ClientState = 'init';
 	const changeState = (state: ClientState) => {
@@ -197,7 +200,12 @@ export async function connectToFlottform({
 			changeState('done');
 		};
 
-	return { createSendFileToPeer };
+	return {
+		createSendFileToPeer,
+		get state() {
+			return currentState;
+		}
+	};
 
 	async function stopPollingForIceCandidates() {
 		if (pollForIceTimer) {

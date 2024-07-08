@@ -24,6 +24,10 @@ import {
 	simulateHoverEffect
 } from './flottform-styles';
 
+export type FlottformHostInstance = {
+	createChannel: () => void;
+};
+
 let channelNumber = 0;
 const noop = () => {};
 
@@ -271,7 +275,7 @@ export function createFlottformInput<ResultType = string | FileList | unknown>({
 	logger?: Logger;
 	useDefaultUi?: boolean;
 	styles?: Styles;
-}): { createChannel: () => void } {
+}): FlottformHostInstance {
 	const baseApi = (flottformApi instanceof URL ? flottformApi : new URL(flottformApi))
 		.toString()
 		.replace(/\/$/, '');
