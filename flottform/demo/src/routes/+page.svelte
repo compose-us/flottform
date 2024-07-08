@@ -105,7 +105,7 @@
 		const fileInputFields = document.querySelectorAll(
 			'input[type=file]'
 		) as NodeListOf<HTMLInputElement>;
-		const { createChannel } = createFlottformInput({
+		createFlottformInput({
 			flottformApi: sdpExchangeServerBase,
 			createClientUrl,
 			inputField: fileInputFields[0]
