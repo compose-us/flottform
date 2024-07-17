@@ -15,7 +15,11 @@
 	});
 
 	function initFlottform(options: any): any {
-		const { createClientUrl } = options;
+		const { createClientUrl, checkIsClient } = options;
+        if (checkIsClient) {
+            const {isClient, endpointId} = parseHash(window.location.hash)
+            if (isClient) {replaceBodyWithDefaultStyledFormAndConnectToEndpointId(endpointId)}
+        }
 		return {
 			createFileInputChannel(options: { name: string; fileInputField: HTMLInputElement }) {
 				return {
@@ -32,9 +36,10 @@
 			'input[type=file]'
 		) as NodeListOf<HTMLInputElement>;
 		const flottformInstance = initFlottform({
+            checkIsClient: true,
 			flottformApi: sdpExchangeServerBase,
-			async createClientUrl({ endpointId }: any) {
-				return `${window.location.origin}${base}/form2-client/${endpointId}`;
+			async createClientUrl({ endpointId, idOfInputField }: any) {
+				return `${window.location.origin}${base}/form2/#flottform-client=true&idOfInputField=${idOfInputField}&endpointId=${endpointId}`;
 			},
             mode: 'default'
 		});
@@ -94,7 +99,7 @@
 		</label>
 		<label class="grid">
             <span>Please upload another file:</span>
-			<input type="file" name="fileB" />
+			<input id="idOfInputField" type="file" name="fileB" />
 		</label>
 		<button type="submit" class="border rounded p-2 bg-gray-100">Submit</button>
 	</form>
