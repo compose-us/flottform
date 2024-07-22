@@ -38,22 +38,30 @@ const createDefaultOnStateChange = (options: {
 	}
 	return (state, details) => {
 		const getElements = () => {
+			// Each input element should have an id
+			const flottformChannelId = inputField.getAttribute('flottform-p2p-transfer-channel-id');
+
 			const createChannelElement = inputField.nextElementSibling!;
-			const createChannelButton =
-				createChannelElement.querySelector<HTMLElement>('.flottform-button')!;
-			const createChannelLinkDialog =
-				document.querySelector<HTMLDialogElement>('.flottform-link-dialog')!;
-			const createChannelStatusWrapper = createChannelLinkDialog.querySelector<HTMLElement>(
-				'.flottform-status-wrapper'
+			const createChannelButton = createChannelElement.querySelector<HTMLElement>(
+				`.flottform-button[flottform-p2p-transfer-channel-id=${flottformChannelId}]`
 			)!;
-			const createChannelLinkArea =
-				createChannelLinkDialog.querySelector<HTMLElement>('.flottform-link-area')!;
-			const createChannelQrCode =
-				createChannelLinkDialog.querySelector<HTMLElement>('.flottform-qr-code')!;
-			const createChannelLinkWithOffer =
-				createChannelLinkDialog.querySelector<HTMLElement>('.flottform-link-offer')!;
+			const createChannelLinkDialog = document.querySelector<HTMLDialogElement>(
+				`.flottform-link-dialog[flottform-p2p-transfer-channel-id=${flottformChannelId}]`
+			)!;
+			const createChannelStatusWrapper = createChannelLinkDialog.querySelector<HTMLElement>(
+				`.flottform-status-wrapper[flottform-p2p-transfer-channel-id=${flottformChannelId}]`
+			)!;
+			const createChannelLinkArea = createChannelLinkDialog.querySelector<HTMLElement>(
+				`.flottform-link-area[flottform-p2p-transfer-channel-id=${flottformChannelId}]`
+			)!;
+			const createChannelQrCode = createChannelLinkDialog.querySelector<HTMLElement>(
+				`.flottform-qr-code[flottform-p2p-transfer-channel-id=${flottformChannelId}]`
+			)!;
+			const createChannelLinkWithOffer = createChannelLinkDialog.querySelector<HTMLElement>(
+				`.flottform-link-offer[flottform-p2p-transfer-channel-id=${flottformChannelId}]`
+			)!;
 			const createDialogDescription = createChannelLinkDialog.querySelector<HTMLElement>(
-				'.flottform-dialog-description'
+				`.flottform-dialog-description[flottform-p2p-transfer-channel-id=${flottformChannelId}]`
 			)!;
 			return {
 				createChannelElement,
@@ -69,56 +77,19 @@ const createDefaultOnStateChange = (options: {
 
 		const mapper: Record<FlottformState, (details?: any) => void> = {
 			new: (details: ReturnType<typeof createFlottformInput>) => {
-				const createChannelElement = document.createElement('div');
-				const createChannelLinkDialog = document.createElement('dialog');
-				const createChannelStatusWrapper = document.createElement('div');
-				const createDialogDescription = document.createElement('p');
-				const closeDialogButton = document.createElement('button');
-				const refreshConnectionButton = document.createElement('button');
-				const createChannelQrCode = document.createElement('img');
-				const createChannelLinkWithOffer = document.createElement('a');
-				createChannelElement.setAttribute('class', 'flottform-parent');
-				createChannelElement.style.cssText = createChannelElementCss(inputField);
-				createChannelQrCode.setAttribute('class', 'flottform-qr-code');
-				createChannelLinkWithOffer.setAttribute('class', 'flottform-link-offer');
-				createChannelLinkWithOffer.setAttribute('target', '_blank');
-				createChannelLinkDialog.setAttribute('class', 'flottform-link-dialog');
-				createChannelStatusWrapper.setAttribute('class', 'flottform-status-wrapper');
-				createDialogDescription.setAttribute('class', 'flottform-dialog-description');
-				closeDialogButton.innerHTML = closeSvg(styles);
-				closeDialogButton.setAttribute('class', 'close-dialog-button');
-				closeDialogButton.addEventListener('click', () => {
-					createChannelLinkDialog.close();
-					createChannelLinkDialog.style.display = 'none';
-				});
-				refreshConnectionButton.innerHTML = 'Refresh';
-				refreshConnectionButton.setAttribute('class', 'refresh-connection-button');
-				refreshConnectionButton.addEventListener('click', details.createChannel);
-				createChannelLinkDialog.appendChild(createChannelStatusWrapper);
-				createChannelLinkDialog.appendChild(createChannelQrCode);
-				createChannelLinkDialog.appendChild(createChannelLinkWithOffer);
-				createChannelLinkDialog.appendChild(createDialogDescription);
-				createChannelLinkDialog.appendChild(closeDialogButton);
-				createChannelLinkDialog.appendChild(refreshConnectionButton);
+				const createChannelLinkDialog = createDialogCard(
+					details,
+					inputField as HTMLInputElement,
+					styles
+				);
 				document.body.appendChild(createChannelLinkDialog);
-				const createChannelButton = document.createElement('button');
-				createChannelButton.setAttribute('type', 'button');
-				createChannelButton.setAttribute('class', 'flottform-button');
-				createChannelButton.innerHTML = flottformSvg(styles);
-				closeDialogButton.style.cssText = closeDialogButtonCss(styles);
-				createChannelButton.style.cssText = createChannelButtonCss(styles);
-				createChannelLinkDialog.style.cssText = dialogCss(styles);
-				createChannelQrCode.style.cssText = createChannelQrCodeCss(styles);
-				refreshConnectionButton.style.cssText = refreshConnectionButtonCss(styles);
-				createChannelStatusWrapper.style.cssText = createChannelStatusWrapperCss(styles);
-				createChannelButton.addEventListener('click', details.createChannel);
-				createChannelButton.addEventListener('click', () => {
-					createChannelLinkDialog.showModal();
-					createChannelLinkDialog.style.display = 'flex';
-				});
-				simulateHoverEffect(createChannelButton, styles);
-				simulateHoverEffect(refreshConnectionButton, styles);
-				createChannelElement.appendChild(createChannelButton);
+
+				const createChannelElement = createFlottformButtonParentElement(
+					inputField as HTMLInputElement,
+					createChannelLinkDialog,
+					details,
+					styles
+				);
 				inputField?.after(createChannelElement);
 			},
 			'waiting-for-client': (details: {
@@ -134,14 +105,18 @@ const createDefaultOnStateChange = (options: {
 					createChannelStatusWrapper
 				} = getElements();
 				createChannelButton.removeEventListener('click', details.createChannel);
+				createChannelButton.style.background = changeBackgroundOnState(state, styles);
+
 				createChannelQrCode.style.display = 'block';
-				createChannelLinkWithOffer.style.display = 'block';
 				createChannelQrCode.setAttribute('src', details.qrCode);
+
+				createChannelLinkWithOffer.style.display = 'block';
 				createChannelLinkWithOffer.setAttribute('href', details.link);
 				createChannelLinkWithOffer.innerHTML = details.link;
+
 				createChannelStatusWrapper.innerHTML = 'Upload a file';
+
 				createDialogDescription.innerHTML = 'Use this QR-Code or Link on your other device.';
-				createChannelButton.style.background = changeBackgroundOnState(state, styles);
 			},
 			'waiting-for-file': () => {
 				const {
@@ -151,6 +126,7 @@ const createDefaultOnStateChange = (options: {
 					createChannelQrCode,
 					createChannelLinkWithOffer
 				} = getElements();
+
 				createChannelQrCode.style.display = 'none';
 				createChannelLinkWithOffer.style.display = 'none';
 				createChannelStatusWrapper.innerHTML = 'Connected!';
@@ -198,6 +174,127 @@ const createDefaultOnStateChange = (options: {
 		mapper[state](details);
 	};
 };
+
+function createFlottformButton(inputField: HTMLInputElement, styles?: Styles) {
+	const createChannelButton = document.createElement('button');
+	createChannelButton.setAttribute('type', 'button');
+	createChannelButton.setAttribute('class', 'flottform-button');
+	createChannelButton.innerHTML = flottformSvg(styles);
+	createChannelButton.style.cssText = createChannelButtonCss(styles);
+	simulateHoverEffect(createChannelButton, styles);
+	createChannelButton.setAttribute(
+		'flottform-p2p-transfer-channel-id',
+		inputField.getAttribute('flottform-p2p-transfer-channel-id')!
+	);
+
+	return createChannelButton;
+}
+
+function createFlottformButtonParentElement(
+	inputField: HTMLInputElement,
+	createChannelLinkDialog: HTMLDialogElement,
+	details: any,
+	styles?: Styles
+) {
+	const flottformChannelId = inputField.getAttribute('flottform-p2p-transfer-channel-id')!;
+
+	const createChannelElement = document.createElement('div');
+	createChannelElement.setAttribute('class', 'flottform-parent');
+	createChannelElement.style.cssText = createChannelElementCss(inputField);
+	// Add an id to differentiate between different input fields.
+	createChannelElement.setAttribute('flottform-p2p-transfer-channel-id', flottformChannelId);
+
+	const createChannelButton = createFlottformButton(inputField, styles);
+	// Add event listeners to the flottform button
+	createChannelButton.addEventListener('click', details.createChannel);
+	createChannelButton.addEventListener('click', () => {
+		createChannelLinkDialog.showModal();
+		createChannelLinkDialog.style.display = 'flex';
+	});
+
+	// Append the button to the parent element
+	createChannelElement.appendChild(createChannelButton);
+	return createChannelElement;
+}
+
+function createDialogCard(details: any, inputField: HTMLInputElement, styles?: Styles) {
+	const flottformChannelId = inputField.getAttribute('flottform-p2p-transfer-channel-id')!;
+
+	const createChannelLinkDialog = document.createElement('dialog');
+	createChannelLinkDialog.setAttribute('class', 'flottform-link-dialog');
+	// Add an id to differentiate between different input fields.
+	createChannelLinkDialog.setAttribute('flottform-p2p-transfer-channel-id', flottformChannelId);
+	createChannelLinkDialog.style.cssText = dialogCss(styles);
+	const {
+		createChannelStatusWrapper,
+		createChannelQrCode,
+		createChannelLinkWithOffer,
+		createDialogDescription,
+		closeDialogButton,
+		refreshConnectionButton
+	} = createDialogCardElements(inputField, styles);
+	// Add event listeners to Dialog Card Elements
+	closeDialogButton.addEventListener('click', () => {
+		createChannelLinkDialog.close();
+		createChannelLinkDialog.style.display = 'none';
+	});
+	refreshConnectionButton.addEventListener('click', details.createChannel);
+
+	// Append all elements to Dialog card
+	createChannelLinkDialog.appendChild(createChannelStatusWrapper);
+	createChannelLinkDialog.appendChild(createChannelQrCode);
+	createChannelLinkDialog.appendChild(createChannelLinkWithOffer);
+	createChannelLinkDialog.appendChild(createDialogDescription);
+	createChannelLinkDialog.appendChild(closeDialogButton);
+	createChannelLinkDialog.appendChild(refreshConnectionButton);
+
+	return createChannelLinkDialog;
+}
+
+function createDialogCardElements(inputField: HTMLInputElement, styles?: Styles) {
+	const flottformChannelId = inputField.getAttribute('flottform-p2p-transfer-channel-id')!;
+
+	const createChannelStatusWrapper = document.createElement('div');
+	createChannelStatusWrapper.setAttribute('class', 'flottform-status-wrapper');
+	createChannelStatusWrapper.style.cssText = createChannelStatusWrapperCss(styles);
+	createChannelStatusWrapper.setAttribute('flottform-p2p-transfer-channel-id', flottformChannelId);
+
+	const createChannelQrCode = document.createElement('img');
+	createChannelQrCode.setAttribute('class', 'flottform-qr-code');
+	createChannelQrCode.style.cssText = createChannelQrCodeCss(styles);
+	createChannelQrCode.setAttribute('flottform-p2p-transfer-channel-id', flottformChannelId);
+
+	const createChannelLinkWithOffer = document.createElement('a');
+	createChannelLinkWithOffer.setAttribute('class', 'flottform-link-offer');
+	createChannelLinkWithOffer.setAttribute('target', '_blank');
+	createChannelLinkWithOffer.setAttribute('flottform-p2p-transfer-channel-id', flottformChannelId);
+
+	const createDialogDescription = document.createElement('p');
+	createDialogDescription.setAttribute('class', 'flottform-dialog-description');
+	createDialogDescription.setAttribute('flottform-p2p-transfer-channel-id', flottformChannelId);
+
+	const closeDialogButton = document.createElement('button');
+	closeDialogButton.innerHTML = closeSvg(styles);
+	closeDialogButton.setAttribute('class', 'close-dialog-button');
+	closeDialogButton.style.cssText = closeDialogButtonCss(styles);
+	closeDialogButton.setAttribute('flottform-p2p-transfer-channel-id', flottformChannelId);
+
+	const refreshConnectionButton = document.createElement('button');
+	refreshConnectionButton.innerHTML = 'Refresh';
+	refreshConnectionButton.setAttribute('class', 'refresh-connection-button');
+	refreshConnectionButton.style.cssText = refreshConnectionButtonCss(styles);
+	simulateHoverEffect(refreshConnectionButton, styles);
+	refreshConnectionButton.setAttribute('flottform-p2p-transfer-channel-id', flottformChannelId);
+
+	return {
+		createChannelStatusWrapper,
+		createChannelQrCode,
+		createChannelLinkWithOffer,
+		createDialogDescription,
+		closeDialogButton,
+		refreshConnectionButton
+	};
+}
 
 export function createFlottformInput<ResultType = string | FileList | unknown>({
 	flottformApi,
@@ -272,9 +369,6 @@ export function createFlottformInput<ResultType = string | FileList | unknown>({
 	useDefaultUi?: boolean;
 	styles?: Styles;
 }): { createChannel: () => void } {
-	const baseApi = (flottformApi instanceof URL ? flottformApi : new URL(flottformApi))
-		.toString()
-		.replace(/\/$/, '');
 	const internalOnStateChange = useDefaultUi
 		? createDefaultOnStateChange({ inputField, logger, styles })
 		: noop;
@@ -293,28 +387,29 @@ export function createFlottformInput<ResultType = string | FileList | unknown>({
 		if (openPeerConnection) {
 			openPeerConnection.close();
 		}
-		const hostIceCandidates = new Set<RTCIceCandidateInit>();
+
 		const connection = new RTCPeerConnection(rtcConfiguration);
 		openPeerConnection = connection;
-		channelNumber++;
-		const channelName = `data-channel-${channelNumber}`;
-		const dataChannel = connection.createDataChannel(channelName);
+
+		const dataChannel = createDataChannel(connection);
 
 		const session = await connection.createOffer();
+		await connection.setLocalDescription(session);
 
-		const response = await fetch(`${baseApi}/create`, {
-			method: 'POST',
-			headers: {
-				Accept: 'application/json',
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({ session })
-		});
+		const baseApi = (flottformApi instanceof URL ? flottformApi : new URL(flottformApi))
+			.toString()
+			.replace(/\/$/, '');
 
-		const { endpointId, hostKey } = await response.json();
+		const { endpointId, hostKey } = await createEndpoint(baseApi, session);
 		logger.log('Created endpoint', { endpointId, hostKey });
+
 		const getEndpointInfoUrl = `${baseApi}/${endpointId}`;
 		const putHostInfoUrl = `${baseApi}/${endpointId}/host`;
+
+		const hostIceCandidates = new Set<RTCIceCandidateInit>();
+		await putHostInfo(logger, putHostInfoUrl, hostKey, hostIceCandidates, session, onError);
+
+		startPollingForConnection();
 
 		async function stopPollingForConnection() {
 			if (pollForIceTimer) {
@@ -322,6 +417,7 @@ export function createFlottformInput<ResultType = string | FileList | unknown>({
 			}
 			pollForIceTimer = null;
 		}
+
 		async function startPollingForConnection() {
 			if (pollForIceTimer) {
 				clearTimeout(pollForIceTimer);
@@ -347,27 +443,8 @@ export function createFlottformInput<ResultType = string | FileList | unknown>({
 			}
 		}
 
-		async function putHostInfo() {
-			try {
-				logger.log('Updating host info with new list of ice candidates');
-				const response = await fetch(putHostInfoUrl, {
-					method: 'PUT',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({
-						hostKey,
-						iceCandidates: [...hostIceCandidates],
-						session
-					})
-				});
-				if (!response.ok) {
-					throw Error('Could not update host info');
-				}
-			} catch (err) {
-				onError(err as Error);
-			}
-		}
-
 		connection.onconnectionstatechange = () => {
+			// Possible values for `connectionState`: "new", "connecting", "connected", "disconnected", "failed", "closed"
 			logger.info(`onconnectionstatechange - ${connection.connectionState}`);
 			if (connection.connectionState === 'connected') {
 				stopPollingForConnection();
@@ -386,7 +463,7 @@ export function createFlottformInput<ResultType = string | FileList | unknown>({
 				if (!setIncludes(hostIceCandidates, e.candidate)) {
 					logger.log('host found new ice candidate! Adding it to our list');
 					hostIceCandidates.add(e.candidate);
-					await putHostInfo();
+					await putHostInfo(logger, putHostInfoUrl, hostKey, hostIceCandidates, session, onError);
 				}
 			}
 		};
@@ -404,9 +481,6 @@ export function createFlottformInput<ResultType = string | FileList | unknown>({
 			}
 		};
 
-		await connection.setLocalDescription(session);
-		await putHostInfo();
-		startPollingForConnection();
 		const connectLink = await createClientUrl({ endpointId });
 		changeState('waiting-for-client', {
 			qrCode: await toDataURL(connectLink),
@@ -466,6 +540,53 @@ export function createFlottformInput<ResultType = string | FileList | unknown>({
 	};
 
 	const returnValue = { createChannel };
+
 	changeState('new', returnValue);
 	return returnValue;
+}
+
+function createDataChannel(connection: RTCPeerConnection) {
+	channelNumber++;
+	const channelName = `data-channel-${channelNumber}`;
+	return connection.createDataChannel(channelName);
+}
+
+async function createEndpoint(baseApi: string, session: RTCSessionDescriptionInit) {
+	const response = await fetch(`${baseApi}/create`, {
+		method: 'POST',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify({ session })
+	});
+
+	return response.json();
+}
+
+async function putHostInfo(
+	logger: Logger,
+	putHostInfoUrl: string,
+	hostKey: string,
+	hostIceCandidates: Set<RTCIceCandidateInit>,
+	session: RTCSessionDescriptionInit,
+	onError
+) {
+	try {
+		logger.log('Updating host info with new list of ice candidates');
+		const response = await fetch(putHostInfoUrl, {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				hostKey,
+				iceCandidates: [...hostIceCandidates],
+				session
+			})
+		});
+		if (!response.ok) {
+			throw Error('Could not update host info');
+		}
+	} catch (err) {
+		onError(err as Error);
+	}
 }
