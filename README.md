@@ -29,3 +29,51 @@ We are about to explore ideas how we can solve the issue we described in detail 
 - [ ] Find a license that fits our needs
 - [ ] Create a logo
 - [ ] Build a website
+
+## Update Instructions for Remote Server Deployment
+
+These are the necessary steps to update the code on the remote server to the latest version.
+
+1. Connect to the remote server:
+
+```sh
+ssh <email@remote.server>
+```
+
+2. Navigate to the Target Repository:
+
+```sh
+cd /path/to/your/repository/in/remote/server
+```
+
+3. Check the Current Branch Used for Production:
+
+```sh
+git status
+```
+
+Ensure you are on the correct branch used for production. If not, switch to the appropriate branch:
+
+```sh
+git checkout <production-branch>
+```
+
+4. Fetch all of the new changes:
+
+```sh
+git fetch --all
+```
+
+5. [Optional] Update the Environment Variables:
+
+If there are changes required in the environment variables, update the .env file accordingly.
+
+```sh
+nano .env
+```
+
+6. Stop & re-run the containers:
+
+```sh
+docker compose down && git pull && docker compose build && docker compose up -d && docker volume prune —-filter all=1 —-force && docker compose logs -f
+```

@@ -1,0 +1,28 @@
+{
+	"name": "@flottform/workspace",
+	"version": "0.0.1",
+	"private": true,
+	"description": "Workspace for building all flottform modules",
+	"author": "compose.us GmbH",
+	"keywords": [
+		"flottform",
+		"forms",
+		"server",
+		"webrtc"
+	],
+	"scripts": {
+		"e2e": "pnpm demo run test:integration",
+		"forms": "pnpm --filter @flottform/forms",
+		"demo": "pnpm --filter @flottform/demo",
+		"server": "pnpm --filter @flottform/server",
+		"server-standalone": "pnpm --filter @flottform/server-standalone",
+		"where-are-you-at": "pnpm --filter @flottform/where-are-you-at"
+	},
+	"packageManager": "pnpm@8.15.2",
+	"devDependencies": {
+		"prettier": "^3.1.1",
+		"prettier-plugin-svelte": "^3.1.2",
+		"prettier-plugin-tailwindcss": "^0.5.11",
+		"typescript": "^5.0.0"
+	}
+}
