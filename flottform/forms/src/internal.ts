@@ -89,3 +89,37 @@ export function setIncludes<T>(set: Set<T>, x: T): boolean {
 	}
 	return false;
 }
+
+type Listener<T extends Array<any>> = (...args: T) => void;
+export type FlottformEventMap = {
+	new: [details: any];
+	'waiting-for-client': [
+		details: {
+			qrCode: string;
+			link: string;
+			createChannel: any;
+		}
+	];
+	'waiting-for-file': [];
+	'waiting-for-ice': [];
+	'receiving-data': [];
+	done: [];
+	error: [details: any];
+};
+
+export class EventEmitter<EventMap extends Record<string, Array<any>>> {
+	private eventListeners: { [K in keyof EventMap]?: Set<Listener<EventMap[K]>> } = {};
+
+	on<K extends keyof EventMap>(eventName: K, listener: Listener<EventMap[K]>) {
+		const listeners = this.eventListeners[eventName] ?? new Set();
+		listeners.add(listener);
+		this.eventListeners[eventName] = listeners;
+	}
+
+	emit<K extends keyof EventMap>(eventName: K, ...args: EventMap[K]) {
+		const listeners = this.eventListeners[eventName] ?? new Set();
+		for (const listener of listeners) {
+			listener(...args);
+		}
+	}
+}
