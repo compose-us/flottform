@@ -33,12 +33,11 @@ export async function connectToFlottform({
 }> {
 	logger.log('connecting to flottform', endpointId);
 	let currentState: ClientState = 'init';
+
 	const changeState = (state: ClientState) => {
 		currentState = state;
 		onStateChange(currentState);
 	};
-	const getEndpointInfoUrl = `${flottformApi}/${endpointId}`;
-	const putClientInfoUrl = `${flottformApi}/${endpointId}/client`;
 
 	let channel: RTCDataChannel | null = null;
 	let pollForIceTimer: ReturnType<typeof globalThis.setTimeout> | null = null;
@@ -48,48 +47,8 @@ export async function connectToFlottform({
 
 	const connection = new RTCPeerConnection(rtcConfiguration);
 
-	connection.onconnectionstatechange = () => {
-		logger.info(`onconnectionstatechange - ${connection.connectionState}`);
-		if (connection.connectionState === 'connected') {
-			stopPollingForIceCandidates();
-			if (currentState === 'connecting-to-host') {
-				changeState('connected');
-			}
-		}
-		if (connection.connectionState === 'disconnected') {
-			startPollingForIceCandidates();
-		}
-		if (connection.connectionState === 'failed') {
-			stopPollingForIceCandidates();
-			if (currentState !== 'done') {
-				changeState('disconnected');
-			}
-		}
-	};
-
-	connection.onicecandidate = async (e) => {
-		logger.info(`onicecandidate - ${connection.connectionState} - ${e.candidate}`);
-		if (e.candidate) {
-			if (!setIncludes(clientIceCandidates, e.candidate)) {
-				logger.log('client found new ice candidate! Adding it to our list');
-				clientIceCandidates.add(e.candidate);
-				await putClientInfo();
-			}
-		}
-	};
-	connection.onicecandidateerror = (e) => {
-		logger.error(`onicecandidateerror - ${connection.connectionState}`, e);
-	};
-	connection.onicegatheringstatechange = async (e) => {
-		logger.info(`onicegatheringstatechange - ${connection.iceGatheringState}`);
-	};
-	connection.oniceconnectionstatechange = (e) => {
-		logger.info(`oniceconnectionstatechange - ${connection.iceConnectionState}`);
-		if (connection.iceConnectionState === 'failed') {
-			logger.log('Failed to find a possible connection path');
-			changeState('connection-impossible');
-		}
-	};
+	setUpClientIceGathering();
+	setUpConnectionStateGathering();
 
 	connection.ondatachannel = (e) => {
 		logger.info(`ondatachannel: ${e.channel}`);
@@ -100,7 +59,57 @@ export async function connectToFlottform({
 		};
 	};
 
+	function setUpClientIceGathering() {
+		connection.onicecandidate = async (e) => {
+			logger.info(`onicecandidate - ${connection.connectionState} - ${e.candidate}`);
+			if (e.candidate) {
+				if (!setIncludes(clientIceCandidates, e.candidate)) {
+					logger.log('client found new ice candidate! Adding it to our list');
+					clientIceCandidates.add(e.candidate);
+					await putClientInfo();
+				}
+			}
+		};
+		connection.onicegatheringstatechange = async (e) => {
+			logger.info(`onicegatheringstatechange - ${connection.iceGatheringState}`);
+		};
+		connection.onicecandidateerror = (e) => {
+			logger.error(`onicecandidateerror - ${connection.connectionState}`, e);
+		};
+	}
+
+	function setUpConnectionStateGathering() {
+		connection.onconnectionstatechange = () => {
+			logger.info(`onconnectionstatechange - ${connection.connectionState}`);
+			if (connection.connectionState === 'connected') {
+				stopPollingForIceCandidates();
+				if (currentState === 'connecting-to-host') {
+					changeState('connected');
+				}
+			}
+			if (connection.connectionState === 'disconnected') {
+				startPollingForIceCandidates();
+			}
+			if (connection.connectionState === 'failed') {
+				stopPollingForIceCandidates();
+				if (currentState !== 'done') {
+					changeState('disconnected');
+				}
+			}
+		};
+
+		connection.oniceconnectionstatechange = (e) => {
+			logger.info(`oniceconnectionstatechange - ${connection.iceConnectionState}`);
+			if (connection.iceConnectionState === 'failed') {
+				logger.log('Failed to find a possible connection path');
+				changeState('connection-impossible');
+			}
+		};
+	}
+
 	changeState('retrieving-info-from-endpoint');
+	const getEndpointInfoUrl = `${flottformApi}/${endpointId}`;
+	const putClientInfoUrl = `${flottformApi}/${endpointId}/client`;
 	const { hostInfo } = await retrieveEndpointInfo(getEndpointInfoUrl);
 	await connection.setRemoteDescription(hostInfo.session);
 	const session = await connection.createAnswer();

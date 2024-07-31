@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { connectToFlottform, type ClientState } from '@flottform/forms';
+	import { type ClientState, FlottformClient } from '@flottform/forms';
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
 	import FileInput from '$lib/components/FileInput.svelte';
@@ -12,29 +12,37 @@
 	let currentPercentage = 0;
 
 	onMount(async () => {
-		try {
-			const result = await connectToFlottform({
-				endpointId: $page.params.endpointId,
-				fileInput,
-				flottformApi: sdpExchangeServerBase,
-				onError(error) {
-					currentState = 'error';
-					console.log(error);
-				},
-				onStateChange(state) {
-					currentState = state;
-				}
-			});
+		const flottformClient = new FlottformClient({
+			endpointId: $page.params.endpointId,
+			fileInput,
+			flottformApi: sdpExchangeServerBase
+		});
 
-			sendFileToPeer = result.createSendFileToPeer({
-				onProgress(p) {
-					currentPercentage = p;
-				}
-			});
-		} catch (err) {
-			console.log('Error connecting to flottform', err);
+		await flottformClient.start();
+
+		// these listeners are optional (Used here to customize the UI)
+		flottformClient.on('init', () => {
+			console.log('Updating the state on the CLIENT page to: ', currentState);
+			currentState = 'init';
+		});
+		flottformClient.on('connected', () => {
+			console.log('Updating the state on the CLIENT page to: ', currentState);
+			currentState = 'connected';
+		});
+		flottformClient.on('sending', () => {
+			console.log('Updating the state on the CLIENT page to: ', currentState);
+			currentState = 'sending';
+		});
+		flottformClient.on('done', () => {
+			console.log('Updating the state on the CLIENT page to: ', currentState);
+			currentState = 'done';
+		});
+		flottformClient.on('error', () => {
+			console.log('Updating the state on the CLIENT page to: ', currentState);
 			currentState = 'error';
-		}
+		});
+
+		sendFileToPeer = flottformClient.sendFile;
 	});
 </script>
 

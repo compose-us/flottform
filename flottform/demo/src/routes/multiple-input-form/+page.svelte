@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createFlottformFileInput } from '@flottform/forms';
+	import { FlottformFileInput } from '@flottform/forms';
 	import { onMount } from 'svelte';
 	import { createClientUrl, sdpExchangeServerBase } from '../../api';
 	import { base } from '$app/paths';
@@ -35,15 +35,32 @@
 		const firstFileInput = document.querySelector(
 			'input[type=file][flottform-p2p-transfer-channel-id=uniqueID1]'
 		);
-		const fileInputFields = [firstFileInput];
 
-		for (let fileInputField of fileInputFields) {
-			createFlottformFileInput({
-				flottformApi: sdpExchangeServerBase,
-				createClientUrl,
-				inputField: fileInputField
-			});
-		}
+		const flottformFileInput = new FlottformFileInput({
+			mode: 'single-file',
+			flottformApi: sdpExchangeServerBase,
+			createClientUrl,
+			inputField: firstFileInput
+		});
+		flottformFileInput.on('new', () => {
+			console.log('+++++Custom UI for `new`');
+		});
+		flottformFileInput.on('connecting', () => {
+			console.log('+++++Custom UI for `connecting`');
+		});
+		flottformFileInput.on('connected', () => {
+			console.log('+++++Custom UI for `connected`');
+		});
+		flottformFileInput.on('receive', () => {
+			console.log('+++++Custom UI for `receive`');
+		});
+		flottformFileInput.on('disconnected', () => {
+			console.log('+++++Custom UI for `disconnected`');
+		});
+		flottformFileInput.on('error', (err) => {
+			console.log('+++++Custom UI for `error`: ', err);
+		});
+		//flottformFileInput.start();
 	});
 </script>
 

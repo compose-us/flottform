@@ -1,3 +1,5 @@
+import { FlottformChannel } from './Flottform-channel';
+
 type HostKey = string;
 type ClientKey = string;
 type EndpointId = string;
@@ -92,19 +94,22 @@ export function setIncludes<T>(set: Set<T>, x: T): boolean {
 
 type Listener<T extends Array<any>> = (...args: T) => void;
 export type FlottformEventMap = {
-	new: [details: any];
+	new: [details: { channel: FlottformChannel }];
 	'waiting-for-client': [
 		details: {
 			qrCode: string;
 			link: string;
-			createChannel: any;
+			channel: FlottformChannel;
 		}
 	];
 	'waiting-for-file': [];
 	'waiting-for-ice': [];
 	'receiving-data': [];
+	'file-received': [{ fileMeta: FileMetaInfos; arrayBuffer: Array<ArrayBuffer> }];
 	done: [];
-	error: [details: any];
+	error: [error: any];
+	connected: [];
+	disconnected: [];
 };
 
 export class EventEmitter<EventMap extends Record<string, Array<any>>> {
