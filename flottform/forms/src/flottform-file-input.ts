@@ -1,4 +1,3 @@
-import { Logger } from '../dist';
 import { FlottformChannel } from './Flottform-channel';
 import {
 	Styles,
@@ -20,6 +19,7 @@ import {
 	EventEmitter,
 	FileMetaInfos,
 	FlottformState,
+	Logger,
 	POLL_TIME_IN_MS
 } from './internal';
 
@@ -93,12 +93,10 @@ export class FlottformFileInput extends EventEmitter<Listeners> {
 
 	private registerListeners = () => {
 		this.channel?.on('new', ({ channel }) => {
-			console.log('-----Default UI changes for the state `new`');
 			this.emit('new', { channel });
 			this.useDefaultUi && this.internalOnStateChange('new', { channel });
 		});
 		this.channel?.on('waiting-for-client', ({ qrCode, link, channel }) => {
-			console.log('-----Default UI changes for the state `waiting-for-client`');
 			this.useDefaultUi &&
 				this.internalOnStateChange('waiting-for-client', {
 					qrCode,
@@ -107,34 +105,27 @@ export class FlottformFileInput extends EventEmitter<Listeners> {
 				});
 		});
 		this.channel?.on('waiting-for-ice', () => {
-			console.log('-----Default UI changes for the state `waiting-for-ice`');
 			this.emit('connecting');
 			this.useDefaultUi && this.internalOnStateChange('waiting-for-ice');
 		});
 		this.channel?.on('connected', () => {
-			console.log('-----Default UI changes for the state `connected`');
 			this.emit('connected');
 		});
 		this.channel?.on('waiting-for-file', () => {
-			console.log('-----Default UI changes for the state `waiting-for-file`');
 			this.useDefaultUi && this.internalOnStateChange('waiting-for-file');
 		});
 		this.channel?.on('receiving-data', () => {
-			console.log('-----Default UI changes for the state `receiving-data`');
 			this.emit('receive');
 			this.useDefaultUi && this.internalOnStateChange('receiving-data');
 		});
 		this.channel?.on('file-received', this.attachFileToInputField);
 		this.channel?.on('done', () => {
-			console.log('-----Default UI changes for the state `done`');
 			this.useDefaultUi && this.internalOnStateChange('done');
 		});
 		this.channel?.on('disconnected', () => {
-			console.log('-----Default UI changes for the state `disconnected`');
 			this.emit('disconnected');
 		});
 		this.channel?.on('error', (error) => {
-			console.log('-----Default UI changes for the state `error`');
 			this.emit('error', error);
 			this.useDefaultUi && this.internalOnStateChange('error');
 		});
