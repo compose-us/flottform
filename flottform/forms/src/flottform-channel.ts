@@ -22,10 +22,6 @@ export class FlottformChannel extends EventEmitter<FlottformEventMap> {
 	private openPeerConnection: RTCPeerConnection | null = null;
 	private dataChannel: RTCDataChannel | null = null;
 	private pollForIceTimer: NodeJS.Timeout | number | null = null;
-	private currentFile: {
-		fileMeta: FileMetaInfos;
-		arrayBuffer: ArrayBuffer[];
-	} | null = null;
 
 	constructor({
 		mode,
@@ -97,8 +93,8 @@ export class FlottformChannel extends EventEmitter<FlottformEventMap> {
 			link: connectLink,
 			channel: this
 		});
-		// Setup listeners for messages incoming from the client
-		this.setupDataChannelListeners();
+		// Setup listener for messages incoming from the client
+		this.setupDataChannelListener();
 	};
 
 	close = () => {
@@ -109,7 +105,7 @@ export class FlottformChannel extends EventEmitter<FlottformEventMap> {
 		this.changeState('disconnected');
 	};
 
-	private setupDataChannelListeners = () => {
+	private setupDataChannelListener = () => {
 		if (this.dataChannel == null) {
 			this.changeState(
 				'error',
@@ -119,24 +115,8 @@ export class FlottformChannel extends EventEmitter<FlottformEventMap> {
 		}
 
 		this.dataChannel.onmessage = (e) => {
-			if (typeof e.data === 'string') {
-				// string can be either file metadata or end of file marker
-				const message = JSON.parse(e.data);
-				if (message.data === 'input:file') {
-					// Handle file metadata
-					this.currentFile = { fileMeta: message, arrayBuffer: [] };
-				} else if (message.data === 'eof') {
-					// Handle end of file
-					if (this.currentFile == null)
-						throw new Error('currentFile is null. Unable to handle the received file');
-					this.emit('file-received', this.currentFile);
-				}
-			} else if (e.data instanceof ArrayBuffer) {
-				// Handle file chunk
-				if (this.currentFile) {
-					this.currentFile.arrayBuffer.push(e.data);
-				}
-			}
+			// Handling the incoming data from the client depends on the use case.
+			this.emit('receiving-data', e);
 		};
 	};
 

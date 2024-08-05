@@ -43,6 +43,10 @@ export class FlottformFileInput extends EventEmitter<Listeners> {
 	private internalOnStateChange: Function;
 	private inputField: HTMLInputElement;
 	private logger: Logger;
+	private currentFile: {
+		fileMeta: FileMetaInfos;
+		arrayBuffer: ArrayBuffer[];
+	} | null = null;
 
 	constructor({
 		mode,
@@ -91,6 +95,27 @@ export class FlottformFileInput extends EventEmitter<Listeners> {
 		this.channel?.close();
 	};
 
+	private handleIncomingData = (e: MessageEvent<any>) => {
+		if (typeof e.data === 'string') {
+			// string can be either file metadata or end of file marker
+			const message = JSON.parse(e.data);
+			if (message.data === 'input:file') {
+				// Handle file metadata
+				this.currentFile = { fileMeta: message, arrayBuffer: [] };
+			} else if (message.data === 'eof') {
+				// Handle end of file
+				if (this.currentFile == null)
+					throw new Error('currentFile is null. Unable to handle the received file');
+				this.attachFileToInputField(this.currentFile);
+			}
+		} else if (e.data instanceof ArrayBuffer) {
+			// Handle file chunk
+			if (this.currentFile) {
+				this.currentFile.arrayBuffer.push(e.data);
+			}
+		}
+	};
+
 	private registerListeners = () => {
 		this.channel?.on('new', ({ channel }) => {
 			this.emit('new', { channel });
@@ -114,11 +139,11 @@ export class FlottformFileInput extends EventEmitter<Listeners> {
 		this.channel?.on('waiting-for-file', () => {
 			this.useDefaultUi && this.internalOnStateChange('waiting-for-file');
 		});
-		this.channel?.on('receiving-data', () => {
+		this.channel?.on('receiving-data', (e) => {
 			this.emit('receive');
+			this.handleIncomingData(e);
 			this.useDefaultUi && this.internalOnStateChange('receiving-data');
 		});
-		this.channel?.on('file-received', this.attachFileToInputField);
 		this.channel?.on('done', () => {
 			this.useDefaultUi && this.internalOnStateChange('done');
 		});

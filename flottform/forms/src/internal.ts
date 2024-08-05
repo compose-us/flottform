@@ -104,7 +104,7 @@ export type FlottformEventMap = {
 	];
 	'waiting-for-file': [];
 	'waiting-for-ice': [];
-	'receiving-data': [];
+	'receiving-data': [e: MessageEvent<any>];
 	'file-received': [{ fileMeta: FileMetaInfos; arrayBuffer: Array<ArrayBuffer> }];
 	done: [];
 	error: [error: any];
