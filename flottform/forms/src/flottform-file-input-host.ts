@@ -17,7 +17,6 @@ import {
 import {
 	DEFAULT_WEBRTC_CONFIG,
 	EventEmitter,
-	FileMetaInfos,
 	FlottformState,
 	Logger,
 	POLL_TIME_IN_MS
@@ -29,7 +28,7 @@ type Listeners = {
 	error: [error: any];
 	connected: [];
 	receive: []; // Emitted to signal the start of receiving the file(s)
-	progress: [progress: number]; // Emitted to signal the progress of receiving the file(s)
+	progress: { fileIndex: number; currentFileProgress: number; overallProgress: number }[]; // Emitted to signal the progress of receiving the file(s)
 	done: [];
 	'webrtc:waiting-for-client': [link: string];
 	'webrtc:waiting-for-ice': [];
@@ -44,10 +43,13 @@ export class FlottformFileInputHost extends EventEmitter<Listeners> {
 	private internalOnStateChange: Function;
 	private inputField: HTMLInputElement;
 	private logger: Logger;
+	private filesMetaData: { name: string; type: string; size: number }[] = [];
+	private filesTotalSize: number = 0;
+	private receivedDataSize: number = 0;
 	private currentFile: {
-		fileMeta: FileMetaInfos;
-		arrayBuffer: ArrayBuffer[];
+		index: number;
 		receivedSize: number;
+		arrayBuffer: ArrayBuffer[];
 	} | null = null;
 	private link: string = '';
 	private qrCode: string = '';
@@ -116,28 +118,79 @@ export class FlottformFileInputHost extends EventEmitter<Listeners> {
 
 	private handleIncomingData = (e: MessageEvent<any>) => {
 		if (typeof e.data === 'string') {
-			// string can be either file metadata or end of file marker
+			// string can be either metadata or end transfer marker.
 			const message = JSON.parse(e.data);
-			if (message.data === 'input:file') {
+			if (message.type === 'file-transfer-meta') {
 				// Handle file metadata
-				this.currentFile = { fileMeta: message, arrayBuffer: [], receivedSize: 0 };
-			} else if (message.data === 'eof') {
-				// Handle end of file
-				if (this.currentFile == null)
-					throw new Error('currentFile is null. Unable to handle the received file');
-				this.attachFileToInputField(this.currentFile);
+				this.filesMetaData = message.filesQueue;
+				this.currentFile = { index: 0, receivedSize: 0, arrayBuffer: [] };
+				this.filesTotalSize = message.totalSize;
+			} else if (message.type === 'transfer-complete') {
+				this.emit('done');
+				this.useDefaultUi && this.internalOnStateChange('done');
 			}
 		} else if (e.data instanceof ArrayBuffer) {
 			// Handle file chunk
 			if (this.currentFile) {
 				this.currentFile.arrayBuffer.push(e.data);
 				this.currentFile.receivedSize += e.data.byteLength;
-				const progress = (this.currentFile.receivedSize / this.currentFile.fileMeta.size).toFixed(
+				this.receivedDataSize += e.data.byteLength;
+
+				const currentFileTotalSize = this.filesMetaData[this.currentFile.index]?.size as number;
+
+				const currentFileProgress = (this.currentFile.receivedSize / currentFileTotalSize).toFixed(
 					2
 				);
-				this.emit('progress', parseFloat(progress));
+				const overallProgress = (this.receivedDataSize / this.filesTotalSize).toFixed(2);
+
+				this.emit('progress', {
+					fileIndex: this.currentFile.index,
+					currentFileProgress: parseFloat(currentFileProgress),
+					overallProgress: parseFloat(overallProgress)
+				});
+
+				if (this.currentFile.receivedSize === currentFileTotalSize) {
+					// Attach the current file to the given input field
+					this.appendFileToInputField(this.currentFile.index);
+					// Initialize the values of currentFile to receive the next file
+					this.currentFile = {
+						index: this.currentFile.index + 1,
+						receivedSize: 0,
+						arrayBuffer: []
+					};
+				}
 			}
 		}
+	};
+
+	private appendFileToInputField = (fileIndex: number) => {
+		if (!this.inputField) {
+			this.logger.warn('No input field provided!!');
+			return;
+		}
+
+		if (!this.inputField.multiple) {
+			this.logger.warn('Input field does not accept multiple files. Setting multiple to true.');
+			this.inputField.multiple = true;
+		}
+
+		const dt = new DataTransfer();
+
+		// Add existing files from the input field to the DataTransfer object to avoid loosing them.
+		if (this.inputField.files) {
+			for (const file of Array.from(this.inputField.files)) {
+				dt.items.add(file);
+			}
+		}
+
+		const fileName = this.filesMetaData[fileIndex]?.name ?? 'no-name';
+		const fileType = this.filesMetaData[fileIndex]?.type ?? 'application/octet-stream';
+
+		const fileForForm = new File(this.currentFile?.arrayBuffer as ArrayBuffer[], fileName, {
+			type: fileType
+		});
+		dt.items.add(fileForForm);
+		this.inputField.files = dt.files;
 	};
 
 	private registerListeners = () => {
@@ -182,27 +235,6 @@ export class FlottformFileInputHost extends EventEmitter<Listeners> {
 			this.emit('error', error);
 			this.useDefaultUi && this.internalOnStateChange('error');
 		});
-	};
-
-	private attachFileToInputField = ({
-		fileMeta,
-		arrayBuffer
-	}: {
-		fileMeta: FileMetaInfos;
-		arrayBuffer: ArrayBuffer[];
-	}) => {
-		if (!this.inputField) {
-			this.logger.warn('no input field, no need to run onResult');
-			return;
-		}
-
-		const fileName = fileMeta.name ?? 'no-name';
-		const fileType = fileMeta.type ?? 'application/octet-stream';
-
-		const fileForForm = new File(arrayBuffer, fileName, { type: fileType });
-		const dt = new DataTransfer();
-		dt.items.add(fileForForm);
-		this.inputField.files = dt.files;
 	};
 
 	private createDefaultOnStateChange(options: {

@@ -11,10 +11,16 @@ type Listeners = {
 	connected: [];
 	'webrtc:connection-impossible': [];
 	sending: []; // Emitted to signal the start of sending the file(s)
-	progress: [progress: number]; // Emitted to signal the progress of sending the file(s)
+	progress: [{ fileIndex: number; fileName: string; progress: number }]; // Emitted to signal the progress of sending the file(s)
 	done: [];
 	disconnected: [];
 	error: [e: string];
+};
+
+type MetaData = {
+	type: 'file-transfer-meta';
+	filesQueue: { name: string; type: string; size: number }[];
+	totalSize: number;
 };
 
 export class FlottformFileInputClient extends EventEmitter<Listeners> {
@@ -58,56 +64,64 @@ export class FlottformFileInputClient extends EventEmitter<Listeners> {
 		this.channel?.close();
 	};
 
-	sendFile = async () => {
-		const { fileMeta, arrayBuffer } = await this.serializeData(this.inputField);
-		this.emit('sending');
+	private createMetaData = (inputElement: HTMLInputElement): MetaData | null => {
+		if (!inputElement.files) return null;
 
-		// Send file metadata
-		this.channel?.sendData(JSON.stringify(fileMeta));
-
-		// Send file in chunks
-		for (let i = 0; i * this.chunkSize <= arrayBuffer.byteLength; i++) {
-			let progress = ((i * this.chunkSize) / arrayBuffer.byteLength).toFixed(2);
-			this.emit('progress', parseFloat(progress));
-			const end = (i + 1) * this.chunkSize;
-			this.channel?.sendData(arrayBuffer.slice(i * this.chunkSize, end));
-		}
-
-		// Send end-of-file marker
-		this.channel?.sendData(JSON.stringify({ data: 'eof' }));
-
-		this.logger.log(`File sent: ${fileMeta.name}`);
+		// Generate all the metadata necessary to send all of the files
+		const files = Array.from(inputElement.files);
+		const filesQueue = files.map((file) => ({
+			name: file.name,
+			type: file.type, // We're dividing each file into chuncks no matter what the type of the file.
+			size: file.size
+		}));
+		return {
+			type: 'file-transfer-meta',
+			filesQueue,
+			totalSize: filesQueue.reduce((sum, file) => sum + file.size, 0)
+		};
 	};
 
-	private serializeData = async (
-		fileInput: HTMLInputElement
-	): Promise<{
-		fileMeta: FileMetaInfos;
-		arrayBuffer: ArrayBuffer;
-	}> => {
-		this.logger.log(fileInput.value);
-		const file = fileInput.files?.item(0);
-		if (!file) {
-			const arrayBuffer = new TextEncoder().encode(fileInput.value);
-			const fileMeta = {
-				data: 'input:text',
-				size: arrayBuffer.byteLength
-			};
-			return { arrayBuffer, fileMeta };
+	private createArrayBuffers = async (inputElement: HTMLInputElement) => {
+		if (!inputElement.files) return null;
+
+		// Generate all the arrayBuffers of the available files
+		const files = Array.from(inputElement.files);
+		return await Promise.all(files.map(async (file) => await file.arrayBuffer()));
+	};
+
+	sendFiles = async () => {
+		const metaData = this.createMetaData(this.inputField);
+		const filesArrayBuffer = await this.createArrayBuffers(this.inputField);
+
+		if (!metaData || !filesArrayBuffer)
+			throw new Error("Can't find the files that you want to send!");
+
+		this.channel?.sendData(JSON.stringify(metaData));
+
+		this.emit('sending');
+
+		for (let i = 0; i < metaData.filesQueue.length; i++) {
+			await this.sendFile(
+				i,
+				metaData.filesQueue[i]?.name as string,
+				filesArrayBuffer[i] as ArrayBuffer
+			);
 		}
-		const arrayBuffer = await file.arrayBuffer();
-		if (!arrayBuffer) {
-			this.logger.log('no array buffer');
-			throw Error('no array buffer in file input element');
+		this.channel?.sendData(JSON.stringify({ type: 'transfer-complete' }));
+	};
+
+	private sendFile = async (fileIndex: number, fileName: string, fileArrayBuffer: ArrayBuffer) => {
+		this.logger.log(`Sending data for file number ${fileIndex + 1}`);
+
+		// Send file in chunks
+		for (let i = 0; i * this.chunkSize <= fileArrayBuffer.byteLength; i++) {
+			// The progress for now is sent for each file seperately
+			let progress = ((i * this.chunkSize) / fileArrayBuffer.byteLength).toFixed(2);
+			this.emit('progress', { fileIndex, fileName, progress: parseFloat(progress) });
+
+			const end = (i + 1) * this.chunkSize;
+			this.channel?.sendData(fileArrayBuffer.slice(i * this.chunkSize, end));
 		}
-		const fileMeta = {
-			data: 'input:file',
-			lastModified: file.lastModified,
-			name: file.name,
-			type: file.type,
-			size: file.size
-		};
-		return { fileMeta, arrayBuffer };
 	};
 
 	private registerListeners = () => {

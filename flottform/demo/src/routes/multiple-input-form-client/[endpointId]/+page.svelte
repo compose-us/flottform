@@ -53,7 +53,7 @@
 			currentState = 'error';
 		});
 
-		sendFileToPeer = flottformFileInputClient.sendFile;
+		sendFileToPeer = flottformFileInputClient.sendFiles;
 
 		/* sendFileToPeer = async (e) => {
 			await flottformFileInputClient.sendFile();

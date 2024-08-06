@@ -59,6 +59,7 @@
 			}}
 			on:dragenter={(e) => handleDrag(e)}
 			on:change={previewUploadedImage}
+			multiple
 		/>
 		<svg
 			class="w-6 h-6 fill-primary-blue opacity-80"

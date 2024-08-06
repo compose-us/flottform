@@ -22,7 +22,7 @@
 		});
 		flottformFileInputHost.on('progress', (p) => {
 			// Optional: Custom UI
-			console.log('RECEIVING= ', p);
+			console.log('progress=', p);
 		});
 		flottformFileInputHost.on('disconnected', () => {
 			// Optional: Custom UI
