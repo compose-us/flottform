@@ -1,66 +1,45 @@
 <script lang="ts">
-	import { FlottformFileInput } from '@flottform/forms';
+	import { FlottformFileInputHost } from '@flottform/forms';
 	import { onMount } from 'svelte';
 	import { createClientUrl, sdpExchangeServerBase } from '../../api';
-	import { base } from '$app/paths';
-	import { writable } from 'svelte/store';
-
-	function ensureUniqueIds(inputFields: HTMLInputElement[]) {
-		return inputFields.map((inputField) => {
-			let id = inputField.getAttribute('flottform-p2p-transfer-channel-id') + crypto.randomUUID();
-			inputField.setAttribute('flottform-p2p-transfer-channel-id', id);
-			return inputField;
-		});
-	}
-
-	function getFlottformEligibleInputs() {
-		const allFileInputs = Array.from(document.querySelectorAll('input[type=file]'));
-		const allEligibleInputs = Array.from(
-			document.querySelectorAll('input[type=file][flottform-p2p-transfer-channel-id]')
-		);
-
-		if (allFileInputs.length === 0) return [];
-
-		if (allEligibleInputs.length === 0) {
-			// Apply Flottform to all input fields
-			return ensureUniqueIds(allFileInputs);
-		} else {
-			// Apply Flottform to the input fields having the specific data attribute
-			return ensureUniqueIds(allEligibleInputs);
-		}
-	}
 
 	onMount(async () => {
-		//const fileInputFields = getFlottformEligibleInputs();
-		const firstFileInput = document.querySelector(
-			'input[type=file][flottform-p2p-transfer-channel-id=uniqueID1]'
-		);
+		const firstFileInput = document.querySelector('input[type=file]') as HTMLInputElement;
 
-		const flottformFileInput = new FlottformFileInput({
-			mode: 'single-file',
+		const flottformFileInputHost = new FlottformFileInputHost({
 			flottformApi: sdpExchangeServerBase,
 			createClientUrl,
 			inputField: firstFileInput
 		});
-		flottformFileInput.on('new', () => {
-			console.log('+++++Custom UI for `new`');
+		flottformFileInputHost.on('new', () => {
+			// Optional: Custom UI
 		});
-		flottformFileInput.on('connecting', () => {
-			console.log('+++++Custom UI for `connecting`');
+		flottformFileInputHost.on('connected', () => {
+			// Optional: Custom UI
 		});
-		flottformFileInput.on('connected', () => {
-			console.log('+++++Custom UI for `connected`');
+		flottformFileInputHost.on('receive', () => {
+			// Optional: Custom UI
 		});
-		flottformFileInput.on('receive', () => {
-			console.log('+++++Custom UI for `receive`');
+		flottformFileInputHost.on('disconnected', () => {
+			// Optional: Custom UI
 		});
-		flottformFileInput.on('disconnected', () => {
-			console.log('+++++Custom UI for `disconnected`');
+		flottformFileInputHost.on('error', (err) => {
+			// Optional: Custom UI
 		});
-		flottformFileInput.on('error', (err) => {
-			console.log('+++++Custom UI for `error`: ', err);
+		flottformFileInputHost.on('webrtc:waiting-for-client', (link) => {
+			// Optional: Custom UI
 		});
-		//flottformFileInput.start();
+		flottformFileInputHost.on('webrtc:waiting-for-ice', () => {
+			// Optional: Custom UI
+		});
+		flottformFileInputHost.on('webrtc:waiting-for-file', () => {
+			// Optional: Custom UI
+		});
+		flottformFileInputHost.on('done', () => {
+			// Optional: Custom UI
+		});
+
+		//flottformFileInputHost.start();
 	});
 </script>
 
@@ -73,7 +52,7 @@
 	<form class="grid grid-cols-1 gap-8">
 		<label class="grid">
 			<span>Please upload the first file:</span>
-			<input type="file" name="fileA" flottform-p2p-transfer-channel-id="uniqueID1" />
+			<input type="file" name="fileA" />
 		</label>
 		<label class="grid">
 			<span>Please upload the second file:</span>
@@ -81,24 +60,19 @@
 		</label>
 		<label class="grid">
 			<span>Please upload the third file:</span>
-			<input type="file" name="fileC" flottform-p2p-transfer-channel-id="uniqueID2" />
+			<input type="file" name="fileC" />
 		</label>
 		<label class="grid">
 			<span>Please Enter your OTP (One Time password):</span>
-			<input
-				type="text"
-				name="one-time-pwd"
-				style="border:1px solid gray; border-radius:0.2rem;"
-				flottform-p2p-transfer-channel-id="uniqueID3"
-			/>
+			<input type="text" name="one-time-pwd" style="border:1px solid gray; border-radius:0.2rem;" />
 		</label>
 		<label class="grid">
 			<span>Please get the signature:</span>
-			<canvas flottform-p2p-transfer-channel-id="uniqueID3" style="background-color:gray;" />
+			<canvas style="background-color:gray;"></canvas>
 		</label>
 		<label class="grid">
 			<span>Text Area Tranlated to English:</span>
-			<textarea style="border:1px solid gray; border-radius:0.2rem;" />
+			<textarea style="border:1px solid gray; border-radius:0.2rem;"></textarea>
 		</label>
 		<button type="submit" class="border rounded p-2 bg-gray-100">Submit</button>
 	</form>

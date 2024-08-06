@@ -1,48 +1,63 @@
 <script lang="ts">
-	import { type ClientState, FlottformClient } from '@flottform/forms';
+	import { FlottformFileInputClient } from '@flottform/forms';
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
 	import FileInput from '$lib/components/FileInput.svelte';
 	import { sdpExchangeServerBase } from '../../../api';
 
+	type State =
+		| 'init'
+		| 'connected'
+		| 'webrtc:connection-impossible'
+		| 'sending'
+		| 'done'
+		| 'disconnected'
+		| 'error';
+
 	let sendFileToPeer = () => {};
 	let fileInput: HTMLInputElement;
 	let button: HTMLButtonElement;
-	let currentState: ClientState = 'init';
+	let currentState: State = 'init';
 	let currentPercentage = 0;
 
 	onMount(async () => {
-		const flottformClient = new FlottformClient({
+		const flottformFileInputClient = new FlottformFileInputClient({
 			endpointId: $page.params.endpointId,
 			fileInput,
 			flottformApi: sdpExchangeServerBase
 		});
 
-		await flottformClient.start();
+		await flottformFileInputClient.start();
 
-		// these listeners are optional (Used here to customize the UI)
-		flottformClient.on('init', () => {
-			console.log('Updating the state on the CLIENT page to: ', currentState);
-			currentState = 'init';
+		flottformFileInputClient.on('webrtc:connection-impossible', () => {
+			currentState = 'webrtc:connection-impossible';
 		});
-		flottformClient.on('connected', () => {
-			console.log('Updating the state on the CLIENT page to: ', currentState);
+
+		flottformFileInputClient.on('connected', () => {
 			currentState = 'connected';
 		});
-		flottformClient.on('sending', () => {
-			console.log('Updating the state on the CLIENT page to: ', currentState);
+		flottformFileInputClient.on('sending', () => {
 			currentState = 'sending';
 		});
-		flottformClient.on('done', () => {
-			console.log('Updating the state on the CLIENT page to: ', currentState);
+		flottformFileInputClient.on('progress', (p) => {
+			console.log('progress= ', p);
+		});
+		flottformFileInputClient.on('done', () => {
 			currentState = 'done';
 		});
-		flottformClient.on('error', () => {
-			console.log('Updating the state on the CLIENT page to: ', currentState);
+		flottformFileInputClient.on('disconnected', () => {
+			currentState = 'disconnected';
+		});
+		flottformFileInputClient.on('error', (e) => {
+			console.log('Error:', e);
 			currentState = 'error';
 		});
 
-		sendFileToPeer = flottformClient.sendFile;
+		sendFileToPeer = flottformFileInputClient.sendFile;
+
+		/* sendFileToPeer = async (e) => {
+			await flottformFileInputClient.sendFile();
+		}; */
 	});
 </script>
 

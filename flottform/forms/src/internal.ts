@@ -1,4 +1,4 @@
-import { FlottformChannel } from './Flottform-channel';
+import { FlottformChannelHost } from './flottform-channel-host';
 
 type HostKey = string;
 type ClientKey = string;
@@ -25,7 +25,6 @@ export type ClientState =
 	| 'connecting-to-host' // initial connection
 	| 'connection-impossible' // if a connection is not possible due to network restrictions
 	| 'connected' // waiting for user input, having a connection
-	| 'sending' // sending file over
 	| 'disconnected' // failed after having a connection
 	| 'done' // done with sending
 	| 'error';
@@ -94,12 +93,12 @@ export function setIncludes<T>(set: Set<T>, x: T): boolean {
 
 type Listener<T extends Array<any>> = (...args: T) => void;
 export type FlottformEventMap = {
-	new: [details: { channel: FlottformChannel }];
+	new: [details: { channel: FlottformChannelHost }];
 	'waiting-for-client': [
 		details: {
 			qrCode: string;
 			link: string;
-			channel: FlottformChannel;
+			channel: FlottformChannelHost;
 		}
 	];
 	'waiting-for-file': [];
@@ -119,6 +118,16 @@ export class EventEmitter<EventMap extends Record<string, Array<any>>> {
 		const listeners = this.eventListeners[eventName] ?? new Set();
 		listeners.add(listener);
 		this.eventListeners[eventName] = listeners;
+	}
+
+	off<K extends keyof EventMap>(eventName: K, listener: Listener<EventMap[K]>) {
+		const listeners = this.eventListeners[eventName];
+		if (listeners) {
+			listeners.delete(listener);
+			if (listeners.size === 0) {
+				delete this.eventListeners[eventName];
+			}
+		}
 	}
 
 	emit<K extends keyof EventMap>(eventName: K, ...args: EventMap[K]) {

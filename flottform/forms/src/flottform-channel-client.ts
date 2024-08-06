@@ -2,7 +2,6 @@ import {
 	ClientState,
 	DEFAULT_WEBRTC_CONFIG,
 	EventEmitter,
-	FileMetaInfos,
 	Logger,
 	POLL_TIME_IN_MS,
 	generateSecretKey,
@@ -11,22 +10,20 @@ import {
 } from './internal';
 
 type Listeners = {
-	init: [details?: any];
+	init: [];
 	'retrieving-info-from-endpoint': [];
 	'sending-client-info': [];
 	'connecting-to-host': [];
 	connected: [];
 	'connection-impossible': [];
-	sending: [];
 	done: [];
 	disconnected: [];
-	error: [];
+	error: [e: string];
 };
 
-export class FlottformClient extends EventEmitter<Listeners> {
+export class FlottformChannelClient extends EventEmitter<Listeners> {
 	private flottformApi: string;
 	private endpointId: string;
-	private inputField: HTMLInputElement;
 	private rtcConfiguration: RTCConfiguration;
 	private pollTimeForIceInMs: number;
 	private logger: Logger;
@@ -35,18 +32,15 @@ export class FlottformClient extends EventEmitter<Listeners> {
 	private openPeerConnection: RTCPeerConnection | null = null;
 	private dataChannel: RTCDataChannel | null = null;
 	private pollForIceTimer: NodeJS.Timeout | number | null = null;
-	private chunkSize: number = 16384; // 16 Kb chunks
 
 	constructor({
 		endpointId,
-		fileInput,
 		flottformApi,
 		rtcConfiguration = DEFAULT_WEBRTC_CONFIG,
 		pollTimeForIceInMs = POLL_TIME_IN_MS,
 		logger = console
 	}: {
 		endpointId: string;
-		fileInput: HTMLInputElement;
 		flottformApi: string;
 		rtcConfiguration?: RTCConfiguration;
 		pollTimeForIceInMs?: number;
@@ -55,7 +49,6 @@ export class FlottformClient extends EventEmitter<Listeners> {
 		super();
 		this.endpointId = endpointId;
 		this.flottformApi = flottformApi;
-		this.inputField = fileInput;
 		this.rtcConfiguration = rtcConfiguration;
 		this.pollTimeForIceInMs = pollTimeForIceInMs;
 		this.logger = logger;
@@ -109,59 +102,12 @@ export class FlottformClient extends EventEmitter<Listeners> {
 		this.changeState('disconnected');
 	};
 
-	sendFile = async (onProgress?: (progress: number) => void) => {
+	sendData = (data: any) => {
 		if (this.dataChannel == null) {
 			this.changeState('error', 'dataChannel is null. Unable to send the file to the Host!');
 			return;
 		}
-		const { fileMeta, arrayBuffer } = await this.serializeData(this.inputField);
-
-		// Send file metadata
-		this.dataChannel.send(JSON.stringify(fileMeta));
-
-		// Send file in chunks
-		for (let i = 0; i * this.chunkSize <= arrayBuffer.byteLength; i++) {
-			//sendProgress(i / (arrayBuffer.byteLength / maxChunkSize));
-			const end = (i + 1) * this.chunkSize;
-			this.dataChannel.send(arrayBuffer.slice(i * this.chunkSize, end));
-		}
-
-		// Send end-of-file marker
-		this.dataChannel.send(JSON.stringify({ data: 'eof' }));
-
-		this.logger.log(`File sent: ${fileMeta.name}`);
-		this.changeState('done');
-	};
-
-	private serializeData = async (
-		fileInput: HTMLInputElement
-	): Promise<{
-		fileMeta: FileMetaInfos;
-		arrayBuffer: ArrayBuffer;
-	}> => {
-		this.logger.log(fileInput.value);
-		const file = fileInput.files?.item(0);
-		if (!file) {
-			const arrayBuffer = new TextEncoder().encode(fileInput.value);
-			const fileMeta = {
-				data: 'input:text',
-				size: arrayBuffer.byteLength
-			};
-			return { arrayBuffer, fileMeta };
-		}
-		const arrayBuffer = await file.arrayBuffer();
-		if (!arrayBuffer) {
-			this.logger.log('no array buffer');
-			throw Error('no array buffer in file input element');
-		}
-		const fileMeta = {
-			data: 'input:file',
-			lastModified: file.lastModified,
-			name: file.name,
-			type: file.type,
-			size: file.size
-		};
-		return { fileMeta, arrayBuffer };
+		this.dataChannel.send(data);
 	};
 
 	private setUpClientIceGathering = (

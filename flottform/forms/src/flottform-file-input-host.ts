@@ -1,4 +1,4 @@
-import { FlottformChannel } from './Flottform-channel';
+import { FlottformChannelHost } from './flottform-channel-host';
 import {
 	Styles,
 	changeBackgroundOnState,
@@ -23,22 +23,22 @@ import {
 	POLL_TIME_IN_MS
 } from './internal';
 
-type FlottformClient = { stopReceiving(): void; error(message: string): void };
-type ListenerWithClient = (client: FlottformClient) => void;
-type ListenerWithError = (error: any) => void;
 type Listeners = {
-	new: [details: { channel: FlottformChannel }];
-	connecting: [];
+	new: [];
 	disconnected: [];
-	error: [ListenerWithError];
+	error: [error: any];
 	connected: [];
 	receive: [];
+	done: [];
+	'webrtc:waiting-for-client': [link: string];
+	'webrtc:waiting-for-ice': [];
+	'webrtc:waiting-for-file': [];
 };
 
 const noop = () => {};
 
-export class FlottformFileInput extends EventEmitter<Listeners> {
-	private channel: FlottformChannel | null = null;
+export class FlottformFileInputHost extends EventEmitter<Listeners> {
+	private channel: FlottformChannelHost | null = null;
 	private useDefaultUi: boolean = true;
 	private internalOnStateChange: Function;
 	private inputField: HTMLInputElement;
@@ -47,9 +47,10 @@ export class FlottformFileInput extends EventEmitter<Listeners> {
 		fileMeta: FileMetaInfos;
 		arrayBuffer: ArrayBuffer[];
 	} | null = null;
+	private link: string = '';
+	private qrCode: string = '';
 
 	constructor({
-		mode,
 		flottformApi,
 		createClientUrl,
 		inputField,
@@ -59,7 +60,6 @@ export class FlottformFileInput extends EventEmitter<Listeners> {
 		logger = console,
 		styles = defaultStyles
 	}: {
-		mode: string;
 		flottformApi: string | URL;
 		createClientUrl: (params: { endpointId: string }) => Promise<string>;
 		inputField: HTMLInputElement;
@@ -70,8 +70,7 @@ export class FlottformFileInput extends EventEmitter<Listeners> {
 		styles?: Styles;
 	}) {
 		super();
-		this.channel = new FlottformChannel({
-			mode,
+		this.channel = new FlottformChannelHost({
 			flottformApi,
 			createClientUrl,
 			rtcConfiguration,
@@ -93,6 +92,24 @@ export class FlottformFileInput extends EventEmitter<Listeners> {
 
 	close = () => {
 		this.channel?.close();
+	};
+
+	getLink = () => {
+		if (this.link === '') {
+			this.logger.error(
+				'Flottform is currently establishing the connection. Link is unavailable for now!'
+			);
+		}
+		return this.link;
+	};
+
+	getQrCode = () => {
+		if (this.qrCode === '') {
+			this.logger.error(
+				'Flottform is currently establishing the connection. qrCode is unavailable for now!'
+			);
+		}
+		return this.qrCode;
 	};
 
 	private handleIncomingData = (e: MessageEvent<any>) => {
@@ -118,10 +135,13 @@ export class FlottformFileInput extends EventEmitter<Listeners> {
 
 	private registerListeners = () => {
 		this.channel?.on('new', ({ channel }) => {
-			this.emit('new', { channel });
+			this.emit('new');
 			this.useDefaultUi && this.internalOnStateChange('new', { channel });
 		});
 		this.channel?.on('waiting-for-client', ({ qrCode, link, channel }) => {
+			this.emit('webrtc:waiting-for-client', link);
+			this.link = link;
+			this.qrCode = qrCode;
 			this.useDefaultUi &&
 				this.internalOnStateChange('waiting-for-client', {
 					qrCode,
@@ -130,21 +150,23 @@ export class FlottformFileInput extends EventEmitter<Listeners> {
 				});
 		});
 		this.channel?.on('waiting-for-ice', () => {
-			this.emit('connecting');
+			this.emit('webrtc:waiting-for-ice');
 			this.useDefaultUi && this.internalOnStateChange('waiting-for-ice');
 		});
 		this.channel?.on('connected', () => {
 			this.emit('connected');
 		});
 		this.channel?.on('waiting-for-file', () => {
+			this.emit('webrtc:waiting-for-file');
 			this.useDefaultUi && this.internalOnStateChange('waiting-for-file');
 		});
 		this.channel?.on('receiving-data', (e) => {
-			this.emit('receive');
+			this.emit('receive'); // Maybe add the progress here
 			this.handleIncomingData(e);
 			this.useDefaultUi && this.internalOnStateChange('receiving-data');
 		});
 		this.channel?.on('done', () => {
+			this.emit('done');
 			this.useDefaultUi && this.internalOnStateChange('done');
 		});
 		this.channel?.on('disconnected', () => {
@@ -245,7 +267,7 @@ export class FlottformFileInput extends EventEmitter<Listeners> {
 				'waiting-for-client': (details: {
 					qrCode: string;
 					link: string;
-					channel: FlottformChannel;
+					channel: FlottformChannelHost;
 				}) => {
 					const {
 						createChannelQrCode,
@@ -343,7 +365,7 @@ export class FlottformFileInput extends EventEmitter<Listeners> {
 	private createFlottformButtonParentElement(
 		inputField: HTMLInputElement,
 		createChannelLinkDialog: HTMLDialogElement,
-		details: { channel: FlottformChannel },
+		details: { channel: FlottformChannelHost },
 		styles?: Styles
 	) {
 		const flottformChannelId = inputField.getAttribute('flottform-p2p-transfer-channel-id')!;
@@ -368,7 +390,7 @@ export class FlottformFileInput extends EventEmitter<Listeners> {
 	}
 
 	private createDialogCard(
-		details: { channel: FlottformChannel },
+		details: { channel: FlottformChannelHost },
 		inputField: HTMLInputElement,
 		styles?: Styles
 	) {

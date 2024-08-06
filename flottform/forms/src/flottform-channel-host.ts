@@ -1,16 +1,9 @@
 import { toDataURL } from 'qrcode';
 import { Logger } from '../dist';
 import { FlottformState } from '../dist/internal';
-import {
-	EventEmitter,
-	FileMetaInfos,
-	FlottformEventMap,
-	retrieveEndpointInfo,
-	setIncludes
-} from './internal';
+import { EventEmitter, FlottformEventMap, retrieveEndpointInfo, setIncludes } from './internal';
 
-export class FlottformChannel extends EventEmitter<FlottformEventMap> {
-	private mode: string;
+export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 	private flottformApi: string | URL;
 	private createClientUrl: (params: { endpointId: string }) => Promise<string>;
 	private rtcConfiguration: RTCConfiguration;
@@ -24,14 +17,12 @@ export class FlottformChannel extends EventEmitter<FlottformEventMap> {
 	private pollForIceTimer: NodeJS.Timeout | number | null = null;
 
 	constructor({
-		mode,
 		flottformApi,
 		createClientUrl,
 		rtcConfiguration,
 		pollTimeForIceInMs,
 		logger
 	}: {
-		mode: string;
 		flottformApi: string | URL;
 		createClientUrl: (params: { endpointId: string }) => Promise<string>;
 		rtcConfiguration: RTCConfiguration;
@@ -39,7 +30,6 @@ export class FlottformChannel extends EventEmitter<FlottformEventMap> {
 		logger: Logger;
 	}) {
 		super();
-		this.mode = mode;
 		this.flottformApi = flottformApi;
 		this.createClientUrl = createClientUrl;
 		this.rtcConfiguration = rtcConfiguration;
