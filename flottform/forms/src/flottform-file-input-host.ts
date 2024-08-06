@@ -28,7 +28,8 @@ type Listeners = {
 	disconnected: [];
 	error: [error: any];
 	connected: [];
-	receive: [];
+	receive: []; // Emitted to signal the start of receiving the file(s)
+	progress: [progress: number]; // Emitted to signal the progress of receiving the file(s)
 	done: [];
 	'webrtc:waiting-for-client': [link: string];
 	'webrtc:waiting-for-ice': [];
@@ -46,6 +47,7 @@ export class FlottformFileInputHost extends EventEmitter<Listeners> {
 	private currentFile: {
 		fileMeta: FileMetaInfos;
 		arrayBuffer: ArrayBuffer[];
+		receivedSize: number;
 	} | null = null;
 	private link: string = '';
 	private qrCode: string = '';
@@ -118,7 +120,7 @@ export class FlottformFileInputHost extends EventEmitter<Listeners> {
 			const message = JSON.parse(e.data);
 			if (message.data === 'input:file') {
 				// Handle file metadata
-				this.currentFile = { fileMeta: message, arrayBuffer: [] };
+				this.currentFile = { fileMeta: message, arrayBuffer: [], receivedSize: 0 };
 			} else if (message.data === 'eof') {
 				// Handle end of file
 				if (this.currentFile == null)
@@ -129,6 +131,11 @@ export class FlottformFileInputHost extends EventEmitter<Listeners> {
 			// Handle file chunk
 			if (this.currentFile) {
 				this.currentFile.arrayBuffer.push(e.data);
+				this.currentFile.receivedSize += e.data.byteLength;
+				const progress = (this.currentFile.receivedSize / this.currentFile.fileMeta.size).toFixed(
+					2
+				);
+				this.emit('progress', parseFloat(progress));
 			}
 		}
 	};
@@ -161,7 +168,6 @@ export class FlottformFileInputHost extends EventEmitter<Listeners> {
 			this.useDefaultUi && this.internalOnStateChange('waiting-for-file');
 		});
 		this.channel?.on('receiving-data', (e) => {
-			this.emit('receive'); // Maybe add the progress here
 			this.handleIncomingData(e);
 			this.useDefaultUi && this.internalOnStateChange('receiving-data');
 		});

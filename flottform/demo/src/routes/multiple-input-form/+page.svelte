@@ -20,6 +20,10 @@
 		flottformFileInputHost.on('receive', () => {
 			// Optional: Custom UI
 		});
+		flottformFileInputHost.on('progress', (p) => {
+			// Optional: Custom UI
+			console.log('RECEIVING= ', p);
+		});
 		flottformFileInputHost.on('disconnected', () => {
 			// Optional: Custom UI
 		});

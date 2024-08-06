@@ -27,7 +27,7 @@
 			flottformApi: sdpExchangeServerBase
 		});
 
-		await flottformFileInputClient.start();
+		flottformFileInputClient.start();
 
 		flottformFileInputClient.on('webrtc:connection-impossible', () => {
 			currentState = 'webrtc:connection-impossible';
