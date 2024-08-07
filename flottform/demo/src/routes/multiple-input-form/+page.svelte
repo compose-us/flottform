@@ -9,7 +9,8 @@
 		const flottformFileInputHost = new FlottformFileInputHost({
 			flottformApi: sdpExchangeServerBase,
 			createClientUrl,
-			inputField: firstFileInput
+			inputField: firstFileInput,
+			theme: 'default'
 		});
 		flottformFileInputHost.on('new', () => {
 			// Optional: Custom UI

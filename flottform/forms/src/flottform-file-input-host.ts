@@ -39,7 +39,7 @@ const noop = () => {};
 
 export class FlottformFileInputHost extends EventEmitter<Listeners> {
 	private channel: FlottformChannelHost | null = null;
-	private useDefaultUi: boolean = true;
+	private theme: 'default' | 'custom';
 	private internalOnStateChange: Function;
 	private inputField: HTMLInputElement;
 	private logger: Logger;
@@ -60,7 +60,7 @@ export class FlottformFileInputHost extends EventEmitter<Listeners> {
 		inputField,
 		rtcConfiguration = DEFAULT_WEBRTC_CONFIG,
 		pollTimeForIceInMs = POLL_TIME_IN_MS,
-		useDefaultUi = true,
+		theme = 'custom',
 		logger = console,
 		styles = defaultStyles
 	}: {
@@ -69,7 +69,7 @@ export class FlottformFileInputHost extends EventEmitter<Listeners> {
 		inputField: HTMLInputElement;
 		rtcConfiguration?: RTCConfiguration;
 		pollTimeForIceInMs?: number;
-		useDefaultUi?: boolean;
+		theme?: 'default' | 'custom';
 		logger?: Logger;
 		styles?: Styles;
 	}) {
@@ -83,10 +83,9 @@ export class FlottformFileInputHost extends EventEmitter<Listeners> {
 		});
 		this.inputField = inputField;
 		this.logger = logger;
-		this.useDefaultUi = useDefaultUi;
-		this.internalOnStateChange = useDefaultUi
-			? this.createDefaultOnStateChange({ inputField, logger, styles })
-			: noop;
+		this.theme = theme;
+		this.internalOnStateChange =
+			theme === 'default' ? this.createDefaultOnStateChange({ inputField, logger, styles }) : noop;
 		this.registerListeners();
 	}
 
@@ -127,7 +126,7 @@ export class FlottformFileInputHost extends EventEmitter<Listeners> {
 				this.filesTotalSize = message.totalSize;
 			} else if (message.type === 'transfer-complete') {
 				this.emit('done');
-				this.useDefaultUi && this.internalOnStateChange('done');
+				this.theme === 'default' && this.internalOnStateChange('done');
 			}
 		} else if (e.data instanceof ArrayBuffer) {
 			// Handle file chunk
@@ -196,13 +195,13 @@ export class FlottformFileInputHost extends EventEmitter<Listeners> {
 	private registerListeners = () => {
 		this.channel?.on('new', ({ channel }) => {
 			this.emit('new');
-			this.useDefaultUi && this.internalOnStateChange('new', { channel });
+			this.theme === 'default' && this.internalOnStateChange('new', { channel });
 		});
 		this.channel?.on('waiting-for-client', ({ qrCode, link, channel }) => {
 			this.emit('webrtc:waiting-for-client', link);
 			this.link = link;
 			this.qrCode = qrCode;
-			this.useDefaultUi &&
+			this.theme === 'default' &&
 				this.internalOnStateChange('waiting-for-client', {
 					qrCode,
 					link,
@@ -211,29 +210,29 @@ export class FlottformFileInputHost extends EventEmitter<Listeners> {
 		});
 		this.channel?.on('waiting-for-ice', () => {
 			this.emit('webrtc:waiting-for-ice');
-			this.useDefaultUi && this.internalOnStateChange('waiting-for-ice');
+			this.theme === 'default' && this.internalOnStateChange('waiting-for-ice');
 		});
 		this.channel?.on('connected', () => {
 			this.emit('connected');
 		});
 		this.channel?.on('waiting-for-file', () => {
 			this.emit('webrtc:waiting-for-file');
-			this.useDefaultUi && this.internalOnStateChange('waiting-for-file');
+			this.theme === 'default' && this.internalOnStateChange('waiting-for-file');
 		});
 		this.channel?.on('receiving-data', (e) => {
 			this.handleIncomingData(e);
-			this.useDefaultUi && this.internalOnStateChange('receiving-data');
+			this.theme === 'default' && this.internalOnStateChange('receiving-data');
 		});
 		this.channel?.on('done', () => {
 			this.emit('done');
-			this.useDefaultUi && this.internalOnStateChange('done');
+			this.theme === 'default' && this.internalOnStateChange('done');
 		});
 		this.channel?.on('disconnected', () => {
 			this.emit('disconnected');
 		});
 		this.channel?.on('error', (error) => {
 			this.emit('error', error);
-			this.useDefaultUi && this.internalOnStateChange('error');
+			this.theme === 'default' && this.internalOnStateChange('error');
 		});
 	};
 
@@ -255,28 +254,28 @@ export class FlottformFileInputHost extends EventEmitter<Listeners> {
 				const createChannelButton = createChannelElement.querySelector<HTMLElement>(
 					`.flottform-button[flottform-p2p-transfer-channel-id=${flottformChannelId}]`
 				)!;
-				const createChannelLinkDialog = document.querySelector<HTMLDialogElement>(
+				const createChannelLinkWrapper = document.querySelector<HTMLDialogElement>(
 					`.flottform-link-dialog[flottform-p2p-transfer-channel-id=${flottformChannelId}]`
 				)!;
-				const createChannelStatusWrapper = createChannelLinkDialog.querySelector<HTMLElement>(
+				const createChannelStatusWrapper = createChannelLinkWrapper.querySelector<HTMLElement>(
 					`.flottform-status-wrapper[flottform-p2p-transfer-channel-id=${flottformChannelId}]`
 				)!;
-				const createChannelLinkArea = createChannelLinkDialog.querySelector<HTMLElement>(
+				const createChannelLinkArea = createChannelLinkWrapper.querySelector<HTMLElement>(
 					`.flottform-link-area[flottform-p2p-transfer-channel-id=${flottformChannelId}]`
 				)!;
-				const createChannelQrCode = createChannelLinkDialog.querySelector<HTMLElement>(
+				const createChannelQrCode = createChannelLinkWrapper.querySelector<HTMLElement>(
 					`.flottform-qr-code[flottform-p2p-transfer-channel-id=${flottformChannelId}]`
 				)!;
-				const createChannelLinkWithOffer = createChannelLinkDialog.querySelector<HTMLElement>(
+				const createChannelLinkWithOffer = createChannelLinkWrapper.querySelector<HTMLElement>(
 					`.flottform-link-offer[flottform-p2p-transfer-channel-id=${flottformChannelId}]`
 				)!;
-				const createDialogDescription = createChannelLinkDialog.querySelector<HTMLElement>(
+				const createDialogDescription = createChannelLinkWrapper.querySelector<HTMLElement>(
 					`.flottform-dialog-description[flottform-p2p-transfer-channel-id=${flottformChannelId}]`
 				)!;
 				return {
 					createChannelElement,
 					createChannelButton,
-					createChannelLinkDialog,
+					createChannelLinkWrapper,
 					createChannelStatusWrapper,
 					createChannelLinkArea,
 					createChannelQrCode,
@@ -286,21 +285,26 @@ export class FlottformFileInputHost extends EventEmitter<Listeners> {
 			};
 
 			const mapper: Record<FlottformState, (details?: any) => void> = {
-				new: (details: { channel }) => {
-					const createChannelLinkDialog = this.createDialogCard(
+				new: () => {
+					let createInputsList = document.querySelector('#flottform-parent');
+					if (!createInputsList) {
+						createInputsList = this.createFlottformInputsList(styles);
+						document.body.appendChild(createInputsList);
+					}
+
+					const createChannelLinkWrapper = this.createLinkAndQrWrapper(
 						details,
 						inputField as HTMLInputElement,
 						styles
 					);
-					document.body.appendChild(createChannelLinkDialog);
-
 					const createChannelElement = this.createFlottformButtonParentElement(
 						inputField as HTMLInputElement,
-						createChannelLinkDialog,
+						createChannelLinkWrapper,
 						details,
 						styles
 					);
-					inputField?.after(createChannelElement);
+
+					createInputsList!.querySelector('ul')!.appendChild(createChannelElement);
 				},
 				'waiting-for-client': (details: {
 					qrCode: string;
@@ -388,29 +392,43 @@ export class FlottformFileInputHost extends EventEmitter<Listeners> {
 	private createFlottformButton(inputField: HTMLInputElement, styles?: Styles) {
 		const createChannelButton = document.createElement('button');
 		createChannelButton.setAttribute('type', 'button');
-		createChannelButton.setAttribute('class', 'flottform-button');
-		createChannelButton.innerHTML = flottformSvg(styles);
-		createChannelButton.style.cssText = createChannelButtonCss(styles);
-		simulateHoverEffect(createChannelButton, styles);
-		createChannelButton.setAttribute(
-			'flottform-p2p-transfer-channel-id',
-			inputField.getAttribute('flottform-p2p-transfer-channel-id')!
-		);
+		// createChannelButton.setAttribute('class', 'flottform-button');
+		createChannelButton.innerText = 'Get a link';
+		// createChannelButton.style.cssText = createChannelButtonCss(styles);
+		// simulateHoverEffect(createChannelButton, styles);
+		// createChannelButton.setAttribute(
+		// 	'flottform-p2p-transfer-channel-id',
+		// 	inputField.getAttribute('flottform-p2p-transfer-channel-id')!
+		// );
 
 		return createChannelButton;
 	}
 
+	private createFlottformInputsList(styles?: Styles) {
+		const createInputsListDetails = document.createElement('details');
+		createInputsListDetails.setAttribute('id', 'flottform-parent');
+		const createHeaderForInputList = document.createElement('summary');
+		createHeaderForInputList.innerText = 'Upload your file from other device';
+		createInputsListDetails.appendChild(createHeaderForInputList);
+		const createListWrapper = document.createElement('ul');
+		createInputsListDetails.appendChild(createListWrapper);
+
+		return createInputsListDetails;
+	}
+
 	private createFlottformButtonParentElement(
 		inputField: HTMLInputElement,
-		createChannelLinkDialog: HTMLDialogElement,
+		createChannelLinkWrapper: HTMLDivElement,
 		details: { channel: FlottformChannelHost },
 		styles?: Styles
 	) {
 		const flottformChannelId = inputField.getAttribute('flottform-p2p-transfer-channel-id')!;
 
-		const createChannelElement = document.createElement('div');
-		createChannelElement.setAttribute('class', 'flottform-parent');
-		createChannelElement.style.cssText = createChannelElementCss(inputField);
+		const createChannelElement = document.createElement('li');
+		const createInputName = document.createElement('p');
+		createInputName.innerText = `Input: ${inputField.id}`;
+		// createChannelElement.setAttribute('class', 'flottform-parent');
+		// createChannelElement.style.cssText = createChannelElementCss(inputField);
 		// Add an id to differentiate between different input fields.
 		createChannelElement.setAttribute('flottform-p2p-transfer-channel-id', flottformChannelId);
 
@@ -418,63 +436,44 @@ export class FlottformFileInputHost extends EventEmitter<Listeners> {
 		// Add event listeners to the flottform button
 		createChannelButton.addEventListener('click', () => details.channel.start());
 		createChannelButton.addEventListener('click', () => {
-			createChannelLinkDialog.showModal();
-			createChannelLinkDialog.style.display = 'flex';
+			createChannelLinkWrapper.style.display = 'block';
 		});
 
 		// Append the button to the parent element
+		createChannelElement.appendChild(createInputName);
 		createChannelElement.appendChild(createChannelButton);
+		createChannelElement.appendChild(createChannelLinkWrapper);
 		return createChannelElement;
 	}
 
-	private createDialogCard(
+	private createLinkAndQrWrapper(
 		details: { channel: FlottformChannelHost },
 		inputField: HTMLInputElement,
 		styles?: Styles
 	) {
 		const flottformChannelId = inputField.getAttribute('flottform-p2p-transfer-channel-id')!;
 
-		const createChannelLinkDialog = document.createElement('dialog');
-		createChannelLinkDialog.setAttribute('class', 'flottform-link-dialog');
+		const createChannelLinkWrapper = document.createElement('div');
+		// createChannelLinkWrapper.setAttribute('class', 'flottform-link-dialog');
 		// Add an id to differentiate between different input fields.
-		createChannelLinkDialog.setAttribute('flottform-p2p-transfer-channel-id', flottformChannelId);
-		createChannelLinkDialog.style.cssText = dialogCss(styles);
-		const {
-			createChannelStatusWrapper,
-			createChannelQrCode,
-			createChannelLinkWithOffer,
-			createDialogDescription,
-			closeDialogButton,
-			refreshConnectionButton
-		} = this.createDialogCardElements(inputField, styles);
-		// Add event listeners to Dialog Card Elements
-		closeDialogButton.addEventListener('click', () => {
-			createChannelLinkDialog.close();
-			createChannelLinkDialog.style.display = 'none';
-		});
+		createChannelLinkWrapper.setAttribute('flottform-p2p-transfer-channel-id', flottformChannelId);
+		// createChannelLinkWrapper.style.cssText = dialogCss(styles);
+		const { createChannelQrCode, createChannelLinkWithOffer, refreshConnectionButton } =
+			this.createLinkAndQrElements(inputField, styles);
+
 		refreshConnectionButton.addEventListener('click', () => details.channel.start());
 
 		// Append all elements to Dialog card
-		createChannelLinkDialog.appendChild(createChannelStatusWrapper);
-		createChannelLinkDialog.appendChild(createChannelQrCode);
-		createChannelLinkDialog.appendChild(createChannelLinkWithOffer);
-		createChannelLinkDialog.appendChild(createDialogDescription);
-		createChannelLinkDialog.appendChild(closeDialogButton);
-		createChannelLinkDialog.appendChild(refreshConnectionButton);
+		createChannelLinkWrapper.appendChild(createChannelQrCode);
+		createChannelLinkWrapper.appendChild(createChannelLinkWithOffer);
 
-		return createChannelLinkDialog;
+		createChannelLinkWrapper.style.display = 'none';
+
+		return createChannelLinkWrapper;
 	}
 
-	private createDialogCardElements(inputField: HTMLInputElement, styles?: Styles) {
+	private createLinkAndQrElements(inputField: HTMLInputElement, styles?: Styles) {
 		const flottformChannelId = inputField.getAttribute('flottform-p2p-transfer-channel-id')!;
-
-		const createChannelStatusWrapper = document.createElement('div');
-		createChannelStatusWrapper.setAttribute('class', 'flottform-status-wrapper');
-		createChannelStatusWrapper.style.cssText = createChannelStatusWrapperCss(styles);
-		createChannelStatusWrapper.setAttribute(
-			'flottform-p2p-transfer-channel-id',
-			flottformChannelId
-		);
 
 		const createChannelQrCode = document.createElement('img');
 		createChannelQrCode.setAttribute('class', 'flottform-qr-code');
@@ -489,16 +488,6 @@ export class FlottformFileInputHost extends EventEmitter<Listeners> {
 			flottformChannelId
 		);
 
-		const createDialogDescription = document.createElement('p');
-		createDialogDescription.setAttribute('class', 'flottform-dialog-description');
-		createDialogDescription.setAttribute('flottform-p2p-transfer-channel-id', flottformChannelId);
-
-		const closeDialogButton = document.createElement('button');
-		closeDialogButton.innerHTML = closeSvg(styles);
-		closeDialogButton.setAttribute('class', 'close-dialog-button');
-		closeDialogButton.style.cssText = closeDialogButtonCss(styles);
-		closeDialogButton.setAttribute('flottform-p2p-transfer-channel-id', flottformChannelId);
-
 		const refreshConnectionButton = document.createElement('button');
 		refreshConnectionButton.innerHTML = 'Refresh';
 		refreshConnectionButton.setAttribute('class', 'refresh-connection-button');
@@ -507,11 +496,8 @@ export class FlottformFileInputHost extends EventEmitter<Listeners> {
 		refreshConnectionButton.setAttribute('flottform-p2p-transfer-channel-id', flottformChannelId);
 
 		return {
-			createChannelStatusWrapper,
 			createChannelQrCode,
 			createChannelLinkWithOffer,
-			createDialogDescription,
-			closeDialogButton,
 			refreshConnectionButton
 		};
 	}
