@@ -1,50 +1,56 @@
 <script lang="ts">
-	import { FlottformFileInputHost } from '@flottform/forms';
+	import { FlottformFileInputHost, defaultThemeForFileInput } from '@flottform/forms';
 	import { onMount } from 'svelte';
 	import { createClientUrl, sdpExchangeServerBase } from '../../api';
 
 	onMount(async () => {
-		const firstFileInput = document.querySelector('input[type=file]') as HTMLInputElement;
+		const firstFileInput = document.querySelectorAll(
+			'input[type=file]'
+		) as NodeListOf<HTMLInputElement>;
+		for (const file of firstFileInput) {
+			const flottformFileInputHost = new FlottformFileInputHost({
+				flottformApi: sdpExchangeServerBase,
+				createClientUrl,
+				inputField: file,
+				theme: defaultThemeForFileInput()
+			});
+		}
+		// flottformFileInputHost.on('new', () => {
+		// 	// Optional: Custom UI
+		// });
+		// flottformFileInputHost.on('connected', () => {
+		// 	// Optional: Custom UI
+		// });
+		// flottformFileInputHost.on('receive', () => {
+		// 	// Optional: Custom UI
+		// });
+		// flottformFileInputHost.on('progress', (p) => {
+		// 	// Optional: Custom UI
+		// 	console.log('progress=', p);
+		// });
+		// flottformFileInputHost.on('disconnected', () => {
+		// 	// Optional: Custom UI
+		// });
+		// flottformFileInputHost.on('error', (err) => {
+		// 	// Optional: Custom UI
+		// });
+		// flottformFileInputHost.on('endpoint-created', ({ link, qrCode }) => {
+		// 	// Optional: Custom UI
+		// });
+		// flottformFileInputHost.on('webrtc:waiting-for-client', (link) => {
+		// 	// Optional: Custom UI
+		// });
+		// flottformFileInputHost.on('webrtc:waiting-for-ice', () => {
+		// 	// Optional: Custom UI
+		// });
+		// flottformFileInputHost.on('webrtc:waiting-for-file', () => {
+		// 	// Optional: Custom UI
+		// });
+		// flottformFileInputHost.on('done', () => {
+		// 	// Optional: Custom UI
+		// });
 
-		const flottformFileInputHost = new FlottformFileInputHost({
-			flottformApi: sdpExchangeServerBase,
-			createClientUrl,
-			inputField: firstFileInput,
-			theme: 'default'
-		});
-		flottformFileInputHost.on('new', () => {
-			// Optional: Custom UI
-		});
-		flottformFileInputHost.on('connected', () => {
-			// Optional: Custom UI
-		});
-		flottformFileInputHost.on('receive', () => {
-			// Optional: Custom UI
-		});
-		flottformFileInputHost.on('progress', (p) => {
-			// Optional: Custom UI
-			console.log('progress=', p);
-		});
-		flottformFileInputHost.on('disconnected', () => {
-			// Optional: Custom UI
-		});
-		flottformFileInputHost.on('error', (err) => {
-			// Optional: Custom UI
-		});
-		flottformFileInputHost.on('webrtc:waiting-for-client', (link) => {
-			// Optional: Custom UI
-		});
-		flottformFileInputHost.on('webrtc:waiting-for-ice', () => {
-			// Optional: Custom UI
-		});
-		flottformFileInputHost.on('webrtc:waiting-for-file', () => {
-			// Optional: Custom UI
-		});
-		flottformFileInputHost.on('done', () => {
-			// Optional: Custom UI
-		});
-
-		//flottformFileInputHost.start();
+		// flottformFileInputHost.start();
 	});
 </script>
 
@@ -57,7 +63,7 @@
 	<form class="grid grid-cols-1 gap-8">
 		<label class="grid">
 			<span>Please upload the first file:</span>
-			<input type="file" name="fileA" />
+			<input type="file" name="fileA" multiple />
 		</label>
 		<label class="grid">
 			<span>Please upload the second file:</span>
