@@ -1,18 +1,6 @@
 import { FlottformChannelHost } from './flottform-channel-host';
-import {
-	Styles,
-	changeBackgroundOnState,
-	createChannelQrCodeCss,
-	refreshConnectionButtonCss,
-	simulateHoverEffect
-} from './flottform-styles';
-import {
-	DEFAULT_WEBRTC_CONFIG,
-	EventEmitter,
-	FlottformState,
-	Logger,
-	POLL_TIME_IN_MS
-} from './internal';
+import { Styles } from './flottform-styles';
+import { DEFAULT_WEBRTC_CONFIG, EventEmitter, Logger, POLL_TIME_IN_MS } from './internal';
 
 type Listeners = {
 	new: [];
@@ -39,7 +27,6 @@ const noop = () => {};
 
 export class FlottformFileInputHost extends EventEmitter<Listeners> {
 	private channel: FlottformChannelHost | null = null;
-	private theme: 'default' | 'custom';
 	private inputField: HTMLInputElement;
 	private logger: Logger;
 	private filesMetaData: { name: string; type: string; size: number }[] = [];
@@ -83,7 +70,7 @@ export class FlottformFileInputHost extends EventEmitter<Listeners> {
 		this.logger = logger;
 
 		this.registerListeners();
-		theme(this);
+		theme && theme(this);
 	}
 
 	start = () => {

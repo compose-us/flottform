@@ -119,6 +119,30 @@ const addCss = (cssFileName?: string) => {
 			background-image: linear-gradient(270deg, #6a11cb, #2575fc);
 			transition: background-color 0.5s ease-in-out;
 		}
+
+		details {
+			background-color: #dfe3e6;
+			border: 1px solid gray;
+  			border-radius: 5px;
+			padding:  0.75rem;
+		}
+
+		details summary {
+			padding: 0.5rem;
+  			border-radius: 5px;
+		}
+
+		details[open] summary {
+			background-color: #f5f9fc;
+		}
+
+		details .flottform-progress-bar-label{
+			font-size: 0.75rem;
+		}
+
+		details .flottform-status-bar {
+			height: 0.5rem;
+		}
 	`;
 
 	// const link = document.createElement('link');
@@ -155,7 +179,6 @@ const createLinkAndQrCode = (qrCode: string, link: string) => {
 	createChannelLinkWithOffer.setAttribute('href', link);
 	createChannelLinkWithOffer.setAttribute('target', '_blank');
 	createChannelLinkWithOffer.innerHTML = link;
-
 	return {
 		createChannelQrCode,
 		createChannelLinkWithOffer
@@ -174,7 +197,7 @@ const defaultThemeForAnyInput =
 		const flottformRoot =
 			options.flottformRootElement ?? document.querySelector('.flottform-root') ?? initRoot();
 		const flottformItem = document.createElement('li');
-		flottformItem.setAttribute('class', `flottform-item ${options.additionalItemClasses ?? ''}`);
+		flottformItem.setAttribute('class', `flottform-item${options.additionalItemClasses ?? ''}`);
 		const statusInformation = document.createElement('div');
 		statusInformation.setAttribute('class', 'flottform-status-information');
 		const createChannelButton = document.createElement('button');
@@ -232,21 +255,19 @@ export const defaultThemeForFileInput =
 
 		// listen to events -> change elements depending on them
 
-		const progressBars: Array<HTMLProgressElement | null> = [];
-
 		flottformFileInputHost.on(
 			'progress',
 			({ currentFileProgress, overallProgress, fileIndex, fileName }) => {
-				if (!progressBars[fileIndex]) {
-					const statusBar = document.createElement('div');
-					statusBar.innerHTML = `<label for="flottform-status-bar-${fileIndex}" class="flottform-progress-bar-label">File ${fileName} progress:</label><progress id="flottform-status-bar-${fileIndex}" max="100" value="0" class="flottform-status-bar"></progress>`;
-					flottformItem.appendChild(statusBar);
-
-					progressBars[fileIndex] = statusBar.querySelector('.flottform-status-bar');
-				}
-
-				progressBars[fileIndex]!.value = currentFileProgress * 100;
-				progressBars[fileIndex]!.innerText = `${currentFileProgress * 100}%`;
+				removeConnectionStatusInformation(flottformItem);
+				updateOverallFilesStatusBar(flottformItem, overallProgress);
+				const details = getDetailsOfFilesTransfer(flottformItem);
+				updateCurrentFileStatusBar(
+					fileIndex,
+					fileName,
+					currentFileProgress,
+					details,
+					flottformItem
+				);
 			}
 		);
 		flottformFileInputHost.on('disconnected', () => {
@@ -255,3 +276,89 @@ export const defaultThemeForFileInput =
 			flottformItem.replaceChildren(statusInformation);
 		});
 	};
+
+const removeConnectionStatusInformation = (flottformItem: HTMLLIElement) => {
+	const connectionStatusInformation = flottformItem.querySelector('.flottform-status-information');
+	if (connectionStatusInformation) {
+		// Remove the connection status information
+		flottformItem.innerHTML = '';
+	}
+};
+
+const getDetailsOfFilesTransfer = (flottformItem: HTMLLIElement) => {
+	let details = flottformItem.querySelector('details');
+	if (!details) {
+		details = document.createElement('details');
+		const summary = document.createElement('summary');
+		summary.innerText = 'Details';
+		details.appendChild(summary);
+		flottformItem.appendChild(details);
+	}
+	return details;
+};
+
+const createCurrentFileStatusBar = (fileIndex: number, fileName: string) => {
+	const currentFileLabel = document.createElement('label');
+	currentFileLabel.setAttribute('id', `flottform-status-bar-${fileIndex}`);
+	currentFileLabel.classList.add('flottform-progress-bar-label');
+	currentFileLabel.innerText = `File ${fileName} progress:`;
+
+	const progressBar = document.createElement('progress');
+	progressBar.setAttribute('id', `flottform-status-bar-${fileIndex}`);
+	progressBar.classList.add('flottform-status-bar');
+	progressBar.setAttribute('max', '100');
+	progressBar.setAttribute('value', '0');
+
+	return { currentFileLabel, progressBar };
+};
+
+const updateCurrentFileStatusBar = (
+	fileIndex: number,
+	fileName: string,
+	currentFileProgress: number,
+	details: HTMLDetailsElement,
+	flottformItem: HTMLLIElement
+) => {
+	let currentFileStatusBar: HTMLProgressElement | null = flottformItem.querySelector(
+		`progress#flottform-status-bar-${fileIndex}`
+	);
+	if (!currentFileStatusBar) {
+		let { currentFileLabel, progressBar } = createCurrentFileStatusBar(fileIndex, fileName);
+		currentFileStatusBar = progressBar;
+
+		details.appendChild(currentFileLabel);
+		details.appendChild(currentFileStatusBar);
+	}
+	currentFileStatusBar.value = currentFileProgress * 100;
+	currentFileStatusBar.innerText = `${currentFileProgress * 100}%`;
+};
+
+const createOverallFilesStatusBar = () => {
+	const overallFilesLabel = document.createElement('label');
+	overallFilesLabel.setAttribute('id', 'flottform-status-bar-overall-progress');
+	overallFilesLabel.classList.add('flottform-progress-bar-label');
+	overallFilesLabel.innerText = 'Receiving Files Progress';
+
+	const progressBar = document.createElement('progress');
+	progressBar.setAttribute('id', 'flottform-status-bar-overall-progress');
+	progressBar.classList.add('flottform-status-bar');
+	progressBar.setAttribute('max', '100');
+	progressBar.setAttribute('value', '0');
+
+	return { overallFilesLabel, progressBar };
+};
+
+const updateOverallFilesStatusBar = (flottformItem: HTMLLIElement, overallProgress: number) => {
+	let overallFilesStatusBar: HTMLProgressElement | null = flottformItem.querySelector(
+		'progress#flottform-status-bar-overall-progress'
+	);
+	if (!overallFilesStatusBar) {
+		let { overallFilesLabel, progressBar } = createOverallFilesStatusBar();
+		overallFilesStatusBar = progressBar;
+
+		flottformItem.appendChild(overallFilesLabel);
+		flottformItem.appendChild(overallFilesStatusBar);
+	}
+	overallFilesStatusBar.value = overallProgress * 100;
+	overallFilesStatusBar.innerText = `${overallProgress * 100}%`;
+};

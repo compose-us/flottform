@@ -4,10 +4,10 @@
 	import { createClientUrl, sdpExchangeServerBase } from '../../api';
 
 	onMount(async () => {
-		const firstFileInput = document.querySelectorAll(
+		const fileInputs = document.querySelectorAll(
 			'input[type=file]'
 		) as NodeListOf<HTMLInputElement>;
-		for (const file of firstFileInput) {
+		for (const file of fileInputs) {
 			const flottformFileInputHost = new FlottformFileInputHost({
 				flottformApi: sdpExchangeServerBase,
 				createClientUrl,
