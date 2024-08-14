@@ -19,6 +19,7 @@ type Listeners = {
 	done: [];
 	disconnected: [];
 	error: [e: string];
+	bufferedamountlow: [];
 };
 
 export class FlottformChannelClient extends EventEmitter<Listeners> {
@@ -32,6 +33,7 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 	private openPeerConnection: RTCPeerConnection | null = null;
 	private dataChannel: RTCDataChannel | null = null;
 	private pollForIceTimer: NodeJS.Timeout | number | null = null;
+	private BUFFER_THRESHOLD = 128 * 1024; // 128KB buffer threshold (maximum of 4 chunks in the buffer waiting to be sent over the network)
 
 	constructor({
 		endpointId,
@@ -82,6 +84,13 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 			this.logger.info(`ondatachannel: ${e.channel}`);
 			this.changeState('connected');
 			this.dataChannel = e.channel;
+			// Set the maximum amount of data waiting inside the datachannel's buffer
+			this.dataChannel.bufferedAmountLowThreshold = this.BUFFER_THRESHOLD;
+			// Set the listener to listen then emit an event when the buffer has more space available and can be used to send more data
+			this.dataChannel.onbufferedamountlow = () => {
+				console.log('----------EVENT FIRED----------');
+				this.emit('bufferedamountlow');
+			};
 			this.dataChannel.onopen = (e) => {
 				this.logger.info(`ondatachannel - onopen: ${e.type}`);
 			};
@@ -106,8 +115,18 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		if (this.dataChannel == null) {
 			this.changeState('error', 'dataChannel is null. Unable to send the file to the Host!');
 			return;
+		} else if (!this.canSendMoreData()) {
+			this.logger.warn('Data channel is full! Cannot send data at the moment');
+			return;
 		}
 		this.dataChannel.send(data);
+	};
+
+	canSendMoreData = () => {
+		return (
+			this.dataChannel &&
+			this.dataChannel.bufferedAmount < this.dataChannel.bufferedAmountLowThreshold
+		);
 	};
 
 	private setUpClientIceGathering = (

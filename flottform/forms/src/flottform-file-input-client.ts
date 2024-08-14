@@ -1,11 +1,5 @@
 import { FlottformChannelClient } from './flottform-channel-client';
-import {
-	DEFAULT_WEBRTC_CONFIG,
-	EventEmitter,
-	FileMetaInfos,
-	Logger,
-	POLL_TIME_IN_MS
-} from './internal';
+import { DEFAULT_WEBRTC_CONFIG, EventEmitter, Logger, POLL_TIME_IN_MS } from './internal';
 
 type Listeners = {
 	connected: [];
@@ -26,7 +20,12 @@ type MetaData = {
 export class FlottformFileInputClient extends EventEmitter<Listeners> {
 	private channel: FlottformChannelClient | null = null;
 	private inputField: HTMLInputElement;
-	private chunkSize: number = 16384; // 16 Kb chunks
+	private chunkSize: number = 16384; // 16 KB chunks
+	private filesMetaData: { name: string; type: string; size: number }[] = [];
+	private filesArrayBuffer: ArrayBuffer[] = [];
+	private currentFileIndex = 0;
+	private currentChunkIndex = 0;
+	private allFilesSent = false;
 	private logger: Logger;
 
 	constructor({
@@ -92,35 +91,69 @@ export class FlottformFileInputClient extends EventEmitter<Listeners> {
 	sendFiles = async () => {
 		const metaData = this.createMetaData(this.inputField);
 		const filesArrayBuffer = await this.createArrayBuffers(this.inputField);
-
 		if (!metaData || !filesArrayBuffer)
 			throw new Error("Can't find the files that you want to send!");
+
+		this.filesMetaData = metaData.filesQueue;
+		this.filesArrayBuffer = filesArrayBuffer;
 
 		this.channel?.sendData(JSON.stringify(metaData));
 
 		this.emit('sending');
-
-		for (let i = 0; i < metaData.filesQueue.length; i++) {
-			await this.sendFile(
-				i,
-				metaData.filesQueue[i]?.name as string,
-				filesArrayBuffer[i] as ArrayBuffer
-			);
-		}
-		this.channel?.sendData(JSON.stringify({ type: 'transfer-complete' }));
+		this.startSendingFiles();
 	};
 
-	private sendFile = async (fileIndex: number, fileName: string, fileArrayBuffer: ArrayBuffer) => {
-		this.logger.log(`Sending data for file number ${fileIndex + 1}`);
+	private startSendingFiles = () => {
+		this.sendNextChunk();
+	};
 
-		// Send file in chunks
-		for (let i = 0; i * this.chunkSize <= fileArrayBuffer.byteLength; i++) {
-			// The progress for now is sent for each file seperately
-			let progress = ((i * this.chunkSize) / fileArrayBuffer.byteLength).toFixed(2);
-			this.emit('progress', { fileIndex, fileName, progress: parseFloat(progress) });
+	private sendNextChunk = async () => {
+		const totalNumberOfFiles = this.filesMetaData.length;
+		if (this.allFilesSent || this.currentFileIndex >= totalNumberOfFiles) {
+			// All files are sent
+			console.log('All files are sent');
+			this.channel?.sendData(JSON.stringify({ type: 'transfer-complete' }));
+			this.allFilesSent = true;
+			this.channel?.off('bufferedamountlow', this.startSendingFiles);
+			return;
+		}
+		const currentFileArrayBuffer = this.filesArrayBuffer[this.currentFileIndex];
+		if (!currentFileArrayBuffer) {
+			throw new Error(`Can't find the ArrayBuffer for the file number ${this.currentFileIndex}`);
+		}
+		const currentFileSize = currentFileArrayBuffer.byteLength;
+		const fileName = this.filesMetaData[this.currentFileIndex]!.name;
 
-			const end = (i + 1) * this.chunkSize;
-			this.channel?.sendData(fileArrayBuffer.slice(i * this.chunkSize, end));
+		while (this.currentChunkIndex * this.chunkSize < currentFileSize) {
+			// The file still has some chunks left
+			if (!this.channel?.canSendMoreData()) {
+				// Buffer is full. Pause sending the chunks
+				console.log('Buffer is full. Pausing sending chunks!');
+				break;
+			}
+			let progress = ((this.currentChunkIndex * this.chunkSize) / currentFileSize).toFixed(2);
+
+			this.emit('progress', {
+				fileIndex: this.currentFileIndex,
+				fileName,
+				progress: parseFloat(progress)
+			});
+
+			const start = this.currentChunkIndex * this.chunkSize;
+			const end = Math.min((this.currentChunkIndex + 1) * this.chunkSize, currentFileSize);
+			this.channel?.sendData(currentFileArrayBuffer.slice(start, end));
+			this.currentChunkIndex++;
+		}
+		// Now either: the buffer is full OR all the chunks of the file have been sent.
+		if (this.currentChunkIndex * this.chunkSize >= currentFileSize) {
+			// File is fully sent move to the next one
+			console.log(`File ${fileName} fully sent. Moving to next file.`);
+			this.currentFileIndex++;
+			this.currentChunkIndex = 0;
+			this.sendNextChunk(); // Recursion used to send the chunks of the next file
+		} else {
+			// Paused waiting for buffer space. Will try again shortly.
+			setTimeout(this.sendNextChunk, 100); // Retry after a short delay
 		}
 	};
 
@@ -157,5 +190,6 @@ export class FlottformFileInputClient extends EventEmitter<Listeners> {
 			this.emit('error', e);
 			// TODO: Implement Default UI.
 		});
+		this.channel?.on('bufferedamountlow', this.startSendingFiles);
 	};
 }
