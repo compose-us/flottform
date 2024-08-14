@@ -9,6 +9,8 @@ const openInputsList = () => {
 		const height = flottformList!.scrollHeight + 'px';
 		flottformList!.style.height = height;
 		flottformList!.style.visibility = 'visible';
+		flottformList!.style.maxHeight = '50vh';
+		flottformList!.style.overflowY = 'auto';
 
 		flottformList!.addEventListener('transitionend', function handler() {
 			flottformList!.style.height = 'auto';
@@ -130,6 +132,11 @@ const addCss = (cssFileName?: string) => {
 		details summary {
 			padding: 0.5rem;
   			border-radius: 5px;
+		}
+
+		details .details-container {
+			height: 12rem;
+  			overflow-y: scroll;
 		}
 
 		details[open] summary {
@@ -292,6 +299,9 @@ const getDetailsOfFilesTransfer = (flottformItem: HTMLLIElement) => {
 		const summary = document.createElement('summary');
 		summary.innerText = 'Details';
 		details.appendChild(summary);
+		const detailsContainer = document.createElement('div');
+		detailsContainer.classList.add('details-container');
+		details.appendChild(detailsContainer);
 		flottformItem.appendChild(details);
 	}
 	return details;
@@ -326,8 +336,10 @@ const updateCurrentFileStatusBar = (
 		let { currentFileLabel, progressBar } = createCurrentFileStatusBar(fileIndex, fileName);
 		currentFileStatusBar = progressBar;
 
-		details.appendChild(currentFileLabel);
-		details.appendChild(currentFileStatusBar);
+		const detailsContainer = details.querySelector('.details-container')!;
+
+		detailsContainer.appendChild(currentFileLabel);
+		detailsContainer.appendChild(currentFileStatusBar);
 	}
 	currentFileStatusBar.value = currentFileProgress * 100;
 	currentFileStatusBar.innerText = `${currentFileProgress * 100}%`;
