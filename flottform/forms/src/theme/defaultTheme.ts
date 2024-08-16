@@ -1,30 +1,33 @@
 import { FlottformFileInputHost } from '../flottform-file-input-host';
 
 const openInputsList = () => {
-	const flottformList: HTMLUListElement | null = document.querySelector('.flottform-inputs-list');
-	const openerSvg: SVGElement | null = document.querySelector('.flottform-opener-triangle');
+	const flottformList: HTMLUListElement = document.querySelector('.flottform-inputs-list')!;
+	const flottformButtonHeight: number = (
+		document.querySelector('.flottform-root-opener-button')! as HTMLButtonElement
+	).offsetHeight;
+	const openerSvg: SVGElement = document.querySelector('.flottform-opener-triangle')!;
 	const open = flottformList!.classList.toggle('flottform-open');
 
 	if (open) {
-		const height = flottformList!.scrollHeight + 'px';
-		flottformList!.style.height = height;
-		flottformList!.style.visibility = 'visible';
-		flottformList!.style.maxHeight = '50vh';
-		flottformList!.style.overflowY = 'auto';
+		const height = flottformList.scrollHeight + 'px';
+		flottformList.style.height = height;
+		flottformList.style.visibility = 'visible';
+		flottformList.style.maxHeight = `calc(100dvh - ${flottformButtonHeight}px)`;
+		flottformList.style.overflowY = 'auto';
 
-		flottformList!.addEventListener('transitionend', function handler() {
-			flottformList!.style.height = 'auto';
-			flottformList!.removeEventListener('transitionend', handler);
+		flottformList.addEventListener('transitionend', function handler() {
+			flottformList.style.height = 'auto';
+			flottformList.removeEventListener('transitionend', handler);
 		});
 	} else {
-		flottformList!.style.height = flottformList!.scrollHeight + 'px';
+		flottformList.style.height = flottformList.scrollHeight + 'px';
 		requestAnimationFrame(() => {
-			flottformList!.style.height = '0';
+			flottformList.style.height = '0';
 		});
-		flottformList!.style.visibility = 'hidden';
+		flottformList.style.visibility = 'hidden';
 	}
 
-	openerSvg!.style.rotate = open ? '180deg' : '0deg';
+	openerSvg.style.rotate = open ? '180deg' : '0deg';
 };
 
 const addCss = (cssFileName?: string) => {
@@ -123,7 +126,7 @@ const addCss = (cssFileName?: string) => {
 		}
 
 		details {
-			background-color: #dfe3e6;
+			background-color: #fafafe;
 			border: 1px solid gray;
   			border-radius: 5px;
 			padding:  0.75rem;
@@ -135,12 +138,12 @@ const addCss = (cssFileName?: string) => {
 		}
 
 		details .details-container {
-			height: 12rem;
+			max-height: 12rem;
   			overflow-y: scroll;
 		}
 
 		details[open] summary {
-			background-color: #f5f9fc;
+			background-color: #fafafe;
 		}
 
 		details .flottform-progress-bar-label{
@@ -149,6 +152,7 @@ const addCss = (cssFileName?: string) => {
 
 		details .flottform-status-bar {
 			height: 0.5rem;
+			border: 1px solid #e5e7eb;
 		}
 	`;
 
@@ -371,6 +375,8 @@ const updateOverallFilesStatusBar = (flottformItem: HTMLLIElement, overallProgre
 		flottformItem.appendChild(overallFilesLabel);
 		flottformItem.appendChild(overallFilesStatusBar);
 	}
+	console.log(overallProgress);
+
 	overallFilesStatusBar.value = overallProgress * 100;
 	overallFilesStatusBar.innerText = `${overallProgress * 100}%`;
 };
