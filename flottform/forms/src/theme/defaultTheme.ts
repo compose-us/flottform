@@ -6,7 +6,7 @@ const openInputsList = () => {
 		document.querySelector('.flottform-root-opener-button')! as HTMLButtonElement
 	).offsetHeight;
 	const openerSvg: SVGElement = document.querySelector('.flottform-opener-triangle')!;
-	const open = flottformList!.classList.toggle('flottform-open');
+	const open = flottformList.classList.toggle('flottform-open');
 
 	if (open) {
 		const height = flottformList.scrollHeight + 'px';
@@ -30,7 +30,7 @@ const openInputsList = () => {
 	openerSvg.style.rotate = open ? '180deg' : '0deg';
 };
 
-const addCss = (cssFileName?: string) => {
+const addCss = () => {
 	const head = document.head;
 	const link = document.createElement('style');
 
@@ -156,11 +156,6 @@ const addCss = (cssFileName?: string) => {
 		}
 	`;
 
-	// const link = document.createElement('link');
-	// link.type = 'text/css';
-	// link.rel = 'stylesheet';
-	// link.href = cssFileName;
-
 	head.appendChild(link);
 };
 
@@ -257,7 +252,7 @@ const defaultThemeForAnyInput =
 export const defaultThemeForFileInput =
 	(options: { id?: string; additionalItemClasses?: string } = {}) =>
 	(flottformFileInputHost: FlottformFileInputHost) => {
-		const { flottformItem, statusInformation, refreshChannelButton, createChannelButton } =
+		const { flottformItem, statusInformation, refreshChannelButton } =
 			defaultThemeForAnyInput(options)(flottformFileInputHost);
 		if (options.id) {
 			flottformItem.setAttribute('id', options.id);
@@ -375,8 +370,6 @@ const updateOverallFilesStatusBar = (flottformItem: HTMLLIElement, overallProgre
 		flottformItem.appendChild(overallFilesLabel);
 		flottformItem.appendChild(overallFilesStatusBar);
 	}
-	console.log(overallProgress);
-
 	overallFilesStatusBar.value = overallProgress * 100;
 	overallFilesStatusBar.innerText = `${overallProgress * 100}%`;
 };

@@ -1,7 +1,12 @@
 import { toDataURL } from 'qrcode';
-import { Logger } from '../dist';
-import { FlottformState } from '../dist/internal';
-import { EventEmitter, FlottformEventMap, retrieveEndpointInfo, setIncludes } from './internal';
+import {
+	EventEmitter,
+	FlottformEventMap,
+	FlottformState,
+	Logger,
+	retrieveEndpointInfo,
+	setIncludes
+} from './internal';
 
 export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 	private flottformApi: string | URL;
