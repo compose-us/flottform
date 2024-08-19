@@ -139,7 +139,7 @@ const addCss = () => {
 
 		details .details-container {
 			max-height: 12rem;
-  			overflow-y: scroll;
+  			overflow-y: auto;
 		}
 
 		details[open] summary {
