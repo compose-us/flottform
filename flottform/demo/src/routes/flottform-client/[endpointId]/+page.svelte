@@ -1,40 +1,63 @@
 <script lang="ts">
-	import { connectToFlottform, type ClientState } from '@flottform/forms';
+	import { FlottformFileInputClient } from '@flottform/forms';
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
 	import FileInput from '$lib/components/FileInput.svelte';
 	import { sdpExchangeServerBase } from '../../../api';
 
+	type State =
+		| 'init'
+		| 'connected'
+		| 'webrtc:connection-impossible'
+		| 'sending'
+		| 'done'
+		| 'disconnected'
+		| 'error';
+
 	let sendFileToPeer = () => {};
 	let fileInput: HTMLInputElement;
 	let button: HTMLButtonElement;
-	let currentState: ClientState = 'init';
+	let currentState: State = 'init';
 	let currentPercentage = 0;
 
 	onMount(async () => {
-		try {
-			const result = await connectToFlottform({
-				endpointId: $page.params.endpointId,
-				fileInput,
-				flottformApi: sdpExchangeServerBase,
-				onError(error) {
-					currentState = 'error';
-					console.log(error);
-				},
-				onStateChange(state) {
-					currentState = state;
-				}
-			});
+		const flottformFileInputClient = new FlottformFileInputClient({
+			endpointId: $page.params.endpointId,
+			fileInput,
+			flottformApi: sdpExchangeServerBase
+		});
 
-			sendFileToPeer = result.createSendFileToPeer({
-				onProgress(p) {
-					currentPercentage = p;
-				}
-			});
-		} catch (err) {
-			console.log('Error connecting to flottform', err);
+		flottformFileInputClient.start();
+
+		flottformFileInputClient.on('webrtc:connection-impossible', () => {
+			currentState = 'webrtc:connection-impossible';
+		});
+
+		flottformFileInputClient.on('connected', () => {
+			currentState = 'connected';
+		});
+		flottformFileInputClient.on('sending', () => {
+			currentState = 'sending';
+		});
+		flottformFileInputClient.on('progress', (p) => {
+			console.log('progress= ', p);
+		});
+		flottformFileInputClient.on('done', () => {
+			currentState = 'done';
+		});
+		flottformFileInputClient.on('disconnected', () => {
+			currentState = 'disconnected';
+		});
+		flottformFileInputClient.on('error', (e) => {
+			console.log('Error:', e);
 			currentState = 'error';
-		}
+		});
+
+		sendFileToPeer = flottformFileInputClient.sendFiles;
+
+		/* sendFileToPeer = async (e) => {
+			await flottformFileInputClient.sendFile();
+		}; */
 	});
 </script>
 
