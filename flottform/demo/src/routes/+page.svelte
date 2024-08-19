@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-	import { createFlottformInput } from '@flottform/forms';
+	import { defaultThemeForFileInput, FlottformFileInputHost } from '@flottform/forms';
 	import { writable } from 'svelte/store';
 	import FileInput from '$lib/components/FileInput.svelte';
 	import { createClientUrl, sdpExchangeServerBase } from '../api';
@@ -102,14 +102,17 @@
 	};
 
 	onMount(async () => {
-		const fileInputFields = document.querySelectorAll(
+		const fileInputs = document.querySelectorAll(
 			'input[type=file]'
 		) as NodeListOf<HTMLInputElement>;
-		const { createChannel } = createFlottformInput({
-			flottformApi: sdpExchangeServerBase,
-			createClientUrl,
-			inputField: fileInputFields[0]
-		});
+		for (const file of fileInputs) {
+			const flottformFileInputHost = new FlottformFileInputHost({
+				flottformApi: sdpExchangeServerBase,
+				createClientUrl,
+				inputField: file,
+				theme: defaultThemeForFileInput()
+			});
+		}
 	});
 </script>
 
