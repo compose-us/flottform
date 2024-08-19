@@ -1,6 +1,6 @@
 **Checklist**
 
-- [ ] Resolves compose-us/flottform-website#id
+- [ ] Resolves #id
 - [ ] Labelled and assigned a reviewer
 
 **Reviewer**
