@@ -268,9 +268,9 @@ export const defaultThemeForFileInput =
 
 		flottformFileInputHost.on(
 			'progress',
-			({ currentFileProgress, overallProgress, fileIndex, fileName }) => {
+			({ currentFileProgress, overallProgress, fileIndex, totalFileCount, fileName }) => {
 				removeConnectionStatusInformation(flottformItem);
-				updateOverallFilesStatusBar(flottformItem, overallProgress);
+				updateOverallFilesStatusBar(flottformItem, overallProgress, fileIndex, totalFileCount);
 				const details = getDetailsOfFilesTransfer(flottformItem);
 				updateCurrentFileStatusBar(
 					fileIndex,
@@ -364,7 +364,12 @@ const createOverallFilesStatusBar = () => {
 	return { overallFilesLabel, progressBar };
 };
 
-const updateOverallFilesStatusBar = (flottformItem: HTMLLIElement, overallProgress: number) => {
+const updateOverallFilesStatusBar = (
+	flottformItem: HTMLLIElement,
+	overallProgress: number,
+	fileIndex: number,
+	totalFileCount: number
+) => {
 	let overallFilesStatusBar: HTMLProgressElement | null = flottformItem.querySelector(
 		'progress#flottform-status-bar-overall-progress'
 	);
@@ -375,8 +380,10 @@ const updateOverallFilesStatusBar = (flottformItem: HTMLLIElement, overallProgre
 		flottformItem.appendChild(overallFilesLabel);
 		flottformItem.appendChild(overallFilesStatusBar);
 	}
-	console.log(overallProgress);
-
+	let overallFilesLabel: HTMLLabelElement = flottformItem.querySelector(
+		'label#flottform-status-bar-overall-progress'
+	)!;
 	overallFilesStatusBar.value = overallProgress * 100;
 	overallFilesStatusBar.innerText = `${overallProgress * 100}%`;
+	overallFilesLabel.innerText = `Receiving file ${fileIndex + 1} of ${totalFileCount}`;
 };

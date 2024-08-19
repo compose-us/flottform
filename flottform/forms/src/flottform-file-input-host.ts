@@ -10,6 +10,7 @@ type Listeners = {
 	receive: []; // Emitted to signal the start of receiving the file(s)
 	progress: {
 		fileIndex: number;
+		totalFileCount: number;
 		fileName: string;
 		currentFileProgress: number;
 		overallProgress: number;
@@ -130,6 +131,7 @@ export class FlottformFileInputHost extends EventEmitter<Listeners> {
 
 				this.emit('progress', {
 					fileIndex: this.currentFile.index,
+					totalFileCount: this.filesMetaData.length,
 					fileName: currentFileName,
 					currentFileProgress: parseFloat(currentFileProgress),
 					overallProgress: parseFloat(overallProgress)
