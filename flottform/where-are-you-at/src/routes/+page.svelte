@@ -1,11 +1,20 @@
 <script lang="ts">
-	import { createFlottformInput } from '@flottform/forms';
+	import { FlottformTextInputHost } from '@flottform/forms';
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
 	import { writable } from 'svelte/store';
-	import type { FlottformState } from '../../../forms/dist/internal';
 	import ShowLocation from './ShowLocation.svelte';
 	import { clientBase, sdpExchangeServerBase } from '$lib/api';
+
+	type Coordinates = {
+		accuracy: number;
+		altitude: number | null;
+		altitudeAccuracy: number | null;
+		heading: number | null;
+		latitude: number;
+		longitude: number;
+		speed: number | null;
+	};
 
 	const createClientUrl = async ({ endpointId }: { endpointId: string }) => {
 		if (!browser) {
@@ -14,57 +23,50 @@
 		return `${clientBase}${endpointId}`;
 	};
 
-	let inputField: HTMLInputElement;
 	let partnerLink: HTMLAnchorElement;
 	let qrCodeImage: HTMLImageElement;
 	let createChannelHandler: () => void;
-	let currentState = writable<FlottformState>('new');
+	let currentState = writable<
+		'new' | 'endpoint-created' | 'webrtc:waiting-for-ice' | 'connected' | 'done' | 'error'
+	>('new');
 	let qrCodeData = writable<string>('');
 	let partnerLinkHref = writable<string>('');
 	let latitude = writable<number>();
 	let longitude = writable<number>();
 
 	onMount(() => {
-		createFlottformInput({
+		const flottformTextInputHost = new FlottformTextInputHost({
 			flottformApi: sdpExchangeServerBase,
-			createClientUrl,
-			useDefaultUi: false,
-			onProgress: async () => {},
-			onResult: async ({ arrayBuffers }) => {
-				const decoder = new TextDecoder();
-				let result = '';
-				for (const ab of arrayBuffers) {
-					result += decoder.decode(ab);
-				}
-				const coords = JSON.parse(result);
-				$latitude = coords.latitude;
-				$longitude = coords.longitude;
-				inputField.value = result;
-			},
-			onStateChange: (state, details) => {
-				if ($currentState === 'done') {
-					return;
-				}
-				$currentState = state;
-				if (state === 'new') {
-					const { createChannel } = details;
-					createChannelHandler = createChannel;
-					return;
-				}
-				if (state === 'waiting-for-client') {
-					const { qrCode, link } = details;
-					console.log({ qrCode, link });
-					$qrCodeData = qrCode;
-					$partnerLinkHref = link;
-					return;
-				}
-			}
+			createClientUrl
+		});
+		createChannelHandler = flottformTextInputHost.start;
+
+		flottformTextInputHost.on('webrtc:waiting-for-ice', () => {
+			$currentState = 'webrtc:waiting-for-ice';
+		});
+		flottformTextInputHost.on('endpoint-created', ({ link, qrCode }) => {
+			$currentState = 'endpoint-created';
+			$partnerLinkHref = link;
+			$qrCodeData = qrCode;
+		});
+		flottformTextInputHost.on('connected', () => {
+			$currentState = 'connected';
+		});
+		flottformTextInputHost.on('done', (message: string) => {
+			$currentState = 'done';
+			const coords: Coordinates = JSON.parse(message);
+			$latitude = coords.latitude;
+			$longitude = coords.longitude;
+			// Channel will be closed since we won't receive data anymore.
+			flottformTextInputHost.close();
+		});
+		flottformTextInputHost.on('error', (error) => {
+			$currentState = 'error';
 		});
 	});
 </script>
 
 <div class="w-full min-h-svh grid place-items-center">
-	<input type="hidden" name="location" bind:this={inputField} />
 	{#if $currentState === 'new'}
 		<button
 			on:click={createChannelHandler}
@@ -75,17 +77,20 @@
 			Ask your friend to share their location
 			{#if createChannelHandler === undefined}<span class="animate-spin">⏳</span>{/if}
 		</button>
-	{:else if $currentState === 'waiting-for-client'}
+	{:else if $currentState === 'endpoint-created'}
 		<div>
 			<img bind:this={qrCodeImage} alt={$partnerLinkHref} src={$qrCodeData} class="mx-auto" />
-			<a bind:this={partnerLink} href={$partnerLinkHref} rel="external">{$partnerLinkHref}</a>
+			<a
+				bind:this={partnerLink}
+				href={$partnerLinkHref}
+				target="_blank"
+				rel="external noopener noreferrer">{$partnerLinkHref}</a
+			>
 		</div>
-	{:else if $currentState === 'waiting-for-ice'}
+	{:else if $currentState === 'webrtc:waiting-for-ice'}
 		Trying to establish a connection with your friend
-	{:else if $currentState === 'waiting-for-file'}
+	{:else if $currentState === 'connected'}
 		Waiting for friend to send their location
-	{:else if $currentState === 'receiving-data'}
-		Receiving location
 	{:else if $currentState === 'done'}
 		<div class="h-3/4 max-w-3xl w-full">
 			<ShowLocation latitude={$latitude} longitude={$longitude} />

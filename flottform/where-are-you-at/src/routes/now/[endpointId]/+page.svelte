@@ -1,83 +1,75 @@
 <script lang="ts">
-	import { connectToFlottform } from '@flottform/forms';
+	import { FlottformTextInputClient } from '@flottform/forms';
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
 	import { sdpExchangeServerBase } from '$lib/api';
 
-	let currentState = $state<'init' | 'start' | 'sending' | 'done' | 'error-user-denied' | 'error'>(
-		'init'
-	);
-	let fileInput: HTMLInputElement;
+	let currentState = $state<
+		'init' | 'connected' | 'sending' | 'done' | 'error-user-denied' | 'error'
+	>('init');
 	let updateCurrentPosition = $state<() => void>();
 
 	onMount(async () => {
-		try {
-			const { createSendFileToPeer } = await connectToFlottform({
-				endpointId: $page.params.endpointId,
-				fileInput,
-				flottformApi: sdpExchangeServerBase,
-				onStateChange(state) {
-					if (state === 'connected') {
-						currentState = 'start';
-					}
-				},
-				onError(error) {
-					currentState = 'error';
-					alert(`could not connect ${error}`);
-				}
-			});
-			const send = await createSendFileToPeer({});
+		const flottformTextInputClient = new FlottformTextInputClient({
+			endpointId: $page.params.endpointId,
+			flottformApi: sdpExchangeServerBase
+		});
+		// Start the WebRTC connection process as soon as the page loads.
+		flottformTextInputClient.start();
 
-			updateCurrentPosition = () => {
-				currentState = 'sending';
-				try {
-					navigator.geolocation.getCurrentPosition(
-						async (position) => {
-							// cannot JSON.stringify position.coords directly
-							const coords = {
-								accuracy: position.coords.accuracy,
-								altitude: position.coords.altitude,
-								altitudeAccuracy: position.coords.altitudeAccuracy,
-								heading: position.coords.heading,
-								latitude: position.coords.latitude,
-								longitude: position.coords.longitude,
-								speed: position.coords.speed
-							};
-							fileInput.value = JSON.stringify(coords);
-							try {
-								await send();
-								currentState = 'done';
-							} catch (e) {
-								currentState = 'error';
-								alert(`could not send location ${e}!`);
-							}
-						},
-						(error) => {
-							console.error('Error getting position', error);
-							if (error.code === 1) {
-								currentState = 'error-user-denied';
-								return;
-							}
-							currentState = 'error';
-						}
-					);
-				} catch (err) {
-					currentState = 'error';
-					console.error('Error getting navigators current position', err);
-				}
-			};
-		} catch (err) {
+		// Listen to the events to update the UI appropriately
+		flottformTextInputClient.on('connected', () => {
+			currentState = 'connected';
+		});
+		flottformTextInputClient.on('sending', () => {
+			currentState = 'sending';
+		});
+		flottformTextInputClient.on('done', () => {
+			currentState = 'done';
+		});
+		flottformTextInputClient.on('error', () => {
 			currentState = 'error';
-			console.error('Error connecting to flottform', err);
-		}
+		});
+
+		updateCurrentPosition = () => {
+			currentState = 'sending';
+			try {
+				navigator.geolocation.getCurrentPosition(
+					async (position) => {
+						// cannot JSON.stringify position.coords directly
+						const coords = {
+							accuracy: position.coords.accuracy,
+							altitude: position.coords.altitude,
+							altitudeAccuracy: position.coords.altitudeAccuracy,
+							heading: position.coords.heading,
+							latitude: position.coords.latitude,
+							longitude: position.coords.longitude,
+							speed: position.coords.speed
+						};
+						const currentLocation = JSON.stringify(coords);
+						flottformTextInputClient.sendText(currentLocation);
+					},
+					(error) => {
+						console.error('Error getting position', error);
+						if (error.code === 1) {
+							currentState = 'error-user-denied';
+							return;
+						}
+						currentState = 'error';
+					}
+				);
+			} catch (err) {
+				currentState = 'error';
+				console.error('Error getting navigators current position', err);
+			}
+		};
 	});
 </script>
 
 <div class="max-w-screen-xl mx-auto p-8 box-border grid grid-cols-1 gap-8 min-h-svh">
-	<input type="hidden" name="location" bind:this={fileInput} value="" />
 	{#if currentState === 'init'}
 		<h1>Trying to connect to host</h1>
-	{:else if currentState === 'start'}
+	{:else if currentState === 'connected'}
 		<h1>Let me know your location, please!</h1>
 		<div class="mx-auto">
 			<button on:click={updateCurrentPosition} class="border border-primary-blue rounded px-4 py-2"

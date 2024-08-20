@@ -88,7 +88,6 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 			this.dataChannel.bufferedAmountLowThreshold = this.BUFFER_THRESHOLD;
 			// Set the listener to listen then emit an event when the buffer has more space available and can be used to send more data
 			this.dataChannel.onbufferedamountlow = () => {
-				console.log('----------EVENT FIRED----------');
 				this.emit('bufferedamountlow');
 			};
 			this.dataChannel.onopen = (e) => {
