@@ -246,7 +246,7 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 
 		this.dataChannel.onopen = (e) => {
 			this.logger.log('data channel opened');
-			this.changeState('waiting-for-file');
+			this.changeState('waiting-for-data');
 		};
 
 		this.dataChannel.onclose = (e) => {

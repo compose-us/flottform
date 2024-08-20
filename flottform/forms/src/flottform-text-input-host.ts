@@ -14,7 +14,7 @@ type Listeners = {
 		event: { link: string; qrCode: string; channel: FlottformChannelHost }
 	];
 	'webrtc:waiting-for-ice': [];
-	'webrtc:waiting-for-file': [];
+	'webrtc:waiting-for-data': [];
 };
 
 const noop = () => {};
@@ -99,8 +99,8 @@ export class FlottformTextInputHost extends EventEmitter<Listeners> {
 		this.channel?.on('waiting-for-ice', () => {
 			this.emit('webrtc:waiting-for-ice');
 		});
-		this.channel?.on('waiting-for-file', () => {
-			this.emit('webrtc:waiting-for-file');
+		this.channel?.on('waiting-for-data', () => {
+			this.emit('webrtc:waiting-for-data');
 			this.emit('connected');
 		});
 		this.channel?.on('receiving-data', (e) => {

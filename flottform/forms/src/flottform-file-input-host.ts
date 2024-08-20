@@ -195,7 +195,7 @@ export class FlottformFileInputHost extends EventEmitter<Listeners> {
 		this.channel?.on('waiting-for-ice', () => {
 			this.emit('webrtc:waiting-for-ice');
 		});
-		this.channel?.on('waiting-for-file', () => {
+		this.channel?.on('waiting-for-data', () => {
 			this.emit('webrtc:waiting-for-file');
 			this.emit('connected');
 		});

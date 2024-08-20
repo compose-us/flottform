@@ -33,7 +33,7 @@ export type FlottformState =
 	| 'new'
 	| 'waiting-for-client'
 	| 'waiting-for-ice'
-	| 'waiting-for-file'
+	| 'waiting-for-data'
 	| 'receiving-data'
 	| 'done'
 	| 'error';
@@ -101,7 +101,7 @@ export type FlottformEventMap = {
 			channel: FlottformChannelHost;
 		}
 	];
-	'waiting-for-file': [];
+	'waiting-for-data': [];
 	'waiting-for-ice': [];
 	'receiving-data': [e: MessageEvent<any>];
 	'file-received': [{ fileMeta: FileMetaInfos; arrayBuffer: Array<ArrayBuffer> }];
