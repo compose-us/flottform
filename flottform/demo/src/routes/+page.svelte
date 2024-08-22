@@ -110,7 +110,7 @@
 				flottformApi: sdpExchangeServerBase,
 				createClientUrl,
 				inputField: file,
-				theme: defaultThemeForFileInput()
+				theme: defaultThemeForFileInput(file)
 			});
 		}
 	});

@@ -7,12 +7,26 @@
 		const fileInputs = document.querySelectorAll(
 			'input[type=file]'
 		) as NodeListOf<HTMLInputElement>;
-		for (const file of fileInputs) {
+		const filesWithLabels = [
+			{
+				file: document.getElementById('document-A') as HTMLInputElement,
+				label: 'Label for File Input 1',
+				buttonLabel: 'Button 1'
+			},
+			{
+				file: document.getElementsByName('fileB')[0] as HTMLInputElement,
+				buttonLabel: 'Button 2'
+			},
+			{
+				file: document.getElementsByName('fileC')[0] as HTMLInputElement
+			}
+		];
+		for (const { file, label, buttonLabel } of filesWithLabels) {
 			const flottformFileInputHost = new FlottformFileInputHost({
 				flottformApi: sdpExchangeServerBase,
 				createClientUrl,
 				inputField: file,
-				theme: defaultThemeForFileInput()
+				theme: defaultThemeForFileInput(file)
 			});
 		}
 		// flottformFileInputHost.on('new', () => {
@@ -63,7 +77,7 @@
 	<form class="grid grid-cols-1 gap-8">
 		<label class="grid">
 			<span>Please upload the first file:</span>
-			<input type="file" name="fileA" multiple />
+			<input type="file" name="fileA" id="document-A" multiple />
 		</label>
 		<label class="grid">
 			<span>Please upload the second file:</span>
