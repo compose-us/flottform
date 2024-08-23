@@ -55,7 +55,7 @@ export class FlottformFileInputHost extends EventEmitter<Listeners> {
 		inputField: HTMLInputElement;
 		rtcConfiguration?: RTCConfiguration;
 		pollTimeForIceInMs?: number;
-		theme?: (myself: FlottformFileInputHost) => void;
+		theme?: (myself: FlottformFileInputHost, inputField: HTMLInputElement) => void;
 		logger?: Logger;
 		styles?: Styles;
 	}) {
@@ -71,7 +71,7 @@ export class FlottformFileInputHost extends EventEmitter<Listeners> {
 		this.logger = logger;
 
 		this.registerListeners();
-		theme && theme(this);
+		theme && theme(this, this.inputField);
 	}
 
 	start = () => {

@@ -3,6 +3,8 @@
 	import { onMount } from 'svelte';
 	import { createClientUrl, sdpExchangeServerBase } from '../../api';
 
+	let flottformAnchor: HTMLElement;
+
 	onMount(async () => {
 		const fileInputs = document.querySelectorAll(
 			'input[type=file]'
@@ -10,8 +12,8 @@
 		const filesWithLabels = [
 			{
 				file: document.getElementById('document-A') as HTMLInputElement,
-				label: 'Label for File Input 1',
-				buttonLabel: 'Button 1'
+				label: 'Label for File Input 1'
+				// buttonLabel: 'Button 1'
 			},
 			{
 				file: document.getElementsByName('fileB')[0] as HTMLInputElement,
@@ -26,7 +28,7 @@
 				flottformApi: sdpExchangeServerBase,
 				createClientUrl,
 				inputField: file,
-				theme: defaultThemeForFileInput(file)
+				theme: defaultThemeForFileInput(flottformAnchor, { label, buttonLabel })
 			});
 		}
 		// flottformFileInputHost.on('new', () => {
@@ -72,6 +74,11 @@
 	<title>Flottform DEMO</title>
 </svelte:head>
 
+<div
+	id="flottform-anchor"
+	bind:this={flottformAnchor}
+	class="absolute top-0 right-0 w-64 flottform-anchor"
+></div>
 <div class="max-w-screen-xl mx-auto p-8 box-border grid grid-cols-1 gap-8">
 	<h1>Multiple Input Form</h1>
 	<form class="grid grid-cols-1 gap-8">
@@ -104,6 +111,9 @@
 </div>
 
 <style lang="postcss">
+	.flottform-anchor {
+		--flottform-border-radius: 0px 0px 10px 10px;
+	}
 	.flottform {
 		@apply absolute top-0 right-0;
 	}

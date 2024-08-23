@@ -10,7 +10,8 @@
 	--flottform-status-bar-background: #f2f1fe;
 	--flottform-status-bar-gradient-from: #6a11cb;
 	--flottform-status-bar-gradient-to: #2575fc;
-	--flottform-root-container-width: 250px;
+	--flottform-border-width: 1px;
+	--flottform-border-radius: 10px;
 	--flottform-qrcode-width: 150px;
 	--flottform-details-max-height: 12rem;
 	--flottform-items-padding: 1rem;
@@ -21,14 +22,12 @@
 .flottform-root {
 	color: var(--flottform-main-color);
 	font-family: var(--flottform-font-style);
-	border: 1px solid var(--flottform-border-color);
-	border-radius: 0px 0px 10px 10px;
-	position: absolute;
-	right: 0;
+	border: var(--flottform-border-width) solid var(--flottform-border-color);
+	border-radius: var(--flottform-border-radius);
 	display: grid;
 	background: var(--flottform-root-background);
-	width: var(--flottform-root-container-width);
-	max-height: 100dvh;
+	width: 100%;
+	height: 100%;
 }
 .flottform-root-opener-button {
 	font-size: 1rem;
@@ -37,7 +36,7 @@
 	display: flex;
 	gap: 0.25rem;
 }
-.flottform-height-transition-container {
+.flottform-elements-container-wrapper {
 	display: grid;
 	grid-template-rows: 0fr;
 	transition:
@@ -48,7 +47,7 @@
 .flottform-elements-container {
 	overflow: auto;
 }
-.flottform-height-transition-container.flottform-open {
+.flottform-elements-container-wrapper.flottform-open {
 	grid-template-rows: 1fr;
 	border-top: 1px solid var(--flottform-border-color);
 }
@@ -88,17 +87,17 @@
 
 .flottform-state-items-container {
 	overflow-x: hidden;
+	display: grid;
+	gap: 1rem;
 }
 
 .flottform-qr-code {
 	width: var(--flottform-qrcode-width);
 }
 .flottform-link-offer {
-	width: calc(var(--flottform-root-container-width) - 1.5rem);
 	display: inline-block;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-	overflow: hidden;
+	white-space: break-spaces;
+	word-break: break-all;
 }
 .flottform-status-information {
 	display: flex;

@@ -13,11 +13,11 @@ interface FlottformThemeOptions {
 }
 
 const openInputsList = () => {
-	const flottformHeightTransitionContainer: HTMLDivElement = document.querySelector(
-		'.flottform-height-transition-container'
+	const flottformElementsContainerWrapper: HTMLDivElement = document.querySelector(
+		'.flottform-elements-container-wrapper'
 	)!;
 	const openerSvg: SVGElement = document.querySelector('.flottform-opener-triangle')!;
-	flottformHeightTransitionContainer.classList.toggle('flottform-open');
+	flottformElementsContainerWrapper.classList.toggle('flottform-open');
 	openerSvg.classList.toggle('flottform-button-svg-open');
 };
 
@@ -26,9 +26,9 @@ const initRoot = (flottformRootTitle?: string, flottformRootDescription?: string
 	flottformRoot.setAttribute('class', 'flottform-root');
 	const flottformListOpenerButton = createFlottformOpenerButton(flottformRootTitle);
 	flottformRoot.appendChild(flottformListOpenerButton);
-	const flottformHeightTransitionContainer =
+	const flottformElementsContainerWrapper =
 		createFlottformItemsContainerWithTransition(flottformRootDescription);
-	flottformRoot.appendChild(flottformHeightTransitionContainer);
+	flottformRoot.appendChild(flottformElementsContainerWrapper);
 	return flottformRoot;
 };
 
@@ -48,8 +48,8 @@ const createLinkAndQrCode = (qrCode: string, link: string) => {
 	};
 };
 const defaultThemeForAnyInput =
-	(inputField?: HTMLInputElement, options: FlottformThemeOptions = {}) =>
-	(flottformBaseInputHost: FlottformFileInputHost) => {
+	(flottformAnchorElement: HTMLElement, options: FlottformThemeOptions = {}) =>
+	(flottformBaseInputHost: FlottformFileInputHost, inputField: HTMLInputElement) => {
 		const flottformRoot =
 			options.flottformRootElement ??
 			document.querySelector('.flottform-root') ??
@@ -81,7 +81,7 @@ const defaultThemeForAnyInput =
 		});
 		flottformBaseInputHost.on('error', (error) => {
 			statusInformation.innerHTML =
-				options.onErrorText ?? `An error occured 🚨 (${error.message}). Please try again`;
+				options.onErrorText ?? `🚨 An error occured (${error.message}). Please try again`;
 			createChannelButton.innerText = 'Retry';
 			flottformStateItemsContainer.replaceChildren(statusInformation);
 			flottformStateItemsContainer.appendChild(createChannelButton);
@@ -90,14 +90,15 @@ const defaultThemeForAnyInput =
 		const flottformElementsContainer = flottformRoot.querySelector(
 			'.flottform-elements-container'
 		)!;
-		const flottformHeightTransitionContainer = flottformRoot.querySelector(
-			'.flottform-height-transition-container'
+		const flottformElementsContainerWrapper = flottformRoot.querySelector(
+			'.flottform-elements-container-wrapper'
 		)!;
 		flottformItemsList.appendChild(flottformItem);
 		flottformElementsContainer.appendChild(flottformItemsList);
-		flottformHeightTransitionContainer.appendChild(flottformElementsContainer);
-		flottformRoot.appendChild(flottformHeightTransitionContainer);
-		document.body.append(flottformRoot);
+		flottformElementsContainerWrapper.appendChild(flottformElementsContainer);
+		flottformRoot.appendChild(flottformElementsContainerWrapper);
+		flottformAnchorElement.appendChild(flottformRoot);
+		// document.body.append(flottformRoot);
 		return {
 			flottformRoot,
 			flottformItem,
@@ -108,10 +109,10 @@ const defaultThemeForAnyInput =
 		};
 	};
 export const defaultThemeForFileInput =
-	(inputField: HTMLInputElement, options: FlottformThemeOptions = {}) =>
-	(flottformFileInputHost: FlottformFileInputHost) => {
+	(flottformAnchorElement: HTMLElement, options: FlottformThemeOptions = {}) =>
+	(flottformFileInputHost: FlottformFileInputHost, inputField: HTMLInputElement) => {
 		const { flottformItem, statusInformation, refreshChannelButton, flottformStateItemsContainer } =
-			defaultThemeForAnyInput(inputField, options)(flottformFileInputHost);
+			defaultThemeForAnyInput(flottformAnchorElement, options)(flottformFileInputHost, inputField);
 		if (options.id) {
 			flottformItem.setAttribute('id', options.id);
 		}
@@ -138,7 +139,7 @@ export const defaultThemeForFileInput =
 		);
 		flottformFileInputHost.on('disconnected', () => {
 			statusInformation.innerHTML =
-				options.onSuccessText ?? `You have ✨ succesfully downloaded ✨ all your files.`;
+				options.onSuccessText ?? `✨ You have succesfully downloaded all your files.`;
 			statusInformation.appendChild(refreshChannelButton);
 			flottformItem.replaceChildren(statusInformation);
 		});
@@ -146,6 +147,7 @@ export const defaultThemeForFileInput =
 
 const createFlottformOpenerButton = (flottformRootTitle: string | undefined) => {
 	const flottformListOpenerButton = document.createElement('button');
+	flottformListOpenerButton.setAttribute('type', 'button');
 	flottformListOpenerButton.setAttribute('class', 'flottform-root-opener-button');
 	flottformListOpenerButton.innerHTML = `<span>${flottformRootTitle ?? 'Fill from Another Device'}</span><svg class="flottform-opener-triangle" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M6.5,8.5l6,7l6-7H6.5z"/></svg>`;
 	flottformListOpenerButton.addEventListener('click', () => openInputsList());
@@ -157,8 +159,8 @@ const createFlottformItemsContainerWithTransition = (
 ) => {
 	const flottformElementsContainer = document.createElement('div');
 	flottformElementsContainer.setAttribute('class', 'flottform-elements-container');
-	const flottformHeightTransitionContainer = document.createElement('div');
-	flottformHeightTransitionContainer.setAttribute('class', 'flottform-height-transition-container');
+	const flottformElementsContainerWrapper = document.createElement('div');
+	flottformElementsContainerWrapper.setAttribute('class', 'flottform-elements-container-wrapper');
 	if (flottformRootDescription !== '') {
 		const flottformDescription = document.createElement('div');
 		flottformDescription.setAttribute('class', 'flottform-root-description');
@@ -170,8 +172,8 @@ const createFlottformItemsContainerWithTransition = (
 	const flottformItemsList = document.createElement('ul');
 	flottformItemsList.setAttribute('class', 'flottform-inputs-list');
 	flottformElementsContainer.appendChild(flottformItemsList);
-	flottformHeightTransitionContainer.appendChild(flottformElementsContainer);
-	return flottformHeightTransitionContainer;
+	flottformElementsContainerWrapper.appendChild(flottformElementsContainer);
+	return flottformElementsContainerWrapper;
 };
 
 const createFlottformChannelButton = (label: string | undefined) => {
@@ -184,6 +186,7 @@ const createFlottformChannelButton = (label: string | undefined) => {
 
 const createFlottformChannelRefreshButton = () => {
 	const refreshChannelButton = document.createElement('button');
+	refreshChannelButton.setAttribute('type', 'button');
 	refreshChannelButton.setAttribute('class', 'flottform-refresh-connection-button');
 	refreshChannelButton.setAttribute(
 		'title',
@@ -205,17 +208,16 @@ const setLabelForFlottformItem = (
 	label: string | undefined,
 	flottformItem: HTMLLIElement
 ) => {
-	if (inputField) {
-		const inputLabel = document.createElement('p');
-		const inputAttributes = inputField.id || inputField.name || `File input ${inputIndex++}`;
-		const labelContent =
-			label ??
-			(inputAttributes && inputAttributes.replace(/^./, inputAttributes[0]!.toLocaleUpperCase())) ??
-			'';
-		if (labelContent) {
-			inputLabel.innerHTML = labelContent;
-			flottformItem.appendChild(inputLabel);
-		}
+	const inputLabel = document.createElement('p');
+	const inputAttributes = inputField.id || inputField.name || `File input ${inputIndex++}`;
+	const labelContent =
+		label ??
+		(inputAttributes &&
+			inputAttributes.trim().replace(/^./, inputAttributes[0]!.toLocaleUpperCase())) ??
+		'';
+	if (labelContent) {
+		inputLabel.innerHTML = labelContent;
+		flottformItem.appendChild(inputLabel);
 	}
 };
 
