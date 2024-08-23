@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import '../app.postcss';
-	import '@flottform/forms/dist/style.css';
+	import '@flottform/forms/style.css';
 </script>
 
 <slot />
