@@ -37,15 +37,43 @@ const createLinkAndQrCode = (qrCode: string, link: string) => {
 	createChannelQrCode.setAttribute('class', 'flottform-qr-code');
 	createChannelQrCode.setAttribute('src', qrCode);
 
-	const createChannelLinkWithOffer = document.createElement('a');
+	const createChannelLinkWithOffer = document.createElement('div');
 	createChannelLinkWithOffer.setAttribute('class', 'flottform-link-offer');
-	createChannelLinkWithOffer.setAttribute('href', link);
-	createChannelLinkWithOffer.setAttribute('target', '_blank');
-	createChannelLinkWithOffer.innerHTML = link;
+	// createChannelLinkWithOffer.setAttribute('rows', '5');
+	// createChannelLinkWithOffer.setAttribute('value', link);
+	createChannelLinkWithOffer.innerText = link;
+	// createChannelLinkWithOffer.setAttribute('readonly', 'true');
 	return {
 		createChannelQrCode,
 		createChannelLinkWithOffer
 	};
+};
+const createCopyToClipboardButton = () => {
+	const copyToClipboardButton = document.createElement('button');
+	copyToClipboardButton.setAttribute('class', 'flottform-copy-to-clipboard');
+	copyToClipboardButton.setAttribute('type', 'button');
+	copyToClipboardButton.setAttribute('title', 'Copy Flottform link to clipboard');
+	copyToClipboardButton.setAttribute('aria-label', 'Copy Flottform link to clipboard');
+	copyToClipboardButton.innerText = '📋';
+	copyToClipboardButton.addEventListener('click', async () => {
+		let flottformLink = (document.querySelector('.flottform-link-offer') as HTMLDivElement)
+			.innerText;
+		navigator.clipboard
+			.writeText(flottformLink)
+			.then(() => {
+				copyToClipboardButton.innerText = '✅';
+				setTimeout(() => {
+					copyToClipboardButton.innerText = '📋';
+				}, 1000);
+			})
+			.catch((error) => {
+				copyToClipboardButton.innerText = `❌ Failed to copy: ${error}`;
+				setTimeout(() => {
+					copyToClipboardButton.innerText = '📋';
+				}, 1000);
+			});
+	});
+	return copyToClipboardButton;
 };
 const defaultThemeForAnyInput =
 	(flottformAnchorElement: HTMLElement, options: FlottformThemeOptions = {}) =>
@@ -71,8 +99,13 @@ const defaultThemeForAnyInput =
 		// listen to events -> change elements depending on them
 		flottformBaseInputHost.on('endpoint-created', ({ link, qrCode }) => {
 			const { createChannelQrCode, createChannelLinkWithOffer } = createLinkAndQrCode(qrCode, link);
+			const copyToClipboardButton = createCopyToClipboardButton();
 			flottformStateItemsContainer.replaceChildren(createChannelQrCode);
-			flottformStateItemsContainer.appendChild(createChannelLinkWithOffer);
+			const linkAndCopyButtonWrapper = document.createElement('div');
+			linkAndCopyButtonWrapper.setAttribute('class', 'flottform-copy-button-link-wrapper');
+			linkAndCopyButtonWrapper.appendChild(copyToClipboardButton);
+			linkAndCopyButtonWrapper.appendChild(createChannelLinkWithOffer);
+			flottformStateItemsContainer.appendChild(linkAndCopyButtonWrapper);
 		});
 		flottformBaseInputHost.on('connected', () => {
 			statusInformation.innerHTML = 'Connected';
@@ -98,7 +131,6 @@ const defaultThemeForAnyInput =
 		flottformElementsContainerWrapper.appendChild(flottformElementsContainer);
 		flottformRoot.appendChild(flottformElementsContainerWrapper);
 		flottformAnchorElement.appendChild(flottformRoot);
-		// document.body.append(flottformRoot);
 		return {
 			flottformRoot,
 			flottformItem,

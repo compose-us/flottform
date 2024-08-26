@@ -1,8 +1,11 @@
 :root {
 	--flottform-main-color: #1a3066;
 	--flottform-root-background: #ffffff;
+	--flottform-root-border-radius: 10px;
 	--flottform-webrtc-button-background: #343AF0;
 	--flottform-webrtc-button-color: #ffffff;
+	--flottform-clipboard-button-background: #e5e7eb;
+	--flottform-clipboard-button-border: #e5e7eb;
 	--flottform-border-color: #808080;
 	--flottform-details-background: #fafafe;
 	--flottform-open-details-background: #fafafe;
@@ -11,7 +14,7 @@
 	--flottform-status-bar-gradient-from: #6a11cb;
 	--flottform-status-bar-gradient-to: #2575fc;
 	--flottform-border-width: 1px;
-	--flottform-border-radius: 10px;
+	--flottform-buttons-border-radius: 10px;
 	--flottform-qrcode-width: 150px;
 	--flottform-details-max-height: 12rem;
 	--flottform-items-padding: 1rem;
@@ -23,7 +26,7 @@
 	color: var(--flottform-main-color);
 	font-family: var(--flottform-font-style);
 	border: var(--flottform-border-width) solid var(--flottform-border-color);
-	border-radius: var(--flottform-border-radius);
+	border-radius: var(--flottform-root-border-radius);
 	display: grid;
 	background: var(--flottform-root-background);
 	width: 100%;
@@ -94,10 +97,34 @@
 .flottform-qr-code {
 	width: var(--flottform-qrcode-width);
 }
+.flottform-copy-button-link-wrapper {
+	display: flex;
+	flex-direction: row-reverse;
+	gap: 1rem;
+	align-items: center;
+}
 .flottform-link-offer {
+	flex-grow: 1;
+	align-content: center;
 	display: inline-block;
 	white-space: break-spaces;
 	word-break: break-all;
+	font: inherit;
+	font-size: 1rem;
+	border: none;
+	overflow: auto;
+	outline: none;
+	-webkit-box-shadow: none;
+	-moz-box-shadow: none;
+	box-shadow: none;
+	resize: none;
+}
+.flottform-copy-to-clipboard {
+	border: 1px solid var(--flottform-clipboard-button-border);
+	border-radius: var(--flottform-buttons-border-radius);
+	background-color: var(--flottform-clipboard-button-background);
+	padding: 0.25rem .5rem;
+	font-size: 0.75rem;
 }
 .flottform-status-information {
 	display: flex;

@@ -112,7 +112,7 @@
 
 <style lang="postcss">
 	.flottform-anchor {
-		--flottform-border-radius: 0px 0px 10px 10px;
+		--flottform-root-border-radius: 0px 0px 10px 10px;
 	}
 	.flottform {
 		@apply absolute top-0 right-0;
