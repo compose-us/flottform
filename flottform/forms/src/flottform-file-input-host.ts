@@ -109,6 +109,8 @@ export class FlottformFileInputHost extends EventEmitter<Listeners> {
 				this.filesMetaData = message.filesQueue;
 				this.currentFile = { index: 0, receivedSize: 0, arrayBuffer: [] };
 				this.filesTotalSize = message.totalSize;
+				// Emit the start of receiving data
+				this.emit('receive');
 			} else if (message.type === 'transfer-complete') {
 				this.emit('done');
 				this.channel?.close();
