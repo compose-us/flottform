@@ -63,12 +63,9 @@
 			$currentState = 'error';
 		});
 	});
-	const copyLinkToClipboard = () => {
-		const flottformLink = (document.querySelector('.link-offer') as HTMLDivElement).innerText;
-		const copyToClipboardButton = document.querySelector(
-			'.copy-button-link-wrapper .copy-to-clipboard'
-		) as HTMLButtonElement;
-
+	const copyLinkToClipboard = (e: Event) => {
+		const copyToClipboardButton = e.target as HTMLButtonElement;
+		const flottformLink = (copyToClipboardButton.nextElementSibling as HTMLDivElement).innerText;
 		navigator.clipboard
 			.writeText(flottformLink)
 			.then(() => {
@@ -86,7 +83,7 @@
 	};
 </script>
 
-<div class="w-full grow grid place-items-center">
+<div class="w-full grow grid place-items-center px-4">
 	{#if $currentState === 'new'}
 		<button
 			on:click={createChannelHandler}
@@ -100,15 +97,17 @@
 	{:else if $currentState === 'endpoint-created'}
 		<div>
 			<img bind:this={qrCodeImage} alt={$partnerLinkHref} src={$qrCodeData} class="mx-auto" />
-			<div class="copy-button-link-wrapper">
+			<div class="flex flex-row gap-4 items-center">
 				<button
-					class="copy-to-clipboard"
+					class="rounded-xl border-2 border-gray-300 bg-gray-300 px-2 py-1 text-xs"
 					type="button"
 					title="Copy link to clipboard"
 					aria-label="Copy link to clipboard"
 					on:click={copyLinkToClipboard}>📋</button
 				>
-				<div class="link-offer">
+				<div
+					class="grow content-center inline-block whitespace-break-spaces break-all text-base overflow-auto border-none outline-none resize-none"
+				>
 					{$partnerLinkHref}
 				</div>
 			</div>
@@ -125,35 +124,3 @@
 		Error connecting to friend
 	{/if}
 </div>
-
-<style>
-	.copy-button-link-wrapper {
-		display: flex;
-		flex-direction: row-reverse;
-		gap: 1rem;
-		align-items: center;
-	}
-	.copy-to-clipboard {
-		border: 1px solid #e5e7eb;
-		border-radius: 10px;
-		background-color: #e5e7eb;
-		padding: 0.25rem 0.5rem;
-		font-size: 0.75rem;
-	}
-	.link-offer {
-		flex-grow: 1;
-		align-content: center;
-		display: inline-block;
-		white-space: break-spaces;
-		word-break: break-all;
-		font: inherit;
-		font-size: 1rem;
-		border: none;
-		overflow: auto;
-		outline: none;
-		-webkit-box-shadow: none;
-		-moz-box-shadow: none;
-		box-shadow: none;
-		resize: none;
-	}
-</style>
