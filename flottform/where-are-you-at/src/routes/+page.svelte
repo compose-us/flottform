@@ -66,7 +66,7 @@
 	});
 </script>
 
-<div class="w-full min-h-svh grid place-items-center">
+<div class="w-full grow grid place-items-center">
 	{#if $currentState === 'new'}
 		<button
 			on:click={createChannelHandler}
