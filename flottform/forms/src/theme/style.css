@@ -2,6 +2,7 @@
 	--flottform-main-color: #1a3066;
 	--flottform-root-background: #ffffff;
 	--flottform-root-border-radius: 10px;
+	--flottform-elements-max-height: calc(100dvh - 8rem);
 	--flottform-webrtc-button-background: #343AF0;
 	--flottform-webrtc-button-color: #ffffff;
 	--flottform-clipboard-button-background: #e5e7eb;
@@ -19,18 +20,18 @@
 	--flottform-details-max-height: 12rem;
 	--flottform-items-padding: 1rem;
 	--flottform-items-gap: 1rem;
-	--flottform-font-style: inherit;
+	--flottform-font-family: inherit;
 }
 
 .flottform-root {
 	color: var(--flottform-main-color);
-	font-family: var(--flottform-font-style);
+	font-family: var(--flottform-font-family);
 	border: var(--flottform-border-width) solid var(--flottform-border-color);
 	border-radius: var(--flottform-root-border-radius);
 	display: grid;
 	background: var(--flottform-root-background);
 	width: 100%;
-	height: 100%;
+	height: auto;
 }
 .flottform-root-opener-button {
 	font-size: 1rem;
@@ -45,7 +46,7 @@
 	transition:
 		grid-template-rows 0.25s ease-out;
 	overflow-y: auto;
-	max-height: calc(100dvh - 8rem);
+	max-height: var(--flottform-elements-max-height);
 }
 .flottform-elements-container {
 	overflow: auto;
