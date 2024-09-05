@@ -27,6 +27,7 @@
 		"@fontsource/gochi-hand": "^5.0.19",
 		"@fontsource/raleway": "^5.0.19",
 		"@fontsource/roboto": "^5.0.13",
+		"@fontsource/unbounded": "^5.0.21",
 		"@playwright/test": "^1.44.0",
 		"@sveltejs/adapter-node": "^5.0.1",
 		"@sveltejs/kit": "^2.5.8",
