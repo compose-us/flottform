@@ -437,32 +437,32 @@
 <dialog
 	bind:this={flottformDialogCard}
 	class="flottform-link-dialog"
-	style="height: 100%; width: 100%; flex-direction: column; align-items: center; justify-content: center; gap: 3rem; border-radius: 0.5rem; border: 1px solid rgb(26, 48, 102); color: rgb(0, 0, 0); padding: 4rem 2rem; box-sizing: border-box; font-size: 1.125rem; line-height: 1.75rem;"
+	style="height: 100%; width: 100%; flex-direction: column; gap: 3rem; border-radius: 0.5rem; border: 1px solid rgb(26, 48, 102); color: rgb(0, 0, 0); padding: 4rem 2rem; box-sizing: border-box; font-size: 1.125rem; line-height: 1.75rem;"
 >
 	<div
 		class="flottform-status-wrapper"
-		style="font-family: Raleway, ui-sans-serif, system-ui, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;, &quot;Noto Color Emoji&quot;; font-weight: 700; font-size: calc(2.25rem); line-height: 2.5rem; display: flex; align-items: center; color: rgb(0, 0, 0);"
+		style="font-family: Raleway, ui-sans-serif, system-ui, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;, &quot;Noto Color Emoji&quot;; font-weight: 700; font-size: calc(2.25rem); line-height: 2.5rem; color: rgb(0, 0, 0); margin: auto;"
 	>
 		{flottformStatusWrapper}
 	</div>
 	<img
 		class="flottform-qr-code"
-		style="width: 350px; display:{flottformQrCodeDisplay}"
+		style="width: 350px; display:{flottformQrCodeDisplay};margin: auto;"
 		alt="qrCode"
 		src={flottformQrCode}
 	/><a
 		href={flottformLinkOffer}
 		class="flottform-link-offer"
-		style="display: {flottformLinkOfferDisplay};"
+		style="display: {flottformLinkOfferDisplay};margin: auto;"
 		rel="noopener noreferrer"
 		target="_blank"
 		>{flottformLinkOffer}
 	</a>
-	<p class="flottform-dialog-description">{flottformDialogDescription}</p>
+	<p class="flottform-dialog-description" style="margin: auto;">{flottformDialogDescription}</p>
 	<button
 		on:click={closeFlottformDialogCard}
 		class="close-dialog-button"
-		style="position: absolute; top: 1rem; right: 2rem; padding: 1rem; color: rgb(26, 48, 102);"
+		style="position: absolute; top: 1rem; right: 2rem; padding: 1rem; color: rgb(26, 48, 102); margin: auto;"
 		><svg
 			xmlns="http://www.w3.org/2000/svg"
 			width="30"
@@ -481,7 +481,7 @@
 	<button
 		bind:this={flottformDialogCardButton}
 		class="refresh-connection-button"
-		style="border-radius: 0.25rem; border: 1px solid rgb(26, 48, 102); padding: 0.5rem 0.75rem;"
+		style="border-radius: 0.25rem; border: 1px solid rgb(26, 48, 102); padding: 0.5rem 0.75rem; margin: auto;"
 		on:mouseover={() => addBoxShadow(flottformDialogCardButton)}
 		on:mouseleave={() => removeBoxShadow(flottformDialogCardButton)}
 		on:focus={() => addBoxShadow(flottformDialogCardButton)}
