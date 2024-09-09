@@ -26,6 +26,44 @@
 	let highlighted = false;
 
 	let fileInput: HTMLInputElement;
+	let flottformButton: HTMLButtonElement;
+	let flottformDialogCardButton: HTMLButtonElement;
+	let flottformDialogCard: HTMLDialogElement;
+	let flottformStatusWrapper: string;
+	let flottformQrCode: string;
+	let flottformQrCodeDisplay: string;
+	let flottformLinkOffer: string;
+	let flottformLinkOfferDisplay: string;
+	let flottformDialogDescription: string;
+
+	let isEndpointCreated = false;
+	let flottformButtonBackgroundColor = '';
+
+	let createWebRtcChannel: () => void;
+
+	const addBoxShadow = (button: HTMLButtonElement) => {
+		button.style.boxShadow = '0 2px 4px 0 rgba(26, 48, 102)';
+	};
+
+	const removeBoxShadow = (button: HTMLButtonElement) => {
+		button.style.boxShadow = 'none';
+	};
+
+	const openFlottformDialogCard = () => {
+		flottformDialogCard.showModal();
+		flottformDialogCard.style.display = 'flex';
+	};
+
+	const closeFlottformDialogCard = () => {
+		flottformDialogCard.close();
+		flottformDialogCard.style.display = 'none';
+	};
+
+	const handleFlottformButtonClick = () => {
+		if (!isEndpointCreated) {
+			createWebRtcChannel();
+		}
+	};
 
 	const clientBase = env.PUBLIC_FLOTTFORM_CLIENT_BASE || 'https://192.168.0.21:5177/custom-ui';
 
@@ -137,94 +175,49 @@
 		});
 
 		flottformFileInputHost.on('new', () => {
-			const createChannelLinkDialog = createDialogCard(flottformFileInputHost, defaultStyles);
-			document.body.appendChild(createChannelLinkDialog);
-
-			const createChannelElement = createFlottformButtonParentElement(
-				fileInput,
-				createChannelLinkDialog,
-				flottformFileInputHost,
-				defaultStyles
-			);
-			fileInput?.after(createChannelElement);
+			createWebRtcChannel = flottformFileInputHost.start;
 		});
 
 		flottformFileInputHost.on('endpoint-created', ({ link, qrCode }) => {
-			const {
-				createChannelQrCode,
-				createChannelLinkWithOffer,
-				createDialogDescription,
-				createChannelButton,
-				createChannelStatusWrapper
-			} = getElements();
-
-			createChannelButton.removeEventListener('click', flottformFileInputHost.start);
-			createChannelButton.style.background = changeBackgroundOnState(
-				'waiting-for-client',
-				defaultStyles
-			);
-
-			createChannelQrCode.style.display = 'block';
-			createChannelQrCode.setAttribute('src', qrCode);
-
-			createChannelLinkWithOffer.style.display = 'block';
-			createChannelLinkWithOffer.setAttribute('href', link);
-			createChannelLinkWithOffer.innerHTML = link;
-
-			createChannelStatusWrapper.innerHTML = 'Upload a file';
-
-			createDialogDescription.innerHTML = 'Use this QR-Code or Link on your other device.';
+			isEndpointCreated = true;
+			flottformButtonBackgroundColor = '#F9F871';
+			flottformLinkOffer = link;
+			flottformQrCode = qrCode;
+			flottformLinkOfferDisplay = 'block';
+			flottformQrCodeDisplay = 'block';
+			flottformStatusWrapper = 'Upload a file';
+			flottformDialogDescription = 'Use this QR-Code or Link on your other device.';
 		});
 
 		flottformFileInputHost.on('connected', () => {
-			const {
-				createDialogDescription,
-				createChannelStatusWrapper,
-				createChannelButton,
-				createChannelQrCode,
-				createChannelLinkWithOffer
-			} = getElements();
-
-			createChannelQrCode.style.display = 'none';
-			createChannelLinkWithOffer.style.display = 'none';
-			createChannelStatusWrapper.innerHTML = 'Connected!';
-			createDialogDescription.innerHTML =
+			flottformQrCodeDisplay = 'none';
+			flottformLinkOfferDisplay = 'none';
+			flottformStatusWrapper = 'Connected!';
+			flottformDialogDescription =
 				'Another device is connected. Start the data transfer from your other device';
-			createChannelButton.style.background = changeBackgroundOnState(
-				'waiting-for-data',
-				defaultStyles
-			);
+			flottformButtonBackgroundColor = '#D4F1EF';
 		});
 
 		flottformFileInputHost.on('webrtc:waiting-for-ice', () => {
-			const { createDialogDescription } = getElements();
-			createDialogDescription.innerHTML = 'Waiting for data channel connection';
+			flottformDialogDescription = 'Waiting for data channel connection';
 		});
 
 		flottformFileInputHost.on('receive', () => {
-			const { createChannelStatusWrapper, createDialogDescription, createChannelButton } =
-				getElements();
-			createChannelStatusWrapper.innerHTML = 'Receiving data';
-			createDialogDescription.innerHTML =
+			flottformStatusWrapper = 'Receiving data';
+			flottformDialogDescription =
 				'Another device is sending data. Waiting for incoming data transfer to complete';
-			createChannelButton.style.background = changeBackgroundOnState(
-				'receiving-data',
-				defaultStyles
-			);
+			flottformButtonBackgroundColor = '#7EA4FF';
 		});
 
 		flottformFileInputHost.on('done', () => {
-			const { createChannelStatusWrapper, createDialogDescription, createChannelButton } =
-				getElements();
-			createChannelStatusWrapper.innerHTML = `Done!`;
-			createDialogDescription.innerHTML = `You have received a file from another device. Please close this dialog to finish your form.`;
-			createChannelButton.style.background = changeBackgroundOnState('done', defaultStyles);
+			flottformStatusWrapper = 'Done!';
+			flottformDialogDescription =
+				'You have received a file from another device. Please close this dialog to finish your form.';
+			flottformButtonBackgroundColor = '#FFFFFF';
 		});
 
 		flottformFileInputHost.on('error', (e) => {
 			console.error(e);
-			const { createChannelStatusWrapper, createDialogDescription, createChannelButton } =
-				getElements();
 			let errorMessage = 'Connection failed - please retry!';
 			if (e.message === 'connection-failed') {
 				errorMessage = 'Client connection failed!';
@@ -234,140 +227,10 @@
 			} else if (e.message === 'file-transfer') {
 				errorMessage = 'Error during file transfer';
 			}
-			createChannelStatusWrapper.innerHTML = 'Oops! Something went wrong';
-			createDialogDescription.innerHTML = errorMessage;
-			createChannelButton.style.background = changeBackgroundOnState('error', defaultStyles);
+			flottformStatusWrapper = 'Oops! Something went wrong';
+			flottformDialogDescription = errorMessage;
+			flottformButtonBackgroundColor = '#F57C6B';
 		});
-
-		function getElements() {
-			const createChannelElement = fileInput.nextElementSibling!;
-			const createChannelButton =
-				createChannelElement.querySelector<HTMLElement>(`.flottform-button`)!;
-
-			const createChannelLinkDialog =
-				document.querySelector<HTMLDialogElement>(`.flottform-link-dialog`)!;
-			const createChannelStatusWrapper =
-				createChannelLinkDialog.querySelector<HTMLElement>(`.flottform-status-wrapper`)!;
-			const createChannelLinkArea =
-				createChannelLinkDialog.querySelector<HTMLElement>(`.flottform-link-area`)!;
-			const createChannelQrCode =
-				createChannelLinkDialog.querySelector<HTMLElement>(`.flottform-qr-code`)!;
-			const createChannelLinkWithOffer =
-				createChannelLinkDialog.querySelector<HTMLElement>(`.flottform-link-offer`)!;
-			const createDialogDescription = createChannelLinkDialog.querySelector<HTMLElement>(
-				`.flottform-dialog-description`
-			)!;
-			return {
-				createChannelElement,
-				createChannelButton,
-				createChannelLinkDialog,
-				createChannelStatusWrapper,
-				createChannelLinkArea,
-				createChannelQrCode,
-				createChannelLinkWithOffer,
-				createDialogDescription
-			};
-		}
-
-		function createDialogCard(flottformFileInputHost: FlottformFileInputHost, styles?: Styles) {
-			const createChannelLinkDialog = document.createElement('dialog');
-			createChannelLinkDialog.setAttribute('class', 'flottform-link-dialog');
-			createChannelLinkDialog.style.cssText = dialogCss(styles);
-			const {
-				createChannelStatusWrapper,
-				createChannelQrCode,
-				createChannelLinkWithOffer,
-				createDialogDescription,
-				closeDialogButton,
-				refreshConnectionButton
-			} = createDialogCardElements(styles);
-			// Add event listeners to Dialog Card Elements
-			closeDialogButton.addEventListener('click', () => {
-				createChannelLinkDialog.close();
-				createChannelLinkDialog.style.display = 'none';
-			});
-			refreshConnectionButton.addEventListener('click', flottformFileInputHost.start);
-
-			// Append all elements to Dialog card
-			createChannelLinkDialog.appendChild(createChannelStatusWrapper);
-			createChannelLinkDialog.appendChild(createChannelQrCode);
-			createChannelLinkDialog.appendChild(createChannelLinkWithOffer);
-			createChannelLinkDialog.appendChild(createDialogDescription);
-			createChannelLinkDialog.appendChild(closeDialogButton);
-			createChannelLinkDialog.appendChild(refreshConnectionButton);
-
-			return createChannelLinkDialog;
-		}
-
-		function createDialogCardElements(styles?: Styles) {
-			const createChannelStatusWrapper = document.createElement('div');
-			createChannelStatusWrapper.setAttribute('class', 'flottform-status-wrapper');
-			createChannelStatusWrapper.style.cssText = createChannelStatusWrapperCss(styles);
-
-			const createChannelQrCode = document.createElement('img');
-			createChannelQrCode.setAttribute('class', 'flottform-qr-code');
-			createChannelQrCode.style.cssText = createChannelQrCodeCss(styles);
-
-			const createChannelLinkWithOffer = document.createElement('a');
-			createChannelLinkWithOffer.setAttribute('class', 'flottform-link-offer');
-			createChannelLinkWithOffer.setAttribute('target', '_blank');
-
-			const createDialogDescription = document.createElement('p');
-			createDialogDescription.setAttribute('class', 'flottform-dialog-description');
-
-			const closeDialogButton = document.createElement('button');
-			closeDialogButton.innerHTML = closeSvg(styles);
-			closeDialogButton.setAttribute('class', 'close-dialog-button');
-			closeDialogButton.style.cssText = closeDialogButtonCss(styles);
-
-			const refreshConnectionButton = document.createElement('button');
-			refreshConnectionButton.innerHTML = 'Refresh';
-			refreshConnectionButton.setAttribute('class', 'refresh-connection-button');
-			refreshConnectionButton.style.cssText = refreshConnectionButtonCss(styles);
-			simulateHoverEffect(refreshConnectionButton, styles);
-
-			return {
-				createChannelStatusWrapper,
-				createChannelQrCode,
-				createChannelLinkWithOffer,
-				createDialogDescription,
-				closeDialogButton,
-				refreshConnectionButton
-			};
-		}
-
-		function createFlottformButtonParentElement(
-			inputField: HTMLInputElement,
-			createChannelLinkDialog: HTMLDialogElement,
-			flottformFileInputHost: FlottformFileInputHost,
-			styles?: Styles
-		) {
-			const createChannelElement = document.createElement('div');
-			createChannelElement.setAttribute('class', 'flottform-parent');
-			createChannelElement.style.cssText = createChannelElementCss(inputField);
-
-			const createChannelButton = createFlottformButton(styles);
-			// Add event listeners to the flottform button
-			createChannelButton.addEventListener('click', flottformFileInputHost.start);
-			createChannelButton.addEventListener('click', () => {
-				createChannelLinkDialog.showModal();
-				createChannelLinkDialog.style.display = 'flex';
-			});
-
-			// Append the button to the parent element
-			createChannelElement.appendChild(createChannelButton);
-			return createChannelElement;
-		}
-		function createFlottformButton(styles?: Styles) {
-			const createChannelButton = document.createElement('button');
-			createChannelButton.setAttribute('type', 'button');
-			createChannelButton.setAttribute('class', 'flottform-button');
-			createChannelButton.innerHTML = flottformSvg(styles);
-			createChannelButton.style.cssText = createChannelButtonCss(styles);
-			simulateHoverEffect(createChannelButton, styles);
-
-			return createChannelButton;
-		}
 	});
 </script>
 
@@ -384,7 +247,7 @@
 	>
 		<span
 			class="ease absolute top-1/2 h-0 w-64 origin-center -translate-x-20 rotate-45 bg-primary-blue transition-all duration-300 group-hover:h-64 group-hover:-translate-y-32"
-		/>
+		></span>
 		<span class="ease relative transition duration-300 group-hover:text-white">Auto-fill form</span>
 	</button>
 	<div class="sm:col-span-2 order-2 md:order-1 gap-4 flex flex-col">
@@ -494,10 +357,10 @@
 						name="problemDescription"
 						rows="4"
 						bind:value={$prefilledForm.problemDescription}
-					/>
+					></textarea>
 				</div>
 			</div>
-			<div class="grid gap-6 grid-cols-1 sm:grid-cols-[390px_1fr]">
+			<div class="grid grid-cols-1 sm:grid-cols-[390px_1fr]">
 				<FileInput id="document" name="document" {fileInput} />
 
 				{#if highlighted}
@@ -532,6 +395,31 @@
 						<p class="text-2xl font-handwriting typewriter">Upload your photo</p>
 					</div>
 				{/if}
+				<div class="flottform-parent" style="display: flex; align-items:center;">
+					<button
+						bind:this={flottformButton}
+						type="button"
+						class="flottform-button"
+						style="background:{flottformButtonBackgroundColor};border: 1px solid rgb(26, 48, 102); padding: 0.75rem 1rem; color: rgb(26, 48, 102); font-weight: 700; border-radius: 5px; cursor: pointer; display: inline-block; box-shadow: none;"
+						on:mouseover={() => addBoxShadow(flottformButton)}
+						on:mouseleave={() => removeBoxShadow(flottformButton)}
+						on:focus={() => addBoxShadow(flottformButton)}
+						on:blur={() => removeBoxShadow(flottformButton)}
+						on:click={handleFlottformButtonClick}
+						on:click={openFlottformDialogCard}
+						><svg
+							xmlns="http://www.w3.org/2000/svg"
+							width="12"
+							height="24"
+							viewBox="0 0 32 74"
+							fill="#1a3066"
+							><path
+								d="M29.2146 12.4C28.9001 12.2308 28.5069 12.1038 28.0351 12.0192C27.6027 11.8922 27.1505 11.8287 26.6788 11.8287C25.3027 11.8287 24.3395 12.2731 23.7891 13.1618C23.2387 14.0081 22.8455 15.1084 22.6096 16.4626L22.4917 17.2244H29.0377L30.1287 26.6192L21.0174 27.4444L17.1842 50.6139L13.3542 73.7835H0.200073L4.03326 50.6139L7.86648 27.4444H2.55894L4.21018 17.2244H9.3408L9.51772 16.2087C9.87155 14.1351 10.363 12.1673 10.992 10.3052C11.6604 8.44322 12.5843 6.81394 13.7637 5.41742C14.9825 3.97858 16.5355 2.85713 18.4226 2.05307C20.3097 1.2067 22.649 0.783508 25.4403 0.783508C26.3446 0.783508 27.3668 0.868146 28.5069 1.03742C29.6471 1.16438 30.5906 1.39713 31.3376 1.73568L29.2146 12.4Z"
+								fill="#1a3066"
+							></path></svg
+						></button
+					>
+				</div>
 			</div>
 			<button
 				type="submit"
@@ -539,12 +427,68 @@
 			>
 				<span
 					class="ease absolute top-1/2 h-0 w-64 origin-center -translate-x-20 rotate-45 bg-primary-blue transition-all duration-300 group-hover:h-64 group-hover:-translate-y-32"
-				/>
+				></span>
 				<span class="ease relative transition duration-300 group-hover:text-white">Send</span>
 			</button>
 		</form>
 	</div>
 </div>
+
+<dialog
+	bind:this={flottformDialogCard}
+	class="flottform-link-dialog"
+	style="height: 100%; width: 100%; flex-direction: column; align-items: center; justify-content: center; gap: 3rem; border-radius: 0.5rem; border: 1px solid rgb(26, 48, 102); color: rgb(0, 0, 0); padding: 4rem 2rem; box-sizing: border-box; font-size: 1.125rem; line-height: 1.75rem;"
+>
+	<div
+		class="flottform-status-wrapper"
+		style="font-family: Raleway, ui-sans-serif, system-ui, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;, &quot;Noto Color Emoji&quot;; font-weight: 700; font-size: calc(2.25rem); line-height: 2.5rem; display: flex; align-items: center; color: rgb(0, 0, 0);"
+	>
+		{flottformStatusWrapper}
+	</div>
+	<img
+		class="flottform-qr-code"
+		style="width: 350px; display:{flottformQrCodeDisplay}"
+		alt="qrCode"
+		src={flottformQrCode}
+	/><a
+		href={flottformLinkOffer}
+		class="flottform-link-offer"
+		style="display: {flottformLinkOfferDisplay};"
+		rel="noopener noreferrer"
+		target="_blank"
+		>{flottformLinkOffer}
+	</a>
+	<p class="flottform-dialog-description">{flottformDialogDescription}</p>
+	<button
+		on:click={closeFlottformDialogCard}
+		class="close-dialog-button"
+		style="position: absolute; top: 1rem; right: 2rem; padding: 1rem; color: rgb(26, 48, 102);"
+		><svg
+			xmlns="http://www.w3.org/2000/svg"
+			width="30"
+			height="30"
+			viewBox="0 0 15 15"
+			fill="#1a3066"
+		>
+			<path
+				fill-rule="evenodd"
+				clip-rule="evenodd"
+				d="M6.79289 7.49998L4.14645 4.85353L4.85355 4.14642L7.5 6.79287L10.1464 4.14642L10.8536 4.85353L8.20711 7.49998L10.8536 10.1464L10.1464 10.8535L7.5 8.20708L4.85355 10.8535L4.14645 10.1464L6.79289 7.49998Z"
+				fill="#1a3066"
+			></path>
+		</svg>
+	</button>
+	<button
+		bind:this={flottformDialogCardButton}
+		class="refresh-connection-button"
+		style="border-radius: 0.25rem; border: 1px solid rgb(26, 48, 102); padding: 0.5rem 0.75rem;"
+		on:mouseover={() => addBoxShadow(flottformDialogCardButton)}
+		on:mouseleave={() => removeBoxShadow(flottformDialogCardButton)}
+		on:focus={() => addBoxShadow(flottformDialogCardButton)}
+		on:blur={() => removeBoxShadow(flottformDialogCardButton)}
+		on:click={createWebRtcChannel}>Refresh</button
+	>
+</dialog>
 
 <style lang="postcss">
 	.drag {
