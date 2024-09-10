@@ -7,21 +7,6 @@
 	import { env } from '$env/dynamic/public';
 	import { browser } from '$app/environment';
 	import { sdpExchangeServerBase } from '../../api';
-	import {
-		closeDialogButtonCss,
-		closeSvg,
-		createChannelButtonCss,
-		createChannelElementCss,
-		createChannelQrCodeCss,
-		createChannelStatusWrapperCss,
-		dialogCss,
-		defaultStyles,
-		flottformSvg,
-		refreshConnectionButtonCss,
-		simulateHoverEffect,
-		type Styles,
-		changeBackgroundOnState
-	} from '../../../../forms/src/flottform-styles';
 
 	let highlighted = false;
 
@@ -40,14 +25,6 @@
 	let flottformButtonBackgroundColor = '';
 
 	let createWebRtcChannel: () => void;
-
-	const addBoxShadow = (button: HTMLButtonElement) => {
-		button.style.boxShadow = '0 2px 4px 0 rgba(26, 48, 102)';
-	};
-
-	const removeBoxShadow = (button: HTMLButtonElement) => {
-		button.style.boxShadow = 'none';
-	};
 
 	const openFlottformDialogCard = () => {
 		flottformDialogCard.showModal();
@@ -180,7 +157,7 @@
 
 		flottformFileInputHost.on('endpoint-created', ({ link, qrCode }) => {
 			isEndpointCreated = true;
-			flottformButtonBackgroundColor = '#F9F871';
+			flottformButtonBackgroundColor = 'bg-[#F9F871]';
 			flottformLinkOffer = link;
 			flottformQrCode = qrCode;
 			flottformLinkOfferDisplay = 'block';
@@ -190,12 +167,12 @@
 		});
 
 		flottformFileInputHost.on('connected', () => {
-			flottformQrCodeDisplay = 'none';
-			flottformLinkOfferDisplay = 'none';
+			flottformQrCodeDisplay = 'hidden';
+			flottformLinkOfferDisplay = 'hidden';
 			flottformStatusWrapper = 'Connected!';
 			flottformDialogDescription =
 				'Another device is connected. Start the data transfer from your other device';
-			flottformButtonBackgroundColor = '#D4F1EF';
+			flottformButtonBackgroundColor = 'bg-[#D4F1EF]';
 		});
 
 		flottformFileInputHost.on('webrtc:waiting-for-ice', () => {
@@ -206,14 +183,14 @@
 			flottformStatusWrapper = 'Receiving data';
 			flottformDialogDescription =
 				'Another device is sending data. Waiting for incoming data transfer to complete';
-			flottformButtonBackgroundColor = '#7EA4FF';
+			flottformButtonBackgroundColor = 'bg-[#7EA4FF]';
 		});
 
 		flottformFileInputHost.on('done', () => {
 			flottformStatusWrapper = 'Done!';
 			flottformDialogDescription =
 				'You have received a file from another device. Please close this dialog to finish your form.';
-			flottformButtonBackgroundColor = '#FFFFFF';
+			flottformButtonBackgroundColor = 'bg-[#FFFFFF]';
 		});
 
 		flottformFileInputHost.on('error', (e) => {
@@ -229,7 +206,7 @@
 			}
 			flottformStatusWrapper = 'Oops! Something went wrong';
 			flottformDialogDescription = errorMessage;
-			flottformButtonBackgroundColor = '#F57C6B';
+			flottformButtonBackgroundColor = 'bg-[#F57C6B]';
 		});
 	});
 </script>
@@ -360,7 +337,7 @@
 					></textarea>
 				</div>
 			</div>
-			<div class="grid grid-cols-1 sm:grid-cols-[390px_1fr]">
+			<div class="grid gap-2 sm:gap-0 grid-cols-1 sm:grid-cols-[390px_1fr]">
 				<FileInput id="document" name="document" {fileInput} />
 
 				{#if highlighted}
@@ -395,16 +372,11 @@
 						<p class="text-2xl font-handwriting typewriter">Upload your photo</p>
 					</div>
 				{/if}
-				<div class="flottform-parent" style="display: flex; align-items:center;">
+				<div class="flex items-center">
 					<button
 						bind:this={flottformButton}
 						type="button"
-						class="flottform-button"
-						style="background:{flottformButtonBackgroundColor};border: 1px solid rgb(26, 48, 102); padding: 0.75rem 1rem; color: rgb(26, 48, 102); font-weight: 700; border-radius: 5px; cursor: pointer; display: inline-block; box-shadow: none;"
-						on:mouseover={() => addBoxShadow(flottformButton)}
-						on:mouseleave={() => removeBoxShadow(flottformButton)}
-						on:focus={() => addBoxShadow(flottformButton)}
-						on:blur={() => removeBoxShadow(flottformButton)}
+						class="border border-[#1a3066] py-3 px-4 text-[#1a3066] font-bold rounded cursor-pointer inline-block {flottformButtonBackgroundColor} hover:shadow-[0_2px_4px_0_rgba(26,48,102)] focus:shadow-[0_2px_4px_0_rgba(26,48,102)] transition-shadow duration-200"
 						on:click={handleFlottformButtonClick}
 						on:click={openFlottformDialogCard}
 						><svg
@@ -436,33 +408,22 @@
 
 <dialog
 	bind:this={flottformDialogCard}
-	class="flottform-link-dialog"
-	style="height: 100%; width: 100%; flex-direction: column; gap: 3rem; border-radius: 0.5rem; border: 1px solid rgb(26, 48, 102); color: rgb(0, 0, 0); padding: 4rem 2rem; box-sizing: border-box; font-size: 1.125rem; line-height: 1.75rem;"
+	class="h-full w-full flex-col gap-12 rounded-lg border border-blue-900 text-black py-16 px-8 border-box text-lg"
 >
-	<div
-		class="flottform-status-wrapper"
-		style="font-family: Raleway, ui-sans-serif, system-ui, sans-serif, &quot;Apple Color Emoji&quot;, &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;, &quot;Noto Color Emoji&quot;; font-weight: 700; font-size: calc(2.25rem); line-height: 2.5rem; color: rgb(0, 0, 0); margin: auto;"
-	>
+	<div class="m-auto text-black text-4xl font-bold font-display">
 		{flottformStatusWrapper}
 	</div>
-	<img
-		class="flottform-qr-code"
-		style="width: 350px; display:{flottformQrCodeDisplay};margin: auto;"
-		alt="qrCode"
-		src={flottformQrCode}
-	/><a
+	<img class="m-auto w-[21.875rem] {flottformQrCodeDisplay}" alt="qrCode" src={flottformQrCode} /><a
 		href={flottformLinkOffer}
-		class="flottform-link-offer"
-		style="display: {flottformLinkOfferDisplay};margin: auto;"
+		class="m-auto {flottformLinkOfferDisplay}"
 		rel="noopener noreferrer"
 		target="_blank"
 		>{flottformLinkOffer}
 	</a>
-	<p class="flottform-dialog-description" style="margin: auto;">{flottformDialogDescription}</p>
+	<p class="m-auto">{flottformDialogDescription}</p>
 	<button
 		on:click={closeFlottformDialogCard}
-		class="close-dialog-button"
-		style="position: absolute; top: 1rem; right: 2rem; padding: 1rem; color: rgb(26, 48, 102); margin: auto;"
+		class="absolute top-4 right-8 p-4 text-[#1a3066] m-auto"
 		><svg
 			xmlns="http://www.w3.org/2000/svg"
 			width="30"
@@ -480,12 +441,7 @@
 	</button>
 	<button
 		bind:this={flottformDialogCardButton}
-		class="refresh-connection-button"
-		style="border-radius: 0.25rem; border: 1px solid rgb(26, 48, 102); padding: 0.5rem 0.75rem; margin: auto;"
-		on:mouseover={() => addBoxShadow(flottformDialogCardButton)}
-		on:mouseleave={() => removeBoxShadow(flottformDialogCardButton)}
-		on:focus={() => addBoxShadow(flottformDialogCardButton)}
-		on:blur={() => removeBoxShadow(flottformDialogCardButton)}
+		class="rounded border border-blue-900 py-2 px-3 m-auto hover:shadow-[0_2px_4px_0_rgba(26,48,102)] focus:shadow-[0_2px_4px_0_rgba(26,48,102)] transition-shadow duration-200"
 		on:click={createWebRtcChannel}>Refresh</button
 	>
 </dialog>
