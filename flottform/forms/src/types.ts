@@ -11,7 +11,7 @@ export interface FlottformCreateItemParams {
 	/**
 	 * Text for an error state (default: 🚨 An error occured (${error.message}). Please try again)
 	 */
-	onErrorText?: string;
+	onErrorText?: string | ((error: Error) => string);
 	/**
 	 * Text for a success state (default: ✨ You have succesfully downloaded all your files.
 	 */

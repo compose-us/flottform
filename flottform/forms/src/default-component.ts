@@ -90,6 +90,7 @@ export const createDefaultFlottformComponent = ({
 			additionalItemClasses,
 			label,
 			buttonLabel,
+			onErrorText,
 			onSuccessText
 		}: {
 			flottformApi: string;
@@ -99,6 +100,7 @@ export const createDefaultFlottformComponent = ({
 			additionalItemClasses?: string;
 			label?: string;
 			buttonLabel?: string;
+			onErrorText?: string | ((error: Error) => string);
 			onSuccessText?: string;
 		}) => {
 			const flottformBaseInputHost = new FlottformFileInputHost({
@@ -116,7 +118,8 @@ export const createDefaultFlottformComponent = ({
 				flottformBaseInputHost,
 				additionalItemClasses,
 				label,
-				buttonLabel
+				buttonLabel,
+				onErrorText
 			});
 
 			const flottformItemsList = flottformRoot.querySelector('.flottform-inputs-list')!;
@@ -150,7 +153,7 @@ export const createDefaultFlottformComponent = ({
 			additionalItemClasses?: string;
 			label?: string;
 			buttonLabel?: string;
-			onErrorText?: string;
+			onErrorText?: string | ((error: Error) => string);
 			onSuccessText?: string;
 		}) => {
 			const flottformBaseInputHost = new FlottformTextInputHost({
@@ -194,7 +197,7 @@ const createBaseFlottformItems = <L extends BaseListeners>({
 	additionalItemClasses?: string;
 	label?: string;
 	buttonLabel?: string;
-	onErrorText?: string;
+	onErrorText?: string | ((error: Error) => string);
 }) => {
 	const flottformItem = createFlottformListItem(additionalItemClasses);
 	setLabelForFlottformItem({ label, flottformItem });
@@ -224,7 +227,7 @@ const createBaseFlottformItems = <L extends BaseListeners>({
 	});
 	flottformBaseInputHost.on('error', (error) => {
 		statusInformation.innerHTML =
-			onErrorText ?? `🚨 An error occured (${error.message}). Please try again`;
+			typeof onErrorText === "function" ? onErrorText(error) : (onErrorText ?? `🚨 An error occured (${error.message}). Please try again`);
 		createChannelButton.innerText = 'Retry';
 		flottformStateItemsContainer.replaceChildren(statusInformation);
 		flottformStateItemsContainer.appendChild(createChannelButton);
