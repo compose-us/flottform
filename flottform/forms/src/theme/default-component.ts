@@ -273,11 +273,11 @@ const handleFileInputStates = ({
 			);
 		}
 	);
-	flottformFileInputHost.on('disconnected', () => {
+	flottformFileInputHost.on('done', () => {
 		statusInformation.innerHTML =
 			onSuccessText ?? `✨ You have succesfully downloaded all your files.`;
 		statusInformation.appendChild(refreshChannelButton);
-		flottformItem.replaceChildren(statusInformation);
+		flottformStateItemsContainer.replaceChildren(statusInformation);
 	});
 };
 

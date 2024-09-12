@@ -78,7 +78,11 @@
 
 <style lang="postcss">
 	.flottform-anchor {
-		--flottform-root-border-radius: 0px 0px 10px 10px;
+		--flottform-border-style: dashed;
+		--flottform-root-border-width: 0 0 1px 1px;
+		--flottform-root-border-style: solid;
+		--flottform-root-border-color: #808080;
+		--flottform-root-border-radius: 0px 0px 0 10px;
 	}
 	.flottform {
 		@apply absolute top-0 right-0;
