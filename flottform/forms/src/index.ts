@@ -4,4 +4,4 @@ export { FlottformTextInputClient } from './flottform-text-input-client';
 export { FlottformTextInputHost } from './flottform-text-input-host';
 export type { ClientState, SafeEndpointInfo, Logger } from './internal';
 import './theme/style.css';
-export { createDefaultFlottformComponent } from './theme/flottform-default-component';
+export { createDefaultFlottformComponent } from './theme/default-component';

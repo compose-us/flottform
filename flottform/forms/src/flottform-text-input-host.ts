@@ -8,7 +8,7 @@ import {
 } from './internal';
 
 type Listeners = BaseListeners & {
-	data: [data: string];
+	done: [data: string];
 };
 
 const noop = () => {};
@@ -24,14 +24,12 @@ export class FlottformTextInputHost extends BaseInputHost<Listeners> {
 		createClientUrl,
 		rtcConfiguration = DEFAULT_WEBRTC_CONFIG,
 		pollTimeForIceInMs = POLL_TIME_IN_MS,
-		theme,
 		logger = console
 	}: {
 		flottformApi: string | URL;
 		createClientUrl: (params: { endpointId: string }) => Promise<string>;
 		rtcConfiguration?: RTCConfiguration;
 		pollTimeForIceInMs?: number;
-		theme?: (myself: FlottformTextInputHost) => void;
 		logger?: Logger;
 	}) {
 		super();
@@ -45,7 +43,6 @@ export class FlottformTextInputHost extends BaseInputHost<Listeners> {
 		this.logger = logger;
 
 		this.registerListeners();
-		theme && theme(this);
 	}
 
 	start = () => {
@@ -76,7 +73,7 @@ export class FlottformTextInputHost extends BaseInputHost<Listeners> {
 
 	private handleIncomingData = (e: MessageEvent<any>) => {
 		// We suppose that the data received is small enough to be all included in 1 message
-		this.emit('data', e.data);
+		this.emit('done', e.data);
 	};
 
 	private registerListeners = () => {

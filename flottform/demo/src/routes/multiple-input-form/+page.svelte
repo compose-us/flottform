@@ -20,43 +20,6 @@
 				options: { label: file.id || file.name || 'File' }
 			});
 		}
-
-		// flottformFileInputHost.on('new', () => {
-		// 	// Optional: Custom UI
-		// });
-		// flottformFileInputHost.on('connected', () => {
-		// 	// Optional: Custom UI
-		// });
-		// flottformFileInputHost.on('receive', () => {
-		// 	// Optional: Custom UI
-		// });
-		// flottformFileInputHost.on('progress', (p) => {
-		// 	// Optional: Custom UI
-		// 	console.log('progress=', p);
-		// });
-		// flottformFileInputHost.on('disconnected', () => {
-		// 	// Optional: Custom UI
-		// });
-		// flottformFileInputHost.on('error', (err) => {
-		// 	// Optional: Custom UI
-		// });
-		// flottformFileInputHost.on('endpoint-created', ({ link, qrCode }) => {
-		// 	// Optional: Custom UI
-		// });
-		// flottformFileInputHost.on('webrtc:waiting-for-client', (link) => {
-		// 	// Optional: Custom UI
-		// });
-		// flottformFileInputHost.on('webrtc:waiting-for-ice', () => {
-		// 	// Optional: Custom UI
-		// });
-		// flottformFileInputHost.on('webrtc:waiting-for-file', () => {
-		// 	// Optional: Custom UI
-		// });
-		// flottformFileInputHost.on('done', () => {
-		// 	// Optional: Custom UI
-		// });
-
-		// flottformFileInputHost.start();
 	});
 </script>
 

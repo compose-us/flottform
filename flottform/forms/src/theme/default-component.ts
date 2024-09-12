@@ -285,7 +285,7 @@ const handleTextInputStates = ({
 	flottformTextInputHost: FlottformTextInputHost;
 	options: FlottformDefaultItemOptions;
 }) => {
-	flottformTextInputHost.on('data', (message: string) => {
+	flottformTextInputHost.on('done', (message: string) => {
 		statusInformation.innerHTML =
 			options.onSuccessText ?? `✨ You have succesfully submitted ${message}`;
 		statusInformation.appendChild(refreshChannelButton);
