@@ -9,7 +9,7 @@ export default defineConfig({
 			// Could also be a dictionary or array of multiple entry points
 			entry: {
 				index: resolve(__dirname, 'src/index.ts'),
-				'theme/base.css': resolve(__dirname, 'src/theme/base.css'),
+				'base.css': resolve(__dirname, 'src/theme/base.css'),
 				'theme/default.css': resolve(__dirname, 'src/theme/default.css'),
 			},
 			name: '@flottform/server',

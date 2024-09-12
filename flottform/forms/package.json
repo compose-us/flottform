@@ -16,13 +16,9 @@
 			"import": "./dist/index.js",
 			"require": "./dist/index.umd.cjs"
 		},
-		"./theme/base.css": {
-			"import": "./dist/theme/base.css",
-			"require": "./dist/theme/base.css"
-		},
-		"./theme/dark.css": {
-			"import": "./dist/theme/dark.css",
-			"require": "./dist/theme/dark.css"
+		"./base.css": {
+			"import": "./dist/base.css",
+			"require": "./dist/base.css"
 		},
 		"./theme/default.css": {
 			"import": "./dist/theme/default.css",
