@@ -1,25 +1,19 @@
 import { FlottformChannelHost } from './flottform-channel-host';
-import { Styles } from './flottform-styles';
-import { DEFAULT_WEBRTC_CONFIG, EventEmitter, Logger, POLL_TIME_IN_MS } from './internal';
+import {
+	BaseInputHost,
+	BaseListeners,
+	DEFAULT_WEBRTC_CONFIG,
+	Logger,
+	POLL_TIME_IN_MS
+} from './internal';
 
-type Listeners = {
-	new: [];
-	disconnected: [];
-	error: [error: any];
-	connected: [];
-	receive: []; // Emitted to signal the start of receiving the file(s)
-	done: [data: string];
-	'endpoint-created': [{ link: string; qrCode: string }];
-	'webrtc:waiting-for-client': [
-		event: { link: string; qrCode: string; channel: FlottformChannelHost }
-	];
-	'webrtc:waiting-for-ice': [];
-	'webrtc:waiting-for-file': [];
+type Listeners = BaseListeners & {
+	data: [data: string];
 };
 
 const noop = () => {};
 
-export class FlottformTextInputHost extends EventEmitter<Listeners> {
+export class FlottformTextInputHost extends BaseInputHost<Listeners> {
 	private channel: FlottformChannelHost | null = null;
 	private logger: Logger;
 	private link: string = '';
@@ -82,7 +76,7 @@ export class FlottformTextInputHost extends EventEmitter<Listeners> {
 
 	private handleIncomingData = (e: MessageEvent<any>) => {
 		// We suppose that the data received is small enough to be all included in 1 message
-		this.emit('done', e.data);
+		this.emit('data', e.data);
 	};
 
 	private registerListeners = () => {

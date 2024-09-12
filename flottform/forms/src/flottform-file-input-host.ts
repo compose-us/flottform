@@ -1,12 +1,13 @@
 import { FlottformChannelHost } from './flottform-channel-host';
-import { Styles } from './flottform-styles';
-import { DEFAULT_WEBRTC_CONFIG, EventEmitter, Logger, POLL_TIME_IN_MS } from './internal';
+import {
+	BaseInputHost,
+	BaseListeners,
+	DEFAULT_WEBRTC_CONFIG,
+	Logger,
+	POLL_TIME_IN_MS
+} from './internal';
 
-type Listeners = {
-	new: [];
-	disconnected: [];
-	error: [error: any];
-	connected: [];
+type Listeners = BaseListeners & {
 	receive: []; // Emitted to signal the start of receiving the file(s)
 	progress: {
 		fileIndex: number;
@@ -16,17 +17,11 @@ type Listeners = {
 		overallProgress: number;
 	}[]; // Emitted to signal the progress of receiving the file(s)
 	done: [];
-	'endpoint-created': [{ link: string; qrCode: string }];
-	'webrtc:waiting-for-client': [
-		event: { link: string; qrCode: string; channel: FlottformChannelHost }
-	];
-	'webrtc:waiting-for-ice': [];
-	'webrtc:waiting-for-file': [];
 };
 
 const noop = () => {};
 
-export class FlottformFileInputHost extends EventEmitter<Listeners> {
+export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 	private channel: FlottformChannelHost | null = null;
 	private inputField: HTMLInputElement;
 	private logger: Logger;
@@ -55,9 +50,8 @@ export class FlottformFileInputHost extends EventEmitter<Listeners> {
 		inputField: HTMLInputElement;
 		rtcConfiguration?: RTCConfiguration;
 		pollTimeForIceInMs?: number;
-		theme?: (myself: FlottformFileInputHost, inputField: HTMLInputElement) => void;
+		theme?: (myself: FlottformFileInputHost) => void;
 		logger?: Logger;
-		styles?: Styles;
 	}) {
 		super();
 		this.channel = new FlottformChannelHost({
@@ -71,7 +65,7 @@ export class FlottformFileInputHost extends EventEmitter<Listeners> {
 		this.logger = logger;
 
 		this.registerListeners();
-		theme && theme(this, this.inputField);
+		theme && theme(this);
 	}
 
 	start = () => {
