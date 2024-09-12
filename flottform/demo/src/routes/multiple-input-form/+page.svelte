@@ -30,7 +30,7 @@
 				flottformApi: sdpExchangeServerBase,
 				createClientUrl,
 				inputField: file,
-				options: { label: file.id || file.name || 'File' }
+				label: file.id || file.name || 'File'
 			});
 		}
 	});

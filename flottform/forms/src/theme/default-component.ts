@@ -1,12 +1,7 @@
 import { FlottformFileInputHost } from '../flottform-file-input-host';
 import { FlottformTextInputHost } from '../flottform-text-input-host';
 import { BaseInputHost, BaseListeners } from '../internal';
-import {
-	FlottformCreateFileParams,
-	FlottformCreateItemParams,
-	FlottformDefaultComponentOptions,
-	FlottformDefaultItemOptions
-} from './types';
+import { FlottformCreateFileParams, FlottformCreateItemParams } from './types';
 
 const openInputsList = () => {
 	const flottformElementsContainerWrapper: HTMLDivElement = document.querySelector(
@@ -47,10 +42,18 @@ const createLinkAndQrCode = (qrCode: string, link: string) => {
 };
 export const createDefaultFlottformComponent = ({
 	flottformAnchorElement,
-	options = {}
+	id,
+	flottformRootElement,
+	additionalComponentClass,
+	flottformRootTitle,
+	flottformRootDescription
 }: {
 	flottformAnchorElement: HTMLElement;
-	options: FlottformDefaultComponentOptions;
+	id?: string;
+	flottformRootElement?: HTMLElement;
+	additionalComponentClass?: string;
+	flottformRootTitle?: string;
+	flottformRootDescription?: string;
 }): {
 	flottformRoot: HTMLElement;
 	createFileItem: (params: FlottformCreateFileParams) => void;
@@ -58,13 +61,9 @@ export const createDefaultFlottformComponent = ({
 	getAllFlottformItems: () => NodeListOf<Element> | null;
 } => {
 	const flottformRoot: HTMLElement =
-		options.flottformRootElement ??
+		flottformRootElement ??
 		document.querySelector('.flottform-root') ??
-		initRoot(
-			options.flottformRootTitle,
-			options.flottformRootDescription,
-			options.additionalComponentClass
-		);
+		initRoot(flottformRootTitle, flottformRootDescription, additionalComponentClass);
 	const flottformElementsContainer = flottformRoot.querySelector('.flottform-elements-container')!;
 	const flottformElementsContainerWrapper = flottformRoot.querySelector(
 		'.flottform-elements-container-wrapper'
@@ -87,12 +86,20 @@ export const createDefaultFlottformComponent = ({
 			flottformApi,
 			createClientUrl,
 			inputField,
-			options = {}
+			id,
+			additionalItemClasses,
+			label,
+			buttonLabel,
+			onSuccessText
 		}: {
 			flottformApi: string;
 			createClientUrl: (params: { endpointId: string }) => Promise<string>;
 			inputField: HTMLInputElement;
-			options: FlottformDefaultItemOptions;
+			id?: string;
+			additionalItemClasses?: string;
+			label?: string;
+			buttonLabel?: string;
+			onSuccessText?: string;
 		}) => {
 			const flottformBaseInputHost = new FlottformFileInputHost({
 				flottformApi,
@@ -105,7 +112,12 @@ export const createDefaultFlottformComponent = ({
 				statusInformation,
 				refreshChannelButton,
 				flottformStateItemsContainer
-			} = createBaseFlottformItems({ flottformBaseInputHost, options });
+			} = createBaseFlottformItems({
+				flottformBaseInputHost,
+				additionalItemClasses,
+				label,
+				buttonLabel
+			});
 
 			const flottformItemsList = flottformRoot.querySelector('.flottform-inputs-list')!;
 
@@ -118,17 +130,28 @@ export const createDefaultFlottformComponent = ({
 				refreshChannelButton,
 				flottformStateItemsContainer,
 				flottformFileInputHost: flottformBaseInputHost,
-				options
+				id,
+				onSuccessText
 			});
 		},
 		createTextItem: ({
 			flottformApi,
 			createClientUrl,
-			options = {}
+			id,
+			additionalItemClasses,
+			label,
+			buttonLabel,
+			onErrorText,
+			onSuccessText
 		}: {
 			flottformApi: string;
 			createClientUrl: (params: { endpointId: string }) => Promise<string>;
-			options: FlottformDefaultItemOptions;
+			id?: string;
+			additionalItemClasses?: string;
+			label?: string;
+			buttonLabel?: string;
+			onErrorText?: string;
+			onSuccessText?: string;
 		}) => {
 			const flottformBaseInputHost = new FlottformTextInputHost({
 				flottformApi,
@@ -137,7 +160,10 @@ export const createDefaultFlottformComponent = ({
 
 			const { flottformItem, statusInformation, refreshChannelButton } = createBaseFlottformItems({
 				flottformBaseInputHost,
-				options
+				additionalItemClasses,
+				label,
+				buttonLabel,
+				onErrorText
 			});
 			const flottformItemsList = flottformRoot.querySelector('.flottform-inputs-list')!;
 
@@ -149,7 +175,8 @@ export const createDefaultFlottformComponent = ({
 				statusInformation,
 				refreshChannelButton,
 				flottformTextInputHost: flottformBaseInputHost,
-				options
+				id,
+				onSuccessText
 			});
 		}
 	};
@@ -157,20 +184,22 @@ export const createDefaultFlottformComponent = ({
 
 const createBaseFlottformItems = <L extends BaseListeners>({
 	flottformBaseInputHost,
-	options = {}
+	additionalItemClasses,
+	label,
+	buttonLabel,
+	onErrorText
 }: {
 	flottformBaseInputHost: BaseInputHost<L>;
-	options: {
-		additionalItemClasses?: string;
-		label?: string;
-		buttonLabel?: string;
-		onErrorText?: string;
-	};
+
+	additionalItemClasses?: string;
+	label?: string;
+	buttonLabel?: string;
+	onErrorText?: string;
 }) => {
-	const flottformItem = createFlottformListItem(options.additionalItemClasses);
-	setLabelForFlottformItem({ label: options.label, flottformItem });
+	const flottformItem = createFlottformListItem(additionalItemClasses);
+	setLabelForFlottformItem({ label, flottformItem });
 	const statusInformation = createStatusInformation();
-	const createChannelButton = createFlottformChannelButton(options.buttonLabel);
+	const createChannelButton = createFlottformChannelButton(buttonLabel);
 	createChannelButton.addEventListener('click', () => flottformBaseInputHost.start());
 	const flottformStateItemsContainer = createStateItemsContainer(createChannelButton);
 	flottformItem.appendChild(flottformStateItemsContainer);
@@ -195,7 +224,7 @@ const createBaseFlottformItems = <L extends BaseListeners>({
 	});
 	flottformBaseInputHost.on('error', (error) => {
 		statusInformation.innerHTML =
-			options.onErrorText ?? `🚨 An error occured (${error.message}). Please try again`;
+			onErrorText ?? `🚨 An error occured (${error.message}). Please try again`;
 		createChannelButton.innerText = 'Retry';
 		flottformStateItemsContainer.replaceChildren(statusInformation);
 		flottformStateItemsContainer.appendChild(createChannelButton);
@@ -209,17 +238,19 @@ const handleFileInputStates = ({
 	refreshChannelButton,
 	flottformStateItemsContainer,
 	flottformFileInputHost,
-	options = {}
+	id,
+	onSuccessText
 }: {
 	flottformItem: HTMLLIElement;
 	statusInformation: HTMLDivElement;
 	refreshChannelButton: HTMLButtonElement;
 	flottformStateItemsContainer: HTMLDivElement;
 	flottformFileInputHost: FlottformFileInputHost;
-	options: FlottformDefaultItemOptions;
+	id?: string;
+	onSuccessText?: string;
 }) => {
-	if (options.id) {
-		flottformItem.setAttribute('id', options.id);
+	if (id) {
+		flottformItem.setAttribute('id', id);
 	}
 
 	flottformFileInputHost.on(
@@ -244,7 +275,7 @@ const handleFileInputStates = ({
 	);
 	flottformFileInputHost.on('disconnected', () => {
 		statusInformation.innerHTML =
-			options.onSuccessText ?? `✨ You have succesfully downloaded all your files.`;
+			onSuccessText ?? `✨ You have succesfully downloaded all your files.`;
 		statusInformation.appendChild(refreshChannelButton);
 		flottformItem.replaceChildren(statusInformation);
 	});
@@ -255,17 +286,21 @@ const handleTextInputStates = ({
 	statusInformation,
 	refreshChannelButton,
 	flottformTextInputHost,
-	options = {}
+	id,
+	onSuccessText
 }: {
 	flottformItem: HTMLLIElement;
 	statusInformation: HTMLDivElement;
 	refreshChannelButton: HTMLButtonElement;
 	flottformTextInputHost: FlottformTextInputHost;
-	options: FlottformDefaultItemOptions;
+	id?: string;
+	onSuccessText?: string;
 }) => {
+	if (id) {
+		flottformItem.setAttribute('id', id);
+	}
 	flottformTextInputHost.on('done', (message: string) => {
-		statusInformation.innerHTML =
-			options.onSuccessText ?? `✨ You have succesfully submitted ${message}`;
+		statusInformation.innerHTML = onSuccessText ?? `✨ You have succesfully submitted ${message}`;
 		statusInformation.appendChild(refreshChannelButton);
 		flottformItem.replaceChildren(statusInformation);
 	});
