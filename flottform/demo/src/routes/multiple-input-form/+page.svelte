@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { FlottformFileInputHost, createDefaultFlottformComponent } from '@flottform/forms';
+	import { createDefaultFlottformComponent } from '@flottform/forms';
 	import { onMount } from 'svelte';
 	import { createClientUrl, sdpExchangeServerBase } from '../../api';
 

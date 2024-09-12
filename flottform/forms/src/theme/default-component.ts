@@ -1,34 +1,12 @@
 import { FlottformFileInputHost } from '../flottform-file-input-host';
 import { FlottformTextInputHost } from '../flottform-text-input-host';
 import { BaseInputHost, BaseListeners } from '../internal';
-
-interface FlottformDefaultComponentOptions {
-	id?: string;
-	flottformRootElement?: HTMLElement;
-	additionalComponentClass?: string;
-	flottformRootTitle?: string;
-	flottformRootDescription?: string;
-}
-interface FlottformDefaultItemOptions {
-	id?: string;
-	flottformRootElement?: HTMLElement;
-	additionalItemClasses?: string;
-	label?: string;
-	buttonLabel?: string;
-	flottformRootTitle?: string;
-	flottformRootDescription?: string;
-	onErrorText?: string;
-	onSuccessText?: string;
-}
-
-interface FlottformCreateItemParams {
-	flottformApi: string;
-	createClientUrl: (params: { endpointId: string }) => Promise<string>;
-	options: FlottformDefaultItemOptions;
-}
-interface FlottformCreateFileParams extends FlottformCreateItemParams {
-	inputField: HTMLInputElement;
-}
+import {
+	FlottformCreateFileParams,
+	FlottformCreateItemParams,
+	FlottformDefaultComponentOptions,
+	FlottformDefaultItemOptions
+} from './types';
 
 const openInputsList = () => {
 	const flottformElementsContainerWrapper: HTMLDivElement = document.querySelector(
