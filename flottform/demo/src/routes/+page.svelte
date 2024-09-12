@@ -1,10 +1,18 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-	import { defaultThemeForFileInput, FlottformFileInputHost } from '@flottform/forms';
+	import { createDefaultFlottformComponent, FlottformFileInputHost } from '@flottform/forms';
 	import { writable } from 'svelte/store';
 	import FileInput from '$lib/components/FileInput.svelte';
 	import { createClientUrl, sdpExchangeServerBase } from '../api';
+	import { browser } from '$app/environment';
+
+	const createTextClientUrl = async ({ endpointId }: { endpointId: string }) => {
+		if (browser) {
+			return `${window.location.origin}${base}/flottform-text-client/${endpointId}`;
+		}
+		return `https://192.168.178.23:5175/flottform-text-client/${endpointId}`;
+	};
 
 	let highlighted = false;
 
@@ -103,18 +111,30 @@
 
 	let flottformAnchor: HTMLElement;
 
+	//container should have saved all elements
+
 	onMount(async () => {
 		const fileInputs = document.querySelectorAll(
 			'input[type=file]'
 		) as NodeListOf<HTMLInputElement>;
+		const flottformComponent = createDefaultFlottformComponent({
+			flottformAnchorElement: flottformAnchor
+		});
 		for (const file of fileInputs) {
-			const flottformFileInputHost = new FlottformFileInputHost({
+			flottformComponent.createFileItem({
 				flottformApi: sdpExchangeServerBase,
 				createClientUrl,
 				inputField: file,
-				theme: defaultThemeForFileInput(flottformAnchor)
+				options: { label: file.id }
 			});
 		}
+		flottformComponent.createTextItem({
+			flottformApi: sdpExchangeServerBase,
+			createClientUrl: createTextClientUrl,
+			options: { label: 'Text' }
+		});
+
+		console.log(flottformComponent.getAllFlottformItems());
 	});
 </script>
 

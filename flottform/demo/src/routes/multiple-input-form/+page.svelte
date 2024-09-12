@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { FlottformFileInputHost, defaultThemeForFileInput } from '@flottform/forms';
+	import { FlottformFileInputHost, createDefaultFlottformComponent } from '@flottform/forms';
 	import { onMount } from 'svelte';
 	import { createClientUrl, sdpExchangeServerBase } from '../../api';
 
@@ -9,28 +9,18 @@
 		const fileInputs = document.querySelectorAll(
 			'input[type=file]'
 		) as NodeListOf<HTMLInputElement>;
-		const filesWithLabels = [
-			{
-				file: document.getElementById('document-A') as HTMLInputElement,
-				label: 'Label for File Input 1'
-				// buttonLabel: 'Button 1'
-			},
-			{
-				file: document.getElementsByName('fileB')[0] as HTMLInputElement,
-				buttonLabel: 'Button 2'
-			},
-			{
-				file: document.getElementsByName('fileC')[0] as HTMLInputElement
-			}
-		];
-		for (const { file, label, buttonLabel } of filesWithLabels) {
-			const flottformFileInputHost = new FlottformFileInputHost({
+		const flottformComponent = createDefaultFlottformComponent({
+			flottformAnchorElement: flottformAnchor
+		});
+		for (const file of fileInputs) {
+			flottformComponent.createFileItem({
 				flottformApi: sdpExchangeServerBase,
 				createClientUrl,
 				inputField: file,
-				theme: defaultThemeForFileInput(flottformAnchor, { label, buttonLabel })
+				options: { label: file.id || file.name || 'File' }
 			});
 		}
+
 		// flottformFileInputHost.on('new', () => {
 		// 	// Optional: Custom UI
 		// });
