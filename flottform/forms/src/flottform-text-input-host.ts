@@ -72,6 +72,7 @@ export class FlottformTextInputHost extends BaseInputHost<Listeners> {
 	};
 
 	private handleIncomingData = (e: MessageEvent<any>) => {
+		this.emit('receive');
 		// We suppose that the data received is small enough to be all included in 1 message
 		this.emit('done', e.data);
 	};
@@ -90,8 +91,8 @@ export class FlottformTextInputHost extends BaseInputHost<Listeners> {
 		this.channel?.on('waiting-for-ice', () => {
 			this.emit('webrtc:waiting-for-ice');
 		});
-		this.channel?.on('waiting-for-file', () => {
-			this.emit('webrtc:waiting-for-file');
+		this.channel?.on('waiting-for-data', () => {
+			this.emit('webrtc:waiting-for-data');
 			this.emit('connected');
 		});
 		this.channel?.on('receiving-data', (e) => {

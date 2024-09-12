@@ -1,7 +1,20 @@
 <script lang="ts">
 	import { createDefaultFlottformComponent } from '@flottform/forms';
 	import { onMount } from 'svelte';
-	import { createClientUrl, sdpExchangeServerBase } from '../../api';
+	import { browser } from '$app/environment';
+	import { env } from '$env/dynamic/public';
+	import { base } from '$app/paths';
+	import { sdpExchangeServerBase } from '../../api';
+
+	const clientBase =
+		env.PUBLIC_FLOTTFORM_CLIENT_BASE || 'https://192.168.0.21:5177/multiple-input-form-client';
+
+	export const createClientUrl = async ({ endpointId }: { endpointId: string }) => {
+		if (browser) {
+			return `${window.location.origin}${base}/multiple-input-form-client/${endpointId}`;
+		}
+		return `${clientBase}/${endpointId}`;
+	};
 
 	let flottformAnchor: HTMLElement;
 

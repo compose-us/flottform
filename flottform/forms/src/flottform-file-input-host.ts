@@ -103,6 +103,8 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 				this.filesMetaData = message.filesQueue;
 				this.currentFile = { index: 0, receivedSize: 0, arrayBuffer: [] };
 				this.filesTotalSize = message.totalSize;
+				// Emit the start of receiving data
+				this.emit('receive');
 			} else if (message.type === 'transfer-complete') {
 				this.emit('done');
 				this.channel?.close();
@@ -189,7 +191,7 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 		this.channel?.on('waiting-for-ice', () => {
 			this.emit('webrtc:waiting-for-ice');
 		});
-		this.channel?.on('waiting-for-file', () => {
+		this.channel?.on('waiting-for-data', () => {
 			this.emit('webrtc:waiting-for-file');
 			this.emit('connected');
 		});

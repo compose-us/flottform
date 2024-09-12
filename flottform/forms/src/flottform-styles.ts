@@ -27,7 +27,7 @@ const defaultColors = {
 	stateBackground: {
 		new: '#FFFFFF',
 		'waiting-for-client': '#F9F871',
-		'waiting-for-file': '#D4F1EF',
+		'waiting-for-data': '#D4F1EF',
 		'receiving-data': '#7EA4FF',
 		done: '#FFFFFF',
 		error: '#F57C6B'
