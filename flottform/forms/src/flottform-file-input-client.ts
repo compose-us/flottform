@@ -115,6 +115,7 @@ export class FlottformFileInputClient extends EventEmitter<Listeners> {
 			this.channel?.sendData(JSON.stringify({ type: 'transfer-complete' }));
 			this.allFilesSent = true;
 			this.channel?.off('bufferedamountlow', this.startSendingFiles);
+			this.emit('done');
 			return;
 		}
 		const currentFileArrayBuffer = this.filesArrayBuffer[this.currentFileIndex];
