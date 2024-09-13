@@ -19,7 +19,7 @@
 <footer class="w-full px-4 py-4 bg-gray-200 bg-opacity-50 mt-auto">
 	<ul class="max-w-screen-xl mx-auto flex justify-center gap-8">
 		<li>
-			<a href="{base}/">New Demo</a>
+			<a href="{base}/">Home</a>
 		</li>
 		<li>
 			<a href="{base}/feedback">Feedback</a>

@@ -23,7 +23,6 @@
 		return `${clientBase}${endpointId}`;
 	};
 
-	let partnerLink: HTMLAnchorElement;
 	let qrCodeImage: HTMLImageElement;
 	let createChannelHandler: () => void;
 	let currentState = writable<
@@ -64,9 +63,27 @@
 			$currentState = 'error';
 		});
 	});
+	const copyLinkToClipboard = (e: Event) => {
+		const copyToClipboardButton = e.target as HTMLButtonElement;
+		const flottformLink = (copyToClipboardButton.nextElementSibling as HTMLDivElement).innerText;
+		navigator.clipboard
+			.writeText(flottformLink)
+			.then(() => {
+				copyToClipboardButton.innerText = '✅';
+				setTimeout(() => {
+					copyToClipboardButton.innerText = '📋';
+				}, 1000);
+			})
+			.catch((error) => {
+				copyToClipboardButton.innerText = `❌ Failed to copy: ${error}`;
+				setTimeout(() => {
+					copyToClipboardButton.innerText = '📋';
+				}, 1000);
+			});
+	};
 </script>
 
-<div class="w-full min-h-svh grid place-items-center">
+<div class="w-full grow grid place-items-center px-4">
 	{#if $currentState === 'new'}
 		<button
 			on:click={createChannelHandler}
@@ -80,12 +97,20 @@
 	{:else if $currentState === 'endpoint-created'}
 		<div>
 			<img bind:this={qrCodeImage} alt={$partnerLinkHref} src={$qrCodeData} class="mx-auto" />
-			<a
-				bind:this={partnerLink}
-				href={$partnerLinkHref}
-				target="_blank"
-				rel="external noopener noreferrer">{$partnerLinkHref}</a
-			>
+			<div class="flex flex-row gap-4 items-center">
+				<button
+					class="rounded-xl border-2 border-gray-300 bg-gray-300 px-2 py-1 text-xs"
+					type="button"
+					title="Copy link to clipboard"
+					aria-label="Copy link to clipboard"
+					on:click={copyLinkToClipboard}>📋</button
+				>
+				<div
+					class="grow content-center inline-block whitespace-break-spaces break-all text-base overflow-auto border-none outline-none resize-none"
+				>
+					{$partnerLinkHref}
+				</div>
+			</div>
 		</div>
 	{:else if $currentState === 'webrtc:waiting-for-ice'}
 		Trying to establish a connection with your friend

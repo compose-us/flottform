@@ -6242,7 +6242,7 @@ packages:
         optional: true
     dependencies:
       esbuild: 0.19.12
-      postcss: 8.4.35
+      postcss: 8.4.39
       rollup: 4.10.0
     optionalDependencies:
       fsevents: 2.3.3

@@ -16,12 +16,16 @@
 			"import": "./dist/index.js",
 			"require": "./dist/index.umd.cjs"
 		},
-		"./style.css": {
-			"import": "./dist/style.css",
-			"require": "./dist/style.css"
+		"./base.css": {
+			"import": "./dist/base.css",
+			"require": "./dist/base.css"
+		},
+		"./theme/default.css": {
+			"import": "./dist/theme/default.css",
+			"require": "./dist/theme/default.css"
 		}
 	},
-	"types": "./dist/src/index.d.ts",
+	"types": "./dist/index.d.ts",
 	"keywords": [
 		"browser",
 		"client",

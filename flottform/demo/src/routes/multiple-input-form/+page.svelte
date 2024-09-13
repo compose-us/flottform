@@ -1,7 +1,20 @@
 <script lang="ts">
-	import { FlottformFileInputHost, defaultThemeForFileInput } from '@flottform/forms';
+	import { createDefaultFlottformComponent } from '@flottform/forms';
 	import { onMount } from 'svelte';
-	import { createClientUrl, sdpExchangeServerBase } from '../../api';
+	import { browser } from '$app/environment';
+	import { env } from '$env/dynamic/public';
+	import { base } from '$app/paths';
+	import { sdpExchangeServerBase } from '../../api';
+
+	const clientBase =
+		env.PUBLIC_FLOTTFORM_CLIENT_BASE || 'https://192.168.0.21:5177/multiple-input-form-client';
+
+	export const createClientUrl = async ({ endpointId }: { endpointId: string }) => {
+		if (browser) {
+			return `${window.location.origin}${base}/multiple-input-form-client/${endpointId}`;
+		}
+		return `${clientBase}/${endpointId}`;
+	};
 
 	let flottformAnchor: HTMLElement;
 
@@ -9,64 +22,17 @@
 		const fileInputs = document.querySelectorAll(
 			'input[type=file]'
 		) as NodeListOf<HTMLInputElement>;
-		const filesWithLabels = [
-			{
-				file: document.getElementById('document-A') as HTMLInputElement,
-				label: 'Label for File Input 1'
-				// buttonLabel: 'Button 1'
-			},
-			{
-				file: document.getElementsByName('fileB')[0] as HTMLInputElement,
-				buttonLabel: 'Button 2'
-			},
-			{
-				file: document.getElementsByName('fileC')[0] as HTMLInputElement
-			}
-		];
-		for (const { file, label, buttonLabel } of filesWithLabels) {
-			const flottformFileInputHost = new FlottformFileInputHost({
+		const flottformComponent = createDefaultFlottformComponent({
+			flottformAnchorElement: flottformAnchor
+		});
+		for (const file of fileInputs) {
+			flottformComponent.createFileItem({
 				flottformApi: sdpExchangeServerBase,
 				createClientUrl,
 				inputField: file,
-				theme: defaultThemeForFileInput(flottformAnchor, { label, buttonLabel })
+				label: file.id || file.name || 'File'
 			});
 		}
-		// flottformFileInputHost.on('new', () => {
-		// 	// Optional: Custom UI
-		// });
-		// flottformFileInputHost.on('connected', () => {
-		// 	// Optional: Custom UI
-		// });
-		// flottformFileInputHost.on('receive', () => {
-		// 	// Optional: Custom UI
-		// });
-		// flottformFileInputHost.on('progress', (p) => {
-		// 	// Optional: Custom UI
-		// 	console.log('progress=', p);
-		// });
-		// flottformFileInputHost.on('disconnected', () => {
-		// 	// Optional: Custom UI
-		// });
-		// flottformFileInputHost.on('error', (err) => {
-		// 	// Optional: Custom UI
-		// });
-		// flottformFileInputHost.on('endpoint-created', ({ link, qrCode }) => {
-		// 	// Optional: Custom UI
-		// });
-		// flottformFileInputHost.on('webrtc:waiting-for-client', (link) => {
-		// 	// Optional: Custom UI
-		// });
-		// flottformFileInputHost.on('webrtc:waiting-for-ice', () => {
-		// 	// Optional: Custom UI
-		// });
-		// flottformFileInputHost.on('webrtc:waiting-for-file', () => {
-		// 	// Optional: Custom UI
-		// });
-		// flottformFileInputHost.on('done', () => {
-		// 	// Optional: Custom UI
-		// });
-
-		// flottformFileInputHost.start();
 	});
 </script>
 
@@ -112,7 +78,11 @@
 
 <style lang="postcss">
 	.flottform-anchor {
-		--flottform-root-border-radius: 0px 0px 10px 10px;
+		--flottform-border-style: dashed;
+		--flottform-root-border-width: 0 0 1px 1px;
+		--flottform-root-border-style: solid;
+		--flottform-root-border-color: #808080;
+		--flottform-root-border-radius: 0px 0px 0 10px;
 	}
 	.flottform {
 		@apply absolute top-0 right-0;

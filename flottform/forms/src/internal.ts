@@ -16,6 +16,20 @@ type EndpointInfo = {
 		iceCandidates: RTCIceCandidateInit[];
 	};
 };
+
+export type BaseListeners = {
+	new: [];
+	disconnected: [];
+	error: [error: any];
+	connected: [];
+	'endpoint-created': [{ link: string; qrCode: string }];
+	'webrtc:waiting-for-client': [
+		event: { link: string; qrCode: string; channel: FlottformChannelHost }
+	];
+	'webrtc:waiting-for-ice': [];
+	'webrtc:waiting-for-file': [];
+};
+
 export type SafeEndpointInfo = Omit<EndpointInfo, 'hostKey' | 'clientKey'>;
 
 export type ClientState =
@@ -33,7 +47,7 @@ export type FlottformState =
 	| 'new'
 	| 'waiting-for-client'
 	| 'waiting-for-ice'
-	| 'waiting-for-file'
+	| 'waiting-for-data'
 	| 'receiving-data'
 	| 'done'
 	| 'error';
@@ -101,7 +115,7 @@ export type FlottformEventMap = {
 			channel: FlottformChannelHost;
 		}
 	];
-	'waiting-for-file': [];
+	'waiting-for-data': [];
 	'waiting-for-ice': [];
 	'receiving-data': [e: MessageEvent<any>];
 	'file-received': [{ fileMeta: FileMetaInfos; arrayBuffer: Array<ArrayBuffer> }];
@@ -136,4 +150,9 @@ export class EventEmitter<EventMap extends Record<string, Array<any>>> {
 			listener(...args);
 		}
 	}
+}
+
+export abstract class BaseInputHost<L extends BaseListeners> extends EventEmitter<L> {
+	abstract start();
+	abstract close();
 }
