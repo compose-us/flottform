@@ -12,7 +12,8 @@
 			'input[type=file]'
 		) as NodeListOf<HTMLInputElement>;
 		const flottformComponent = createDefaultFlottformComponent({
-			flottformAnchorElement: flottformAnchor
+			flottformAnchorElement: flottformAnchor,
+			flottformRootTitle: 'Upload your CV from another device'
 		});
 		for (const file of fileInputs) {
 			flottformComponent.createFileItem({
