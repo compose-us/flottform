@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { defaultThemeForFileInput, FlottformFileInputHost } from '@flottform/forms';
-	import { sdpExchangeServerBase, createClientUrl } from '../../api';
+	import { createDefaultFlottformComponent } from '@flottform/forms';
+	import { sdpExchangeServerBase, createClientUrl } from './api';
 
 	import backgroundImage from './undraw.svg';
 
@@ -11,26 +11,31 @@
 		const fileInputs = document.querySelectorAll(
 			'input[type=file]'
 		) as NodeListOf<HTMLInputElement>;
+		const flottformComponent = createDefaultFlottformComponent({
+			flottformAnchorElement: flottformAnchor
+		});
 		for (const file of fileInputs) {
-			const flottformFileInputHost = new FlottformFileInputHost({
+			flottformComponent.createFileItem({
 				flottformApi: sdpExchangeServerBase,
 				createClientUrl,
 				inputField: file,
-				theme: defaultThemeForFileInput(flottformAnchor, {
-					flottformRootTitle: 'Upload your CV from another device'
-				})
+				label: 'Your CV',
+				onSuccessText: 'You have successfully uploaded your CV'
 			});
 		}
 	});
 </script>
 
-<div class="max-w-screen-xl h-svh">
-	<div class="grid grid-cols-3 gap-8 h-full">
-		<div class="bg-gray-100 w-full flex">
+<div class="flex flex-col min-h-svh">
+	<div class="md:grid md:grid-cols-3 gap-8 h-full max-w-screen-xl flex-1">
+		<div class="bg-gray-100 w-full hidden md:flex">
 			<img src={backgroundImage} alt="Background" class="self-end h-auto max-h-96" />
 		</div>
-		<form action="#" class="col-span-2 py-14 grid grid-cols-2 gap-y-4 gap-x-12 auto-rows-min px-6">
-			<h2 class="col-span-2">Let us know you better</h2>
+		<form
+			action="#"
+			class="md:col-span-2 py-14 grid grid-cols-1 md:grid-cols-2 gap-y-4 md:gap-x-12 auto-rows-min px-6"
+		>
+			<h2 class="md:col-span-2">Let us know you better</h2>
 			<div class="flex flex-col gap-2">
 				<label for="name">Name</label>
 				<input
@@ -67,7 +72,7 @@
 					class="border rounded px-4 py-2 border-[#051e0c]"
 				/>
 			</div>
-			<div class="flex flex-col gap-2 col-span-2">
+			<div class="flex flex-col gap-2 md:col-span-2">
 				<label for="presentation">Tell us a bit about yourself</label>
 				<textarea
 					rows="5"
@@ -81,9 +86,9 @@
 				<input name="cv" id="cv" type="file" class="border rounded px-4 py-2 border-[#051e0c]" />
 			</div>
 			<div class="relative">
-				<div bind:this={flottformAnchor} class="flottform-anchor"></div>
+				<div bind:this={flottformAnchor} class="flottform-anchor md:absolute md:top-6"></div>
 			</div>
-			<div class="col-start-2 flex gap-8 justify-end row-start-12">
+			<div class="md:col-start-2 flex gap-8 justify-end row-start-12">
 				<button type="reset" class="rounded px-4 py-2 bg-[#27dc49] w-min font-bold">Reset</button>
 				<button type="submit" class="rounded px-4 py-2 bg-[#ed8ee5] w-min font-bold">Send</button>
 			</div>
@@ -93,12 +98,10 @@
 
 <style lang="postcss">
 	.flottform-anchor {
-		position: absolute;
-		top: 25px;
 		--flottform-main-color: #051e0c;
 		--flottform-border-color: #051e0c;
 		--flottform-root-border-radius: 0.25rem;
-		--flottform-elements-max-height: 20rem;
+		--flottform-elements-max-height: 15rem;
 		--flottform-webrtc-button-background: #ed8ee5;
 		--flottform-webrtc-button-color: #051e0c;
 		--flottform-buttons-border-radius: 0.25rem;
