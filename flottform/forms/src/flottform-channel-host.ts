@@ -7,7 +7,26 @@ import {
 	retrieveEndpointInfo,
 	setIncludes
 } from './internal';
-
+/**
+ * A class used to represent one peer (called client) to establish a WebRTC connection with another peer (called host).
+ * It handles ICE candidate gathering and sending/receiving data.
+ * The connection is initiated only when `start` method is called.
+ *
+ * This class emits various events throughout the connection lifecycle such as `connected`, `disconnected`, and `error`, allowing you to respond to the connection state changes.
+ *
+ * @fires new - Emitted when the host is created and ready to accept clients.
+ * @fires waiting-for-client - Emitted when waiting for a client to connect.
+ * @fires waiting-for-data - Emitted when the host is ready to receive data.
+ * @fires waiting-for-ice - Emitted when ICE candidates are being gathered.
+ * @fires receiving-data - Emitted when the host is receiving data from the client.
+ * @fires file-received - Emitted when a complete file has been received.
+ * @fires done - Emitted when the transfer is complete.
+ * @fires error - Emitted when an error occurs during connection or data transfer.
+ * @fires connected - Emitted when the host successfully connects to a client.
+ * @fires disconnected - Emitted when the connection is closed.
+ *
+ * @extends EventEmitter
+ */
 export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 	private flottformApi: string | URL;
 	private createClientUrl: (params: { endpointId: string }) => Promise<string>;
@@ -21,6 +40,16 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 	private dataChannel: RTCDataChannel | null = null;
 	private pollForIceTimer: NodeJS.Timeout | number | null = null;
 
+	/**
+	 * Creates an instance of FlottformChannelHost
+	 *
+	 * @param {Object} config - The configuration for setting up the channel for the host.
+	 * @param {flottformApi} - The API endpoint for retrieving connection information.
+	 * @param {createClientUrl} - A function that generates the client URL given an endpoint ID.
+	 * @param {rtcConfiguration} - The RTC configuration for the WebRTC connection.
+	 * @param {pollTimeForIceInMs} - The time interval (in ms) for polling ICE candidates.
+	 * @param {logger} - Optional logger for logging connection events.
+	 */
 	constructor({
 		flottformApi,
 		createClientUrl,
@@ -44,13 +73,21 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 			this.changeState('new', { channel: this });
 		});
 	}
-
+	/**
+	 * Changes the state of the host and emits the corresponding event.
+	 *
+	 * @param newState - The new state to transition to.
+	 * @param details - Optional additional details to emit with the event.
+	 */
 	private changeState = (newState: FlottformState | 'disconnected', details?: any) => {
 		this.state = newState;
 		this.emit(newState, details);
 		this.logger.info(`State changed to: ${newState}`, details == undefined ? '' : details);
 	};
 
+	/**
+	 * Starts the WebRTC connection process for the host. The connection is not established until this method is called.
+	 */
 	start = async () => {
 		if (this.openPeerConnection) {
 			this.close();
@@ -92,6 +129,11 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		this.setupDataChannelListener();
 	};
 
+	/**
+	 * Closes the WebRTC connection if it is currently established.
+	 *
+	 * @fires disconnected - Emitted when the connection is successfully closed.
+	 */
 	close = () => {
 		if (this.openPeerConnection) {
 			this.openPeerConnection.close();
@@ -100,6 +142,12 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		this.changeState('disconnected');
 	};
 
+	/**
+	 * Sets up the WebRTC data channel listener to handle incoming data from the client.
+	 *
+	 * @fires error - Emitted when the data channel is not set up yet.
+	 * @fires receiving-data - Emitted when data is received from the client.
+	 */
 	private setupDataChannelListener = () => {
 		if (this.dataChannel == null) {
 			this.changeState(
@@ -115,6 +163,16 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		};
 	};
 
+	/**
+	 * Sets up the ICE candidate gathering process and sends the gathered candidates to the client peer.
+	 *
+	 * @param putHostInfoUrl - The URL where the host's information should be sent.
+	 * @param hostKey - The host's unique key used for identification.
+	 * @param hostIceCandidates - A set of ICE candidates gathered by the host.
+	 * @param session - The RTC session description used for connection setup.
+	 *
+	 * @fires error - Emitted when the connection channel is not setup yet.
+	 */
 	private setupHostIceGathering = (
 		putHostInfoUrl: string,
 		hostKey: string,
@@ -150,6 +208,13 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		};
 	};
 
+	/**
+	 * Sets up a process to periodically retrieve the connection state and ICE candidates from the client.
+	 *
+	 * @param getEndpointInfoUrl - The URL for retrieving ICE candidate information from the client.
+	 *
+	 * @fires error - Emitted when the connection channel is: not setup yet, connection establishment failed or impossible.
+	 */
 	private setUpConnectionStateGathering = (getEndpointInfoUrl: string) => {
 		if (this.openPeerConnection === null) {
 			this.changeState(
@@ -186,6 +251,9 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		};
 	};
 
+	/**
+	 * Stops polling for a connection or ICE candidates.
+	 */
 	private stopPollingForConnection = async () => {
 		if (this.pollForIceTimer) {
 			clearTimeout(this.pollForIceTimer);
@@ -193,6 +261,11 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		this.pollForIceTimer = null;
 	};
 
+	/**
+	 * Starts polling for a connection and ICE candidates from the client.
+	 *
+	 * @param getEndpointInfoUrl - The URL to use for polling the ICE candidates.
+	 */
 	private startPollingForConnection = async (getEndpointInfoUrl: string) => {
 		if (this.pollForIceTimer) {
 			clearTimeout(this.pollForIceTimer);
@@ -205,6 +278,12 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		}, this.pollTimeForIceInMs);
 	};
 
+	/**
+	 * Creates an endpoint on the server where the client can retrieve the host's connection information.
+	 *
+	 * @param baseApi - The base API URL for the host's information.
+	 * @param session - The RTC session description used for connection setup.
+	 */
 	private createEndpoint = async (baseApi: string, session: RTCSessionDescriptionInit) => {
 		const response = await fetch(`${baseApi}/create`, {
 			method: 'POST',
@@ -218,6 +297,14 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		return response.json();
 	};
 
+	/**
+	 * Polls the client for connection state and ICE candidates to complete the WebRTC connection.
+	 *
+	 * @param getEndpointInfoUrl - The URL for retrieving connection and candidate information.
+	 *
+	 * @fires error - Emitted when the connection channel is not setup yet.
+	 * @fires waiting-for-ice - Emitted when the host finds a client to connect to.
+	 */
 	private pollForConnection = async (getEndpointInfoUrl: string) => {
 		if (this.openPeerConnection === null) {
 			this.changeState('error', "openPeerConnection is null. Unable to retrieve Client's details");
@@ -238,17 +325,23 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		}
 	};
 
+	/**
+	 * Sets up the data channel for transferring files and other large data types.
+	 *
+	 * @fires error - Emitted when the data channel is not setup yet.
+	 * @fires waiting-for-data - Emitted when the data channel is opened.
+	 */
 	private setupDataChannelForTransfer = () => {
 		if (this.dataChannel === null) {
 			this.changeState('error', 'dataChannel is null. Unable to setup a Data Channel');
 			return;
 		}
-
+		// @ts-ignore: Unused variable
 		this.dataChannel.onopen = (e) => {
 			this.logger.log('data channel opened');
 			this.changeState('waiting-for-data');
 		};
-
+		// @ts-ignore: Unused variable
 		this.dataChannel.onclose = (e) => {
 			this.logger.log('data channel closed');
 		};
@@ -259,6 +352,11 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		};
 	};
 
+	/**
+	 * Creates the WebRTC data channel for communication with the client peer.
+	 *
+	 * @fires error - Emitted when the data channel is not setup yet.
+	 */
 	private createDataChannel = () => {
 		if (this.openPeerConnection === null) {
 			this.changeState('error', 'openPeerConnection is null. Unable to create a new Data Channel');
@@ -270,6 +368,17 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		return this.openPeerConnection.createDataChannel(channelName);
 	};
 
+	/**
+	 * Sends host information, including ICE candidates, to a remote server where the client can access it.
+	 *
+	 * @param putHostInfoUrl - The URL where the host's information should be sent.
+	 * @param hostKey - The host's unique key for identification.
+	 * @param hostIceCandidates - A set of ICE candidates gathered by the host.
+	 * @param session - The RTC session description used for connection setup.
+	 *
+	 * @throws Will throw an error if it wasn't able to update the host's info
+	 * @fires error if some error happens during the process of saving the host's info to the server.
+	 */
 	private putHostInfo = async (
 		putHostInfoUrl: string,
 		hostKey: string,

@@ -17,6 +17,18 @@ type MetaData = {
 	totalSize: number;
 };
 
+/**
+ * The `FlottformFileInputClient` uses the `FlottformChannelClient` to manage the WebRTC connection and handle the transfer of large files to a peer.
+ * It listens to various events emitted by `FlottformChannelClient` to implement the file sending process.
+ *
+ * @fires connected - Emitted when the connection is successfully established.
+ * @fires webrtc:connection-impossible - Emitted if the connection to the host cannot be established.
+ * @fires done - Emitted when the all of the data is sent.
+ * @fires disconnected - Emitted when the connection is closed.
+ * @fires error - Emitted when there is an error during the connection.
+ *
+ * @extends EventEmitter<Listeners>
+ */
 export class FlottformFileInputClient extends EventEmitter<Listeners> {
 	private channel: FlottformChannelClient | null = null;
 	private inputField: HTMLInputElement;
@@ -26,8 +38,20 @@ export class FlottformFileInputClient extends EventEmitter<Listeners> {
 	private currentFileIndex = 0;
 	private currentChunkIndex = 0;
 	private allFilesSent = false;
+	// @ts-ignore: Unused variable
 	private logger: Logger;
 
+	/**
+	 * Creates an instance of FlottformFileInputClient.
+	 *
+	 * @param {Object} config - The configuration for setting up the file input client.
+	 * @param {string} - The unique ID for the WebRTC endpoint.
+	 * @param {HTMLInputElement} - The input field element where files are selected for transfer.
+	 * @param {string} - The API URL for retrieving connection information.
+	 * @param {RTCConfiguration} [config.rtcConfiguration=DEFAULT_WEBRTC_CONFIG] - WebRTC configuration settings.
+	 * @param {number} [config.pollTimeForIceInMs=POLL_TIME_IN_MS] - The polling time for ICE candidates in milliseconds.
+	 * @param {Logger} [config.logger=console] - Logger for capturing logs and errors.
+	 */
 	constructor({
 		endpointId,
 		fileInput,
@@ -55,14 +79,28 @@ export class FlottformFileInputClient extends EventEmitter<Listeners> {
 		this.logger = logger;
 		this.registerListeners();
 	}
+
+	/**
+	 * Starts the WebRTC connection by invoking the `start` method of the underlying `FlottformChannelClient`.
+	 */
 	start = () => {
 		this.channel?.start();
 	};
 
+	/**
+	 * Closes the WebRTC connection by invoking the `close` method of the underlying `FlottformChannelClient`.
+	 */
 	close = () => {
 		this.channel?.close();
 	};
 
+	/**
+	 * Creates the metadata for the selected files.
+	 * This metadata includes information about each file such as name, type, and size.
+	 *
+	 * @param {HTMLInputElement} inputElement - The input field containing the selected files.
+	 * @returns {MetaData | null} The metadata object or `null` if no files are found.
+	 */
 	private createMetaData = (inputElement: HTMLInputElement): MetaData | null => {
 		if (!inputElement.files) return null;
 
@@ -80,6 +118,14 @@ export class FlottformFileInputClient extends EventEmitter<Listeners> {
 		};
 	};
 
+	/**
+	 * Converts the files selected in the input field into an array of ArrayBuffers.
+	 * These ArrayBuffers will be used to send file data over the WebRTC connection.
+	 *
+	 * @private
+	 * @param {HTMLInputElement} inputElement - The input field containing the selected files.
+	 * @returns {Promise<ArrayBuffer[]>} A promise that resolves to an array of file data as ArrayBuffers.
+	 */
 	private createArrayBuffers = async (inputElement: HTMLInputElement) => {
 		if (!inputElement.files) return null;
 
@@ -88,6 +134,12 @@ export class FlottformFileInputClient extends EventEmitter<Listeners> {
 		return await Promise.all(files.map(async (file) => await file.arrayBuffer()));
 	};
 
+	/**
+	 * Starts the process of sending files over the WebRTC connection.
+	 * This method prepares the files, creates metadata, and begins the file transfer.
+	 *
+	 * @throws Will throw an error if the metadata or file data is unavailable.
+	 */
 	sendFiles = async () => {
 		const metaData = this.createMetaData(this.inputField);
 		const filesArrayBuffer = await this.createArrayBuffers(this.inputField);
@@ -103,10 +155,23 @@ export class FlottformFileInputClient extends EventEmitter<Listeners> {
 		this.startSendingFiles();
 	};
 
+	/**
+	 * Starts sending the files by sending the first chunk.
+	 * This method initiates the recursive process of sending chunks of data.
+	 *
+	 * @private
+	 */
 	private startSendingFiles = () => {
 		this.sendNextChunk();
 	};
 
+	/**
+	 * Sends the next chunk of the current file over the WebRTC connection.
+	 * If the buffer is full, the sending is paused until there is more space.
+	 * If the current file is completely sent, it moves to the next file in the queue.
+	 *
+	 * @private
+	 */
 	private sendNextChunk = async () => {
 		const totalNumberOfFiles = this.filesMetaData.length;
 		if (this.allFilesSent || this.currentFileIndex >= totalNumberOfFiles) {
@@ -157,6 +222,12 @@ export class FlottformFileInputClient extends EventEmitter<Listeners> {
 		}
 	};
 
+	/**
+	 * Registers event listeners for various events emitted by the `FlottformChannelClient`.
+	 * These events include WebRTC connection status and errors.
+	 *
+	 * @private
+	 */
 	private registerListeners = () => {
 		this.channel?.on('init', () => {
 			// TODO: Implement Default UI.

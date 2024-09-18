@@ -1,4 +1,5 @@
 import { FlottformChannelHost } from './flottform-channel-host';
+// @ts-ignore: Unused variable
 import { Styles } from './flottform-styles';
 import { DEFAULT_WEBRTC_CONFIG, EventEmitter, Logger, POLL_TIME_IN_MS } from './internal';
 
@@ -16,15 +17,32 @@ type Listeners = {
 	'webrtc:waiting-for-ice': [];
 	'webrtc:waiting-for-data': [];
 };
-
+// @ts-ignore: Unused variable
 const noop = () => {};
 
+/**
+ * The `FlottformTextInputHost` manages the server side (host) of the WebRTC connection, listening for client connections and receiving text data
+ * It uses the `FlottformChannelHost` to establish and maintain the WebRTC connection.
+ *
+ * @extends EventEmitter<Listeners>
+ */
 export class FlottformTextInputHost extends EventEmitter<Listeners> {
 	private channel: FlottformChannelHost | null = null;
 	private logger: Logger;
 	private link: string = '';
 	private qrCode: string = '';
 
+	/**
+	 * Creates an instance of FlottformTextInputHost.
+	 *
+	 * @param {Object} config - The configuration for setting up the text input host.
+	 * @param {string | URL} config.flottformApi - The API URL for retrieving connection information.
+	 * @param {Function} config.createClientUrl - A function to create the client URL with an endpoint ID.
+	 * @param {RTCConfiguration} [config.rtcConfiguration=DEFAULT_WEBRTC_CONFIG] - WebRTC configuration settings.
+	 * @param {number} [config.pollTimeForIceInMs=POLL_TIME_IN_MS] - The polling time for ICE candidates in milliseconds.
+	 * @param {Function} [config.theme] - Optional theme customization function.
+	 * @param {Logger} [config.logger=console] - Logger for capturing logs and errors.
+	 */
 	constructor({
 		flottformApi,
 		createClientUrl,
@@ -54,14 +72,25 @@ export class FlottformTextInputHost extends EventEmitter<Listeners> {
 		theme && theme(this);
 	}
 
+	/**
+	 * Starts the WebRTC connection by invoking the `start` method of the underlying `FlottformChannelHost`.
+	 */
 	start = () => {
 		this.channel?.start();
 	};
 
+	/**
+	 * Closes the WebRTC connection by invoking the `close` method of the underlying `FlottformChannelHost`.
+	 */
 	close = () => {
 		this.channel?.close();
 	};
 
+	/**
+	 * Retrieves the link (URL) for the client to connect to the WebRTC host.
+	 *
+	 * @returns {string} The link for the client to connect. If the link is unavailable, an error is logged.
+	 */
 	getLink = () => {
 		if (this.link === '') {
 			this.logger.error(
@@ -71,6 +100,11 @@ export class FlottformTextInputHost extends EventEmitter<Listeners> {
 		return this.link;
 	};
 
+	/**
+	 * Retrieves the QR code data for the client to scan and connect to the WebRTC host.
+	 *
+	 * @returns {string} The QR code data for client connection. If the QR code is unavailable, an error is logged.
+	 */
 	getQrCode = () => {
 		if (this.qrCode === '') {
 			this.logger.error(
@@ -80,13 +114,27 @@ export class FlottformTextInputHost extends EventEmitter<Listeners> {
 		return this.qrCode;
 	};
 
+	/**
+	 * Handles incoming text data from the client.
+	 * Emits the `receive` event when data is received, and the `done` event when all data has been fully received.
+	 *
+	 * @private
+	 * @param {MessageEvent<any>} e - The message event containing the incoming text data.
+	 */
 	private handleIncomingData = (e: MessageEvent<any>) => {
 		this.emit('receive');
 		// We suppose that the data received is small enough to be all included in 1 message
 		this.emit('done', e.data);
 	};
 
+	/**
+	 * Registers event listeners for various events emitted by the `FlottformChannelHost`.
+	 * These events include WebRTC connection states, data reception, and error handling.
+	 *
+	 * @private
+	 */
 	private registerListeners = () => {
+		// @ts-ignore: Unused variable
 		this.channel?.on('new', ({ channel }) => {
 			this.emit('new');
 		});
