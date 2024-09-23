@@ -86,12 +86,6 @@ export class FlottformTextInputClient extends EventEmitter<Listeners> {
 		this.emit('done');
 	};
 
-	/**
-	 * Registers event listeners for various events emitted by the `FlottformChannelClient`.
-	 * These events include WebRTC connection status, completion of text sending, and errors.
-	 *
-	 * @private
-	 */
 	private registerListeners = () => {
 		this.channel?.on('init', () => {});
 		this.channel?.on('retrieving-info-from-endpoint', () => {});

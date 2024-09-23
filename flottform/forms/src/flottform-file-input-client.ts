@@ -94,13 +94,6 @@ export class FlottformFileInputClient extends EventEmitter<Listeners> {
 		this.channel?.close();
 	};
 
-	/**
-	 * Creates the metadata for the selected files.
-	 * This metadata includes information about each file such as name, type, and size.
-	 *
-	 * @param {HTMLInputElement} inputElement - The input field containing the selected files.
-	 * @returns {MetaData | null} The metadata object or `null` if no files are found.
-	 */
 	private createMetaData = (inputElement: HTMLInputElement): MetaData | null => {
 		if (!inputElement.files) return null;
 
@@ -118,14 +111,6 @@ export class FlottformFileInputClient extends EventEmitter<Listeners> {
 		};
 	};
 
-	/**
-	 * Converts the files selected in the input field into an array of ArrayBuffers.
-	 * These ArrayBuffers will be used to send file data over the WebRTC connection.
-	 *
-	 * @private
-	 * @param {HTMLInputElement} inputElement - The input field containing the selected files.
-	 * @returns {Promise<ArrayBuffer[]>} A promise that resolves to an array of file data as ArrayBuffers.
-	 */
 	private createArrayBuffers = async (inputElement: HTMLInputElement) => {
 		if (!inputElement.files) return null;
 
@@ -155,23 +140,10 @@ export class FlottformFileInputClient extends EventEmitter<Listeners> {
 		this.startSendingFiles();
 	};
 
-	/**
-	 * Starts sending the files by sending the first chunk.
-	 * This method initiates the recursive process of sending chunks of data.
-	 *
-	 * @private
-	 */
 	private startSendingFiles = () => {
 		this.sendNextChunk();
 	};
 
-	/**
-	 * Sends the next chunk of the current file over the WebRTC connection.
-	 * If the buffer is full, the sending is paused until there is more space.
-	 * If the current file is completely sent, it moves to the next file in the queue.
-	 *
-	 * @private
-	 */
 	private sendNextChunk = async () => {
 		const totalNumberOfFiles = this.filesMetaData.length;
 		if (this.allFilesSent || this.currentFileIndex >= totalNumberOfFiles) {
@@ -222,12 +194,6 @@ export class FlottformFileInputClient extends EventEmitter<Listeners> {
 		}
 	};
 
-	/**
-	 * Registers event listeners for various events emitted by the `FlottformChannelClient`.
-	 * These events include WebRTC connection status and errors.
-	 *
-	 * @private
-	 */
 	private registerListeners = () => {
 		this.channel?.on('init', () => {
 			// TODO: Implement Default UI.

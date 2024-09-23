@@ -114,25 +114,12 @@ export class FlottformTextInputHost extends EventEmitter<Listeners> {
 		return this.qrCode;
 	};
 
-	/**
-	 * Handles incoming text data from the client.
-	 * Emits the `receive` event when data is received, and the `done` event when all data has been fully received.
-	 *
-	 * @private
-	 * @param {MessageEvent<any>} e - The message event containing the incoming text data.
-	 */
 	private handleIncomingData = (e: MessageEvent<any>) => {
 		this.emit('receive');
 		// We suppose that the data received is small enough to be all included in 1 message
 		this.emit('done', e.data);
 	};
 
-	/**
-	 * Registers event listeners for various events emitted by the `FlottformChannelHost`.
-	 * These events include WebRTC connection states, data reception, and error handling.
-	 *
-	 * @private
-	 */
 	private registerListeners = () => {
 		// @ts-ignore: Unused variable
 		this.channel?.on('new', ({ channel }) => {

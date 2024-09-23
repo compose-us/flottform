@@ -149,12 +149,6 @@ export class FlottformFileInputHost extends EventEmitter<Listeners> {
 		return this.qrCode;
 	};
 
-	/**
-	 * Handles incoming data from the WebRTC data channel.
-	 * This method processes the `MessageEvent` received when data is transferred from the peer.
-	 *
-	 * @param {MessageEvent<any>} e - The event containing the incoming data.
-	 */
 	private handleIncomingData = (e: MessageEvent<any>) => {
 		if (typeof e.data === 'string') {
 			// string can be either metadata or end transfer marker.
@@ -208,12 +202,6 @@ export class FlottformFileInputHost extends EventEmitter<Listeners> {
 		}
 	};
 
-	/**
-	 * Appends the received file to the input field.
-	 * This method is triggered when a file is completely received and needs to be attached to the HTML input field.
-	 *
-	 * @param {number} fileIndex - The index of the file being appended.
-	 */
 	private appendFileToInputField = (fileIndex: number) => {
 		if (!this.inputField) {
 			this.logger.warn('No input field provided!!');
@@ -244,11 +232,6 @@ export class FlottformFileInputHost extends EventEmitter<Listeners> {
 		this.inputField.files = dt.files;
 	};
 
-	/**
-	 * Registers event listeners for various events emitted by the `FlottformChannelHost`.
-	 * These events include the WebRTC connection state, client readiness, ICE gathering...
-	 *
-	 */
 	private registerListeners = () => {
 		// @ts-ignore: Unused variable
 		this.channel?.on('new', ({ channel }) => {

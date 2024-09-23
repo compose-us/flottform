@@ -73,12 +73,7 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 			this.changeState('new', { channel: this });
 		});
 	}
-	/**
-	 * Changes the state of the host and emits the corresponding event.
-	 *
-	 * @param newState - The new state to transition to.
-	 * @param details - Optional additional details to emit with the event.
-	 */
+
 	private changeState = (newState: FlottformState | 'disconnected', details?: any) => {
 		this.state = newState;
 		this.emit(newState, details);
@@ -142,12 +137,6 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		this.changeState('disconnected');
 	};
 
-	/**
-	 * Sets up the WebRTC data channel listener to handle incoming data from the client.
-	 *
-	 * @fires error - Emitted when the data channel is not set up yet.
-	 * @fires receiving-data - Emitted when data is received from the client.
-	 */
 	private setupDataChannelListener = () => {
 		if (this.dataChannel == null) {
 			this.changeState(
@@ -163,16 +152,6 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		};
 	};
 
-	/**
-	 * Sets up the ICE candidate gathering process and sends the gathered candidates to the client peer.
-	 *
-	 * @param putHostInfoUrl - The URL where the host's information should be sent.
-	 * @param hostKey - The host's unique key used for identification.
-	 * @param hostIceCandidates - A set of ICE candidates gathered by the host.
-	 * @param session - The RTC session description used for connection setup.
-	 *
-	 * @fires error - Emitted when the connection channel is not setup yet.
-	 */
 	private setupHostIceGathering = (
 		putHostInfoUrl: string,
 		hostKey: string,
@@ -208,13 +187,6 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		};
 	};
 
-	/**
-	 * Sets up a process to periodically retrieve the connection state and ICE candidates from the client.
-	 *
-	 * @param getEndpointInfoUrl - The URL for retrieving ICE candidate information from the client.
-	 *
-	 * @fires error - Emitted when the connection channel is: not setup yet, connection establishment failed or impossible.
-	 */
 	private setUpConnectionStateGathering = (getEndpointInfoUrl: string) => {
 		if (this.openPeerConnection === null) {
 			this.changeState(
@@ -251,9 +223,6 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		};
 	};
 
-	/**
-	 * Stops polling for a connection or ICE candidates.
-	 */
 	private stopPollingForConnection = async () => {
 		if (this.pollForIceTimer) {
 			clearTimeout(this.pollForIceTimer);
@@ -261,11 +230,6 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		this.pollForIceTimer = null;
 	};
 
-	/**
-	 * Starts polling for a connection and ICE candidates from the client.
-	 *
-	 * @param getEndpointInfoUrl - The URL to use for polling the ICE candidates.
-	 */
 	private startPollingForConnection = async (getEndpointInfoUrl: string) => {
 		if (this.pollForIceTimer) {
 			clearTimeout(this.pollForIceTimer);
@@ -278,12 +242,6 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		}, this.pollTimeForIceInMs);
 	};
 
-	/**
-	 * Creates an endpoint on the server where the client can retrieve the host's connection information.
-	 *
-	 * @param baseApi - The base API URL for the host's information.
-	 * @param session - The RTC session description used for connection setup.
-	 */
 	private createEndpoint = async (baseApi: string, session: RTCSessionDescriptionInit) => {
 		const response = await fetch(`${baseApi}/create`, {
 			method: 'POST',
@@ -297,14 +255,6 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		return response.json();
 	};
 
-	/**
-	 * Polls the client for connection state and ICE candidates to complete the WebRTC connection.
-	 *
-	 * @param getEndpointInfoUrl - The URL for retrieving connection and candidate information.
-	 *
-	 * @fires error - Emitted when the connection channel is not setup yet.
-	 * @fires waiting-for-ice - Emitted when the host finds a client to connect to.
-	 */
 	private pollForConnection = async (getEndpointInfoUrl: string) => {
 		if (this.openPeerConnection === null) {
 			this.changeState('error', "openPeerConnection is null. Unable to retrieve Client's details");
@@ -325,12 +275,6 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		}
 	};
 
-	/**
-	 * Sets up the data channel for transferring files and other large data types.
-	 *
-	 * @fires error - Emitted when the data channel is not setup yet.
-	 * @fires waiting-for-data - Emitted when the data channel is opened.
-	 */
 	private setupDataChannelForTransfer = () => {
 		if (this.dataChannel === null) {
 			this.changeState('error', 'dataChannel is null. Unable to setup a Data Channel');
@@ -352,11 +296,6 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		};
 	};
 
-	/**
-	 * Creates the WebRTC data channel for communication with the client peer.
-	 *
-	 * @fires error - Emitted when the data channel is not setup yet.
-	 */
 	private createDataChannel = () => {
 		if (this.openPeerConnection === null) {
 			this.changeState('error', 'openPeerConnection is null. Unable to create a new Data Channel');
@@ -368,17 +307,6 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		return this.openPeerConnection.createDataChannel(channelName);
 	};
 
-	/**
-	 * Sends host information, including ICE candidates, to a remote server where the client can access it.
-	 *
-	 * @param putHostInfoUrl - The URL where the host's information should be sent.
-	 * @param hostKey - The host's unique key for identification.
-	 * @param hostIceCandidates - A set of ICE candidates gathered by the host.
-	 * @param session - The RTC session description used for connection setup.
-	 *
-	 * @throws Will throw an error if it wasn't able to update the host's info
-	 * @fires error if some error happens during the process of saving the host's info to the server.
-	 */
 	private putHostInfo = async (
 		putHostInfoUrl: string,
 		hostKey: string,

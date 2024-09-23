@@ -84,18 +84,13 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		this.pollTimeForIceInMs = pollTimeForIceInMs;
 		this.logger = logger;
 	}
-	/**
-	 * Changes the state of the client and emits the corresponding event.
-	 *
-	 * @param newState - The new state to transition to.
-	 * @param details - Optional additional details to emit with the event.
-	 */
 
 	private changeState = (newState: ClientState, details?: any) => {
 		this.state = newState;
 		this.emit(newState, details);
 		this.logger.info(`**Client State changed to: ${newState}`, details == undefined ? '' : details);
 	};
+
 	/**
 	 * Starts the WebRTC connection process. The connection is not established until this method is called.
 	 *
@@ -152,6 +147,7 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		}
 		this.changeState('disconnected');
 	};
+
 	/**
 	 * Sends data to the connected peer via the WebRTC data channel.
 	 *
@@ -168,6 +164,7 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		}
 		this.dataChannel.send(data);
 	};
+
 	/**
 	 * Determines if more data can be sent based on the WebRTC data channel's buffered amount. This is useful when dealing with large amounts of data.
 	 *
@@ -179,14 +176,7 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 			this.dataChannel.bufferedAmount < this.dataChannel.bufferedAmountLowThreshold
 		);
 	};
-	/**
-	 * Sets up event listeners for ICE candidate gathering and sends the gathered candidates to the peer.
-	 *
-	 * @param putClientInfoUrl - The URL where client information should be sent.
-	 * @param clientKey - The client's unique key used for identification.
-	 * @param clientIceCandidates - A set of ICE candidates gathered by the client.
-	 * @param session - The RTC session description used for connection setup.
-	 */
+
 	private setUpClientIceGathering = (
 		putClientInfoUrl: string,
 		clientKey: string,
@@ -221,11 +211,7 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 			this.logger.error(`onicecandidateerror - ${this.openPeerConnection!.connectionState}`, e);
 		};
 	};
-	/**
-	 * Periodically retrieves ICE candidates from the host to complete the WebRTC connection.
-	 *
-	 * @param getEndpointInfoUrl - The URL for retrieving host's ICE candidate information.
-	 */
+
 	private setUpConnectionStateGathering = (getEndpointInfoUrl: string) => {
 		if (this.openPeerConnection === null) {
 			this.changeState(
@@ -263,9 +249,7 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 			}
 		};
 	};
-	/**
-	 * Stops polling for ICE candidates.
-	 */
+
 	private stopPollingForIceCandidates = async () => {
 		if (this.pollForIceTimer) {
 			clearTimeout(this.pollForIceTimer);
@@ -273,11 +257,6 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		this.pollForIceTimer = null;
 	};
 
-	/**
-	 * Starts polling for ICE candidates from the host.
-	 *
-	 * @param getEndpointInfoUrl - The URL to use for polling the ICE candidates.
-	 */
 	private startPollingForIceCandidates = async (getEndpointInfoUrl: string) => {
 		if (this.pollForIceTimer) {
 			clearTimeout(this.pollForIceTimer);
@@ -288,11 +267,6 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		this.pollForIceTimer = setTimeout(this.startPollingForIceCandidates, this.pollTimeForIceInMs);
 	};
 
-	/**
-	 * Polls for the WebRTC connection state and ICE candidates from the host.
-	 *
-	 * @param getEndpointInfoUrl - The URL for retrieving connection and candidate information.
-	 */
 	private pollForConnection = async (getEndpointInfoUrl: string) => {
 		if (this.openPeerConnection === null) {
 			this.changeState('error', "openPeerConnection is null. Unable to retrieve Host's details");
@@ -306,15 +280,6 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		}
 	};
 
-	/**
-	 * Sends client information, including ICE candidates, to a remote server where the host can retrieve it.
-	 *
-	 *
-	 * @param putClientInfoUrl - The URL where client information should be sent.
-	 * @param clientKey - The client's unique key for identification.
-	 * @param clientIceCandidates - A set of ICE candidates gathered by the client.
-	 * @param session - The RTC session description used for connection setup.
-	 */
 	private putClientInfo = async (
 		putClientInfoUrl: string,
 		clientKey: string,
