@@ -66,7 +66,6 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 	 * @param {HTMLInputElement} - The input field element where files will be added.
 	 * @param {RTCConfiguration} [config.rtcConfiguration=DEFAULT_WEBRTC_CONFIG] - WebRTC configuration settings.
 	 * @param {number} [config.pollTimeForIceInMs=POLL_TIME_IN_MS] - The polling time for ICE candidates in milliseconds.
-	 * @param {(host: FlottformFileInputHost) => void} [config.theme] - A function to apply themes or styles.
 	 * @param {Logger} [config.logger=console] - Logger for capturing logs and errors.
 	 * @param {Styles} [config.styles] - Optional styles to be applied.
 	 */
@@ -76,7 +75,6 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 		inputField,
 		rtcConfiguration = DEFAULT_WEBRTC_CONFIG,
 		pollTimeForIceInMs = POLL_TIME_IN_MS,
-		theme,
 		logger = console
 	}: {
 		flottformApi: string | URL;
@@ -84,7 +82,6 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 		inputField: HTMLInputElement;
 		rtcConfiguration?: RTCConfiguration;
 		pollTimeForIceInMs?: number;
-		theme?: (myself: FlottformFileInputHost) => void;
 		logger?: Logger;
 	}) {
 		super();
@@ -99,7 +96,6 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 		this.logger = logger;
 
 		this.registerListeners();
-		theme && theme(this);
 	}
 
 	/**

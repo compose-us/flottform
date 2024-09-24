@@ -30,7 +30,6 @@ export class FlottformTextInputHost extends BaseInputHost<Listeners> {
 	 * @param {Function} config.createClientUrl - A function to create the client URL with an endpoint ID.
 	 * @param {RTCConfiguration} [config.rtcConfiguration=DEFAULT_WEBRTC_CONFIG] - WebRTC configuration settings.
 	 * @param {number} [config.pollTimeForIceInMs=POLL_TIME_IN_MS] - The polling time for ICE candidates in milliseconds.
-	 * @param {Function} [config.theme] - Optional theme customization function.
 	 * @param {Logger} [config.logger=console] - Logger for capturing logs and errors.
 	 */
 	constructor({
