@@ -1,0 +1,25 @@
+:root {
+	--flottform-main-color: #1a3066;
+	--flottform-root-background: #ffffff;
+	--flottform-root-border-radius: 10px;
+	--flottform-elements-max-height: calc(100dvh - 8rem);
+	--flottform-webrtc-button-background: #343AF0;
+	--flottform-webrtc-button-color: #ffffff;
+	--flottform-clipboard-button-background: #e5e7eb;
+	--flottform-clipboard-button-border: #e5e7eb;
+	--flottform-border-color: #808080;
+	--flottform-border-style: solid;
+	--flottform-border-width: 1px;
+	--flottform-details-background: #fafafe;
+	--flottform-open-details-background: #fafafe;
+	--flottform-status-bar-border-color: #e5e7eb;
+	--flottform-status-bar-background: #f2f1fe;
+	--flottform-status-bar-gradient-from: #6a11cb;
+	--flottform-status-bar-gradient-to: #2575fc;
+	--flottform-buttons-border-radius: 10px;
+	--flottform-qrcode-width: 150px;
+	--flottform-details-max-height: 12rem;
+	--flottform-items-padding: 1rem;
+	--flottform-items-gap: 1rem;
+	--flottform-font-family: inherit;
+}
