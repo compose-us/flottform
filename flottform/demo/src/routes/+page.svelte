@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-	import { defaultThemeForFileInput, FlottformFileInputHost } from '@flottform/forms';
+	import { createDefaultFlottformComponent } from '@flottform/forms';
 	import { writable } from 'svelte/store';
 	import FileInput from '$lib/components/FileInput.svelte';
 	import { createClientUrl, sdpExchangeServerBase } from '../api';
@@ -101,16 +101,21 @@
 		isFillingOut = false;
 	};
 
+	let flottformAnchor: HTMLElement;
+
 	onMount(async () => {
 		const fileInputs = document.querySelectorAll(
 			'input[type=file]'
 		) as NodeListOf<HTMLInputElement>;
+		const flottformComponent = createDefaultFlottformComponent({
+			flottformAnchorElement: flottformAnchor
+		});
 		for (const file of fileInputs) {
-			const flottformFileInputHost = new FlottformFileInputHost({
+			flottformComponent.createFileItem({
 				flottformApi: sdpExchangeServerBase,
 				createClientUrl,
 				inputField: file,
-				theme: defaultThemeForFileInput()
+				label: file.id
 			});
 		}
 	});
@@ -144,6 +149,7 @@
 			up every few hours.
 		</p>
 		<form action="{base}/upload" method="POST" enctype="multipart/form-data" class="grid gap-8">
+			<div id="flottform-anchor" bind:this={flottformAnchor} class="flottform-anchor"></div>
 			<div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
 				<div class="flex flex-col">
 					<label for="name">Name</label>
@@ -292,6 +298,10 @@
 </div>
 
 <style lang="postcss">
+	.flottform-anchor {
+		--flottform-border-width: 2px;
+		--flottform-border-color: #343af0;
+	}
 	.drag {
 		@apply border-2 border-dotted border-primary-blue;
 	}

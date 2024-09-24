@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { FlottformFileInputHost, defaultThemeForFileInput } from '@flottform/forms';
+	import { createDefaultFlottformComponent } from '@flottform/forms';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { env } from '$env/dynamic/public';
@@ -16,54 +16,23 @@
 		return `${clientBase}/${endpointId}`;
 	};
 
+	let flottformAnchor: HTMLElement;
+
 	onMount(async () => {
 		const fileInputs = document.querySelectorAll(
 			'input[type=file]'
 		) as NodeListOf<HTMLInputElement>;
+		const flottformComponent = createDefaultFlottformComponent({
+			flottformAnchorElement: flottformAnchor
+		});
 		for (const file of fileInputs) {
-			const flottformFileInputHost = new FlottformFileInputHost({
+			flottformComponent.createFileItem({
 				flottformApi: sdpExchangeServerBase,
 				createClientUrl,
 				inputField: file,
-				theme: defaultThemeForFileInput()
+				label: file.id || file.name || 'File'
 			});
 		}
-		// flottformFileInputHost.on('new', () => {
-		// 	// Optional: Custom UI
-		// });
-		// flottformFileInputHost.on('connected', () => {
-		// 	// Optional: Custom UI
-		// });
-		// flottformFileInputHost.on('receive', () => {
-		// 	// Optional: Custom UI
-		// });
-		// flottformFileInputHost.on('progress', (p) => {
-		// 	// Optional: Custom UI
-		// 	console.log('progress=', p);
-		// });
-		// flottformFileInputHost.on('disconnected', () => {
-		// 	// Optional: Custom UI
-		// });
-		// flottformFileInputHost.on('error', (err) => {
-		// 	// Optional: Custom UI
-		// });
-		// flottformFileInputHost.on('endpoint-created', ({ link, qrCode }) => {
-		// 	// Optional: Custom UI
-		// });
-		// flottformFileInputHost.on('webrtc:waiting-for-client', (link) => {
-		// 	// Optional: Custom UI
-		// });
-		// flottformFileInputHost.on('webrtc:waiting-for-ice', () => {
-		// 	// Optional: Custom UI
-		// });
-		// flottformFileInputHost.on('webrtc:waiting-for-file', () => {
-		// 	// Optional: Custom UI
-		// });
-		// flottformFileInputHost.on('done', () => {
-		// 	// Optional: Custom UI
-		// });
-
-		// flottformFileInputHost.start();
 	});
 </script>
 
@@ -71,12 +40,17 @@
 	<title>Flottform DEMO</title>
 </svelte:head>
 
+<div
+	id="flottform-anchor"
+	bind:this={flottformAnchor}
+	class="absolute top-0 right-0 w-64 flottform-anchor"
+></div>
 <div class="max-w-screen-xl mx-auto p-8 box-border grid grid-cols-1 gap-8">
 	<h1>Multiple Input Form</h1>
 	<form class="grid grid-cols-1 gap-8">
 		<label class="grid">
 			<span>Please upload the first file:</span>
-			<input type="file" name="fileA" multiple />
+			<input type="file" name="fileA" id="document-A" multiple />
 		</label>
 		<label class="grid">
 			<span>Please upload the second file:</span>
@@ -103,6 +77,13 @@
 </div>
 
 <style lang="postcss">
+	.flottform-anchor {
+		--flottform-border-style: dashed;
+		--flottform-root-border-width: 0 0 1px 1px;
+		--flottform-root-border-style: solid;
+		--flottform-root-border-color: #808080;
+		--flottform-root-border-radius: 0px 0px 0 10px;
+	}
 	.flottform {
 		@apply absolute top-0 right-0;
 	}

@@ -16,6 +16,19 @@ type EndpointInfo = {
 		iceCandidates: RTCIceCandidateInit[];
 	};
 };
+
+export type BaseListeners = {
+	new: [];
+	disconnected: [];
+	error: [error: any];
+	connected: [];
+	'endpoint-created': [{ link: string; qrCode: string }];
+	'webrtc:waiting-for-client': [
+		event: { link: string; qrCode: string; channel: FlottformChannelHost }
+	];
+	'webrtc:waiting-for-ice': [];
+};
+
 export type SafeEndpointInfo = Omit<EndpointInfo, 'hostKey' | 'clientKey'>;
 
 export type ClientState =
@@ -136,4 +149,9 @@ export class EventEmitter<EventMap extends Record<string, Array<any>>> {
 			listener(...args);
 		}
 	}
+}
+
+export abstract class BaseInputHost<L extends BaseListeners> extends EventEmitter<L> {
+	abstract start();
+	abstract close();
 }

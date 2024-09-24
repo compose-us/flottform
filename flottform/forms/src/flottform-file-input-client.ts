@@ -148,10 +148,11 @@ export class FlottformFileInputClient extends EventEmitter<Listeners> {
 		const totalNumberOfFiles = this.filesMetaData.length;
 		if (this.allFilesSent || this.currentFileIndex >= totalNumberOfFiles) {
 			// All files are sent
-			console.log('All files are sent');
+			this.logger.log('All files are sent');
 			this.channel?.sendData(JSON.stringify({ type: 'transfer-complete' }));
 			this.allFilesSent = true;
 			this.channel?.off('bufferedamountlow', this.startSendingFiles);
+			this.emit('done');
 			return;
 		}
 		const currentFileArrayBuffer = this.filesArrayBuffer[this.currentFileIndex];
@@ -165,7 +166,7 @@ export class FlottformFileInputClient extends EventEmitter<Listeners> {
 			// The file still has some chunks left
 			if (!this.channel?.canSendMoreData()) {
 				// Buffer is full. Pause sending the chunks
-				console.log('Buffer is full. Pausing sending chunks!');
+				this.logger.log('Buffer is full. Pausing sending chunks!');
 				break;
 			}
 			let progress = ((this.currentChunkIndex * this.chunkSize) / currentFileSize).toFixed(2);
@@ -184,7 +185,7 @@ export class FlottformFileInputClient extends EventEmitter<Listeners> {
 		// Now either: the buffer is full OR all the chunks of the file have been sent.
 		if (this.currentChunkIndex * this.chunkSize >= currentFileSize) {
 			// File is fully sent move to the next one
-			console.log(`File ${fileName} fully sent. Moving to next file.`);
+			this.logger.log(`File ${fileName} fully sent. Moving to next file.`);
 			this.currentFileIndex++;
 			this.currentChunkIndex = 0;
 			this.sendNextChunk(); // Recursion used to send the chunks of the next file
