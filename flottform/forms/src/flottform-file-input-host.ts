@@ -17,6 +17,7 @@ type Listeners = BaseListeners & {
 		overallProgress: number;
 	}[]; // Emitted to signal the progress of receiving the file(s)
 	done: [];
+	'webrtc:waiting-for-file': [];
 };
 
 const noop = () => {};
