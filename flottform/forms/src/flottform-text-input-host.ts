@@ -9,6 +9,7 @@ import {
 
 type Listeners = BaseListeners & {
 	done: [data: string];
+	'webrtc:waiting-for-text': [];
 };
 
 const noop = () => {};
