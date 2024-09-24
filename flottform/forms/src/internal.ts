@@ -27,7 +27,6 @@ export type BaseListeners = {
 		event: { link: string; qrCode: string; channel: FlottformChannelHost }
 	];
 	'webrtc:waiting-for-ice': [];
-	'webrtc:waiting-for-file': [];
 };
 
 export type SafeEndpointInfo = Omit<EndpointInfo, 'hostKey' | 'clientKey'>;
