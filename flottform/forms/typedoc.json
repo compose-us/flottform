@@ -6,7 +6,7 @@
 		"src/flottform-file-input-host.ts",
 		"src/flottform-text-input-client.ts",
 		"src/flottform-text-input-host.ts",
-		"src/file4.ts"
+		"src/default-component.ts"
 	],
 	"out": "docs",
 	"tsconfig": "./tsconfig.json",
