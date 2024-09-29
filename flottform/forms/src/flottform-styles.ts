@@ -95,7 +95,7 @@ padding-bottom: 4rem;
 box-sizing: border-box;
 font-size: ${styles?.fontSize || defaultFonts.fontSize};
 line-height: 1.75rem;`;
-
+// @ts-ignore: Unused variable
 export const createChannelQrCodeCss = (styles?: Styles) => `max-wigth: 100%;
 width: 350px`;
 

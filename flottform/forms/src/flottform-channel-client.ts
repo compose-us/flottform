@@ -21,7 +21,26 @@ type Listeners = {
 	error: [e: string];
 	bufferedamountlow: [];
 };
-
+/**
+ * A class used to represent one peer (called client) to establish a WebRTC connection with another peer (called host).
+ * It handles ICE candidate gathering and sending/receiving data.
+ * The connection is initiated only when `start` method is called.
+ *
+ * This class emits various events during the connection lifecycle, such as `connected`, `disconnected`, and `error`, allowing you to respond to changes in the connection state.
+ *
+ * @fires init - Emitted when the client is initialized.
+ * @fires retrieving-info-from-endpoint - Emitted when information is being retrieved from the endpoint.
+ * @fires sending-client-info - Emitted when client information is being sent to the host.
+ * @fires connecting-to-host - Emitted when attempting to connect to the host.
+ * @fires connected - Emitted when the connection is successfully established.
+ * @fires connection-impossible - Emitted if the connection to the host cannot be established.
+ * @fires done - Emitted when the all of the data is received.
+ * @fires disconnected - Emitted when the connection is closed.
+ * @fires error - Emitted when there is an error during the connection.
+ * @fires bufferedamountlow - Emitted when the buffered amount for data channels is low.
+ *
+ * @extends EventEmitter
+ */
 export class FlottformChannelClient extends EventEmitter<Listeners> {
 	private flottformApi: string;
 	private endpointId: string;
@@ -34,7 +53,17 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 	private dataChannel: RTCDataChannel | null = null;
 	private pollForIceTimer: NodeJS.Timeout | number | null = null;
 	private BUFFER_THRESHOLD = 128 * 1024; // 128KB buffer threshold (maximum of 4 chunks in the buffer waiting to be sent over the network)
-
+	/**
+	 * Creates an instance of FlottformChannelClient
+	 *
+	 * @param {Object} config - The configuration for setting up the channel for the host.
+	 *
+	 * @param {endpointId} - The unique identifier of the endpoint to connect to.
+	 * @param {flottformApi} - The API endpoint for retrieving connection information.
+	 * @param {rtcConfiguration} - Optional RTC configuration for WebRTC connection.
+	 * @param {pollTimeForIceInMs} - Optional time in milliseconds for polling ICE candidates.
+	 * @param {logger} - Optional logger for logging connection events (default: `console`).
+	 */
 	constructor({
 		endpointId,
 		flottformApi,
@@ -62,6 +91,10 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		this.logger.info(`**Client State changed to: ${newState}`, details == undefined ? '' : details);
 	};
 
+	/**
+	 * Starts the WebRTC connection process. The connection is not established until this method is called.
+	 *
+	 */
 	start = async () => {
 		if (this.openPeerConnection) {
 			this.close();
@@ -102,6 +135,11 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		this.startPollingForIceCandidates(getEndpointInfoUrl);
 	};
 
+	/**
+	 * Closes the WebRTC connection if it is currently established.
+	 *
+	 * @fires disconnected - Emitted when the connection is successfully closed.
+	 */
 	close = () => {
 		if (this.openPeerConnection) {
 			this.openPeerConnection.close();
@@ -110,6 +148,12 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		this.changeState('disconnected');
 	};
 
+	/**
+	 * Sends data to the connected peer via the WebRTC data channel.
+	 *
+	 * @param data - The data to send to the peer.
+	 * @fires error - Emits the state error if the connection is not established.
+	 */
 	sendData = (data: any) => {
 		if (this.dataChannel == null) {
 			this.changeState('error', 'dataChannel is null. Unable to send the file to the Host!');
@@ -121,6 +165,11 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		this.dataChannel.send(data);
 	};
 
+	/**
+	 * Determines if more data can be sent based on the WebRTC data channel's buffered amount. This is useful when dealing with large amounts of data.
+	 *
+	 * @returns `true` if more data can be sent, otherwise `false`.
+	 */
 	canSendMoreData = () => {
 		return (
 			this.dataChannel &&
@@ -154,6 +203,7 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 				}
 			}
 		};
+		// @ts-ignore: Unused variable
 		this.openPeerConnection.onicegatheringstatechange = async (e) => {
 			this.logger.info(`onicegatheringstatechange - ${this.openPeerConnection!.iceGatheringState}`);
 		};
@@ -161,6 +211,7 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 			this.logger.error(`onicecandidateerror - ${this.openPeerConnection!.connectionState}`, e);
 		};
 	};
+
 	private setUpConnectionStateGathering = (getEndpointInfoUrl: string) => {
 		if (this.openPeerConnection === null) {
 			this.changeState(
@@ -187,7 +238,7 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 				}
 			}
 		};
-
+		// @ts-ignore: Unused variable
 		this.openPeerConnection.oniceconnectionstatechange = (e) => {
 			this.logger.info(
 				`oniceconnectionstatechange - ${this.openPeerConnection!.iceConnectionState}`
@@ -198,12 +249,14 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 			}
 		};
 	};
+
 	private stopPollingForIceCandidates = async () => {
 		if (this.pollForIceTimer) {
 			clearTimeout(this.pollForIceTimer);
 		}
 		this.pollForIceTimer = null;
 	};
+
 	private startPollingForIceCandidates = async (getEndpointInfoUrl: string) => {
 		if (this.pollForIceTimer) {
 			clearTimeout(this.pollForIceTimer);
@@ -213,6 +266,7 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 
 		this.pollForIceTimer = setTimeout(this.startPollingForIceCandidates, this.pollTimeForIceInMs);
 	};
+
 	private pollForConnection = async (getEndpointInfoUrl: string) => {
 		if (this.openPeerConnection === null) {
 			this.changeState('error', "openPeerConnection is null. Unable to retrieve Host's details");
@@ -225,6 +279,7 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 			await this.openPeerConnection.addIceCandidate(iceCandidate);
 		}
 	};
+
 	private putClientInfo = async (
 		putClientInfoUrl: string,
 		clientKey: string,

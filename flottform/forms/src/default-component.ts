@@ -40,8 +40,66 @@ const createLinkAndQrCode = (qrCode: string, link: string) => {
 		createChannelLinkWithOffer
 	};
 };
+
+/**
+ * Creates and attaches a default Flottform UI component to the specified anchor element. This UI acts as an intermediary to facilitate WebRTC-based peer-to-peer connections between two devices, allowing one peer to send data (files or text) to the other.
+ *
+ * Developers can customize aspects of the UI, such as the button text, descriptions, and CSS classes, while using the default behavior provided by the function to quickly set up the peer-to-peer data transfer mechanism.
+ *
+ * The generated UI component will be attached as a child to `flottformAnchorElement`. The UI includes a dialog with a QR code or link that the second peer can use to connect and upload files/text to the main form.
+ *
+ * The dialog also shows the progress of receiving the file or text from the other device or any errors that can happen.
+ *
+ * The returned object allows for further interactions, such as adding the UI necessary to handle receiving a file or text, and retrieving all existing Flottform items within the UI.
+ *
+ * @param {Object} params - Configuration options for setting up the Flottform component.
+ * @param {HTMLElement} params.flottformAnchorElement - The HTML element to which the Flottform component will be attached. It determines where the UI will be built on the page.
+ * @param {string} [params.id] - Optional ID for the UI used for File of Text element.
+ * @param {HTMLElement} [params.flottformRootElement] - An optional root element to use. If not provided, a new default root element (a `div` with the class `flottform-root`) will be created.
+ * @param {string} [params.additionalComponentClass] - Optional additional class to add for custom styling of the component.
+ * @param {string} [params.flottformRootTitle] - Optional title to set for the Flottform root element This is the text displayed on the button that opens the dialog (with the class `flottform-root-opener-button`).
+ * @param {string} [params.flottformRootDescription] - Optional description text shown inside the dialog when it is opened. It provides context for the user about what the Flottform component does (e.g., "Receive files from other devices").
+ *
+ * @returns {Object} - Returns an object with methods to interact with the Flottform component.
+ * @returns {HTMLElement} returns.flottformRoot - The root element of the Flottform UI.
+ * @returns {Function} returns.createFileItem - Function to create an entry in the UI for receiving files from another peer. The entry will show the QR code/link, progress of the file transfer, and handle any errors.
+ * @returns {Function} returns.createTextItem - Function to create an entry in the UI for receiving text from another peer. Similar to `createFileItem`, it handles text input, progress tracking, and error handling.
+ * @returns {Function} returns.getAllFlottformItems - Function to retrieve all current Flottform items (file and text entries) in the dialog.
+ *
+ * @example
+ *
+ *
+ * const flottformComponent = createDefaultFlottformComponent({
+ *	flottformAnchorElement: document.getElementById('form-anchor'),
+ *	flottformRootTitle: 'Share Data via Flottform',
+ * 	flottformRootDescription: 'This form is powered by Flottform. Upload files or send text from another device using the provided QR code.'
+ *});
+ *
+ * // Create an entry to receive files
+ * flottformComponent.createFileItem({
+ *   flottformApi, // URL of the WebRTC signaling server
+ *   createClientUrl: ({ endpointId }) => `/upload/${endpointId}`, // URL of the client page for file uploads
+ *   inputField: document.querySelector('#fileInput'), // The file input field in the main form
+ *   label: 'Upload Resume', // Label for the file input
+ *   buttonLabel:'Submit File', // Button text for the file input
+ *   onSuccessText: 'File received successfully!' // Success message displayed after the file is received
+ * });
+ *
+ * // Create an entry to receive text
+ * flottformComponent.createTextItem({
+ *   flottformApi, // URL of the WebRTC signaling server
+ *   createClientUrl: ({ endpointId }) => `/text/${endpointId}`, // URL of the client page for sending text
+ *   label: 'Enter your message', // Label for the text input
+ *   buttonLabel: 'Send Message', // Button text for the text input
+ *   onErrorText: (error) => `Failed to receive text: ${error.message}` // Error message if text transfer fails
+ * });
+ *
+ * // Retrieve all Flottform items in the UI (file and text entries)
+ * const allItems = flottformComponent.getAllFlottformItems();
+ */
 export const createDefaultFlottformComponent = ({
 	flottformAnchorElement,
+	// @ts-ignore: Unused variable
 	id,
 	flottformRootElement,
 	additionalComponentClass,
@@ -74,6 +132,11 @@ export const createDefaultFlottformComponent = ({
 	flottformAnchorElement.appendChild(flottformRoot);
 	return {
 		flottformRoot,
+		/**
+		 * Retrieves all existing Flottform items (both file and text entries) in the UI.
+		 *
+		 * @returns {NodeListOf<Element> | null} - A NodeList of Flottform input items (file and text entries), or `null` if no items are found.
+		 */
 		getAllFlottformItems: () => {
 			const flottformInputsList = flottformRoot.querySelector('.flottform-inputs-list');
 			if (!flottformInputsList) {
@@ -82,6 +145,22 @@ export const createDefaultFlottformComponent = ({
 			}
 			return flottformInputsList.childNodes as NodeListOf<Element>;
 		},
+		/**
+		 * Creates a UI entry for receiving a file via WebRTC.
+		 *
+		 * @param {Object} params - Configuration options for the file input entry.
+		 * @param {string} params.flottformApi - URL of the WebRTC signaling server.
+		 * @param {Function} params.createClientUrl - A function that returns the URL where the second peer can upload the file.
+		 * @param {HTMLInputElement} params.inputField - The file input field in the main form where the received file will be displayed or processed.
+		 * @param {string} [params.id] - Optional ID for the file input entry.
+		 * @param {string} [params.additionalItemClasses] - Optional additional CSS classes for styling the file input entry.
+		 * @param {string} [params.label] - Optional label text for the file input entry.
+		 * @param {string} [params.buttonLabel] - Optional text for the button that triggers the file reception.
+		 * @param {string | Function} [params.onErrorText] - Optional error message displayed if the file transfer fails.
+		 * @param {string} [params.onSuccessText] - Optional success message displayed after the file is successfully received.
+		 *
+		 * @returns {void}
+		 */
 		createFileItem: ({
 			flottformApi,
 			createClientUrl,
@@ -137,6 +216,21 @@ export const createDefaultFlottformComponent = ({
 				onSuccessText
 			});
 		},
+		/**
+		 * Creates a UI entry for receiving text via WebRTC.
+		 *
+		 * @param {Object} params - Configuration options for the text input entry.
+		 * @param {string} params.flottformApi - URL of the WebRTC signaling server.
+		 * @param {Function} params.createClientUrl - A function that returns the URL where the second peer can send the text.
+		 * @param {string} [params.id] - Optional ID for the text input entry.
+		 * @param {string} [params.additionalItemClasses] - Optional additional CSS classes for styling the text input entry.
+		 * @param {string} [params.label] - Optional label text for the text input entry.
+		 * @param {string} [params.buttonLabel] - Optional text for the button that triggers the text reception.
+		 * @param {string | Function} [params.onErrorText] - Optional error message displayed if the text transfer fails.
+		 * @param {string} [params.onSuccessText] - Optional success message displayed after the text is successfully received.
+		 *
+		 * @returns {void}
+		 */
 		createTextItem: ({
 			flottformApi,
 			createClientUrl,
@@ -227,7 +321,9 @@ const createBaseFlottformItems = <L extends BaseListeners>({
 	});
 	flottformBaseInputHost.on('error', (error) => {
 		statusInformation.innerHTML =
-			typeof onErrorText === "function" ? onErrorText(error) : (onErrorText ?? `🚨 An error occured (${error.message}). Please try again`);
+			typeof onErrorText === 'function'
+				? onErrorText(error)
+				: onErrorText ?? `🚨 An error occured (${error.message}). Please try again`;
 		createChannelButton.innerText = 'Retry';
 		flottformStateItemsContainer.replaceChildren(statusInformation);
 		flottformStateItemsContainer.appendChild(createChannelButton);
