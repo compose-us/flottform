@@ -225,7 +225,9 @@ const createBaseFlottformItems = <L extends BaseListeners>({
 	});
 	flottformBaseInputHost.on('error', (error) => {
 		statusInformation.innerHTML =
-			typeof onErrorText === "function" ? onErrorText(error) : (onErrorText ?? `🚨 An error occured (${error.message}). Please try again`);
+			typeof onErrorText === 'function'
+				? onErrorText(error)
+				: onErrorText ?? `🚨 An error occured (${error.message}). Please try again`;
 		createChannelButton.innerText = 'Retry';
 		flottformStateItemsContainer.replaceChildren(statusInformation);
 		flottformStateItemsContainer.appendChild(createChannelButton);
