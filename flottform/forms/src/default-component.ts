@@ -42,14 +42,12 @@ const createLinkAndQrCode = (qrCode: string, link: string) => {
 };
 export const createDefaultFlottformComponent = ({
 	flottformAnchorElement,
-	id,
 	flottformRootElement,
 	additionalComponentClass,
 	flottformRootTitle,
 	flottformRootDescription
 }: {
 	flottformAnchorElement: HTMLElement;
-	id?: string;
 	flottformRootElement?: HTMLElement;
 	additionalComponentClass?: string;
 	flottformRootTitle?: string;
