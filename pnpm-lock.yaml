@@ -23,6 +23,12 @@ importers:
 
   flottform/demo:
     devDependencies:
+      '@eslint/eslintrc':
+        specifier: ^3.1.0
+        version: 3.1.0
+      '@eslint/js':
+        specifier: ^9.12.0
+        version: 9.12.0
       '@flottform/forms':
         specifier: workspace:^
         version: link:../forms
@@ -63,7 +69,7 @@ importers:
         specifier: ^10.4.19
         version: 10.4.19(postcss@8.4.39)
       eslint:
-        specifier: ^9.2.0
+        specifier: ^9.7.0
         version: 9.7.0
       eslint-config-prettier:
         specifier: ^9.1.0
@@ -71,6 +77,9 @@ importers:
       eslint-plugin-svelte:
         specifier: ^2.39.0
         version: 2.42.0(eslint@9.7.0)(svelte@5.0.0-next.136)
+      globals:
+        specifier: ^15.10.0
+        version: 15.10.0
       postcss:
         specifier: ^8.4.38
         version: 8.4.39
@@ -830,6 +839,11 @@ packages:
   /@eslint/js@8.56.0:
     resolution: {integrity: sha512-gMsVel9D7f2HLkBma9VbtzZRehRogVRfbr++f06nL2vnCGCNlzOD+/MUov/F4p8myyAHspEhVobgjpX64q5m6A==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+    dev: true
+
+  /@eslint/js@9.12.0:
+    resolution: {integrity: sha512-eohesHH8WFRUprDNyEREgqP6beG6htMeUYeCpkEgBCieCMme5r9zFWjzAJp//9S+Kub4rqE+jXe9Cp1a7IYIIA==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     dev: true
 
   /@eslint/js@9.7.0:
@@ -3789,6 +3803,11 @@ packages:
 
   /globals@14.0.0:
     resolution: {integrity: sha512-oahGvuMGQlPw/ivIYBjVSrWAfWLBeku5tpPE2fOPLi+WHffIWbuh2tCjhyQhTBPMf5E9jDEH4FOmTYgYwbKwtQ==}
+    engines: {node: '>=18'}
+    dev: true
+
+  /globals@15.10.0:
+    resolution: {integrity: sha512-tqFIbz83w4Y5TCbtgjZjApohbuh7K9BxGYFm7ifwDR240tvdb7P9x+/9VvUKlmkPoiknoJtanI8UOrqxS3a7lQ==}
     engines: {node: '>=18'}
     dev: true
 
