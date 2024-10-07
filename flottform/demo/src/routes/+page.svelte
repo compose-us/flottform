@@ -134,7 +134,7 @@
 	>
 		<span
 			class="ease absolute top-1/2 h-0 w-64 origin-center -translate-x-20 rotate-45 bg-primary-blue transition-all duration-300 group-hover:h-64 group-hover:-translate-y-32"
-		/>
+		></span>
 		<span class="ease relative transition duration-300 group-hover:text-white">Auto-fill form</span>
 	</button>
 	<div class="sm:col-span-2 order-2 md:order-1 gap-4 flex flex-col">
