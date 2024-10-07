@@ -22,6 +22,8 @@ type Listeners = {
 	bufferedamountlow: [];
 };
 
+type RTCDataChannelData = string | Blob | ArrayBuffer | ArrayBufferView;
+
 export class FlottformChannelClient extends EventEmitter<Listeners> {
 	private flottformApi: string;
 	private endpointId: string;
@@ -110,7 +112,7 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		this.changeState('disconnected');
 	};
 
-	sendData = (data: any) => {
+	sendData = (data: RTCDataChannelData) => {
 		if (this.dataChannel == null) {
 			this.changeState('error', 'dataChannel is null. Unable to send the file to the Host!');
 			return;
@@ -188,7 +190,7 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 			}
 		};
 
-		this.openPeerConnection.oniceconnectionstatechange = (e) => {
+		this.openPeerConnection.oniceconnectionstatechange = () => {
 			this.logger.info(
 				`oniceconnectionstatechange - ${this.openPeerConnection!.iceConnectionState}`
 			);
