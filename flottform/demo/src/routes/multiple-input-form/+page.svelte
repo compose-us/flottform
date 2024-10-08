@@ -64,9 +64,9 @@
 			<span>Please Enter your OTP (One Time password):</span>
 			<input type="text" name="one-time-pwd" style="border:1px solid gray; border-radius:0.2rem;" />
 		</label>
-		<label class="grid">
+		<label class="grid" for="canvas">
 			<span>Please get the signature:</span>
-			<canvas style="background-color:gray;"></canvas>
+			<canvas style="background-color:gray;" id="canvas"></canvas>
 		</label>
 		<label class="grid">
 			<span>Text Area Tranlated to English:</span>

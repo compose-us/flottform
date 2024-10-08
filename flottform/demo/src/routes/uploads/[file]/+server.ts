@@ -11,6 +11,8 @@ export const GET: RequestHandler = async ({ params }) => {
 		return new Response(fileStream);
 	} catch (err) {
 		console.log(err);
+		/* eslint-disable  @typescript-eslint/no-explicit-any */
 		return error((err as any).code === 'ENOENT' ? 404 : 500);
+		/* eslint-enable  @typescript-eslint/no-explicit-any */
 	}
 };
