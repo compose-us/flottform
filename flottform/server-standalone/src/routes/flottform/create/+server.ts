@@ -11,7 +11,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	let session: RTCSessionDescriptionInit;
 	try {
 		session = RTCSessionDescriptionInitSchema.parse(data.session);
-	} catch (e) {
+	} catch {
 		return error(400, 'Could not parse session parameter into RTCSessionDescription.');
 	}
 

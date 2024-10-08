@@ -39,7 +39,7 @@ export const DELETE: RequestHandler = async ({ params, request }) => {
 	let data: unknown;
 	try {
 		data = await request.json();
-	} catch (e) {
+	} catch {
 		return error(400, 'Could not parse request data as JSON');
 	}
 
