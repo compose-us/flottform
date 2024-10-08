@@ -72,7 +72,7 @@
 	{:else if currentState === 'connected'}
 		<h1>Let me know your location, please!</h1>
 		<div class="mx-auto">
-			<button on:click={updateCurrentPosition} class="border border-primary-blue rounded px-4 py-2"
+			<button onclick={updateCurrentPosition} class="border border-primary-blue rounded px-4 py-2"
 				>Send current location</button
 			>
 		</div>
@@ -80,7 +80,7 @@
 		<h1>Sending location to your friend!</h1>
 	{:else if currentState === 'error-user-denied'}
 		<h1>You need to allow sending a location for this app to work!</h1>
-		<button on:click={updateCurrentPosition}>Try again</button>
+		<button onclick={updateCurrentPosition}>Try again</button>
 	{:else if currentState === 'error'}
 		<h1>There was a problem with the connection - please try again! 🤕</h1>
 	{:else if currentState === 'done'}

@@ -22,10 +22,11 @@ export default [
 			'**/node_modules',
 			'build',
 			'.svelte-kit',
-			'package',
+			'/package',
 			'**/.env',
 			'**/.env.*',
 			'!**/.env.example',
+			// Ignore files for PNPM, NPM and YARN
 			'**/pnpm-lock.yaml',
 			'**/package-lock.json',
 			'**/yarn.lock'
@@ -64,6 +65,9 @@ export default [
 			parser: parser,
 			ecmaVersion: 5,
 			sourceType: 'script',
+			globals: {
+				L: 'readonly'
+			},
 
 			parserOptions: {
 				parser: '@typescript-eslint/parser'

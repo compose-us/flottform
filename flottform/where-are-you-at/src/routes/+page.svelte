@@ -59,7 +59,7 @@
 			// Channel will be closed since we won't receive data anymore.
 			flottformTextInputHost.close();
 		});
-		flottformTextInputHost.on('error', (error) => {
+		flottformTextInputHost.on('error', () => {
 			$currentState = 'error';
 		});
 	});
