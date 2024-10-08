@@ -41,7 +41,6 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 		inputField,
 		rtcConfiguration = DEFAULT_WEBRTC_CONFIG,
 		pollTimeForIceInMs = POLL_TIME_IN_MS,
-		theme,
 		logger = console
 	}: {
 		flottformApi: string | URL;
@@ -64,7 +63,6 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 		this.logger = logger;
 
 		this.registerListeners();
-		theme && theme(this);
 	}
 
 	start = () => {

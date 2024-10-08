@@ -45,6 +45,7 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		});
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	private changeState = (newState: FlottformState | 'disconnected', details?: any) => {
 		this.state = newState;
 		this.emit(newState, details);
@@ -244,12 +245,12 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 			return;
 		}
 
-		this.dataChannel.onopen = (e) => {
+		this.dataChannel.onopen = () => {
 			this.logger.log('data channel opened');
 			this.changeState('waiting-for-data');
 		};
 
-		this.dataChannel.onclose = (e) => {
+		this.dataChannel.onclose = () => {
 			this.logger.log('data channel closed');
 		};
 
