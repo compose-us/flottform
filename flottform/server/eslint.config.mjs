@@ -32,7 +32,14 @@ export default [
 			sourceType: 'module'
 		},
 
-		rules: {}
+		rules: {
+			'@typescript-eslint/no-unused-vars': [
+				'error',
+				{
+					varsIgnorePattern: '^_'
+				}
+			]
+		}
 	},
 	{
 		files: ['**/.eslintrc.{js,cjs}'],
