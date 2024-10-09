@@ -20,8 +20,7 @@
 .flottform-elements-container-wrapper {
 	display: grid;
 	grid-template-rows: 0fr;
-	transition:
-		grid-template-rows 0.25s ease-out;
+	transition: grid-template-rows 0.25s ease-out;
 	overflow-y: auto;
 	max-height: var(--flottform-elements-max-height);
 }
@@ -101,7 +100,7 @@
 	border: 1px var(--flottform-border-style) var(--flottform-clipboard-button-border);
 	border-radius: var(--flottform-buttons-border-radius);
 	background-color: var(--flottform-clipboard-button-background);
-	padding: 0.25rem .5rem;
+	padding: 0.25rem 0.5rem;
 	font-size: 0.75rem;
 }
 .flottform-status-information {
@@ -131,13 +130,21 @@
 
 .flottform-status-bar::-webkit-progress-value {
 	border-radius: 8px;
-	background-image: linear-gradient(270deg, var(--flottform-status-bar-gradient-from), var(--flottform-status-bar-gradient-to));
+	background-image: linear-gradient(
+		270deg,
+		var(--flottform-status-bar-gradient-from),
+		var(--flottform-status-bar-gradient-to)
+	);
 	transition: background-color 0.5s ease-in-out;
 }
 
 .flottform-status-bar::-moz-progress-bar {
 	border-radius: 8px;
-	background-image: linear-gradient(270deg, var(--flottform-status-bar-gradient-from), var(--flottform-status-bar-gradient-to));
+	background-image: linear-gradient(
+		270deg,
+		var(--flottform-status-bar-gradient-from),
+		var(--flottform-status-bar-gradient-to)
+	);
 	transition: background-color 0.5s ease-in-out;
 }
 

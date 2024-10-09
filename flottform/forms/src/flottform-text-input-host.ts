@@ -14,8 +14,6 @@ type Listeners = BaseListeners & {
 	'webrtc:waiting-for-data': [];
 };
 
-const noop = () => {};
-
 export class FlottformTextInputHost extends BaseInputHost<Listeners> {
 	private channel: FlottformChannelHost | null = null;
 	private logger: Logger;
@@ -74,14 +72,14 @@ export class FlottformTextInputHost extends BaseInputHost<Listeners> {
 		return this.qrCode;
 	};
 
-	private handleIncomingData = (e: MessageEvent<any>) => {
+	private handleIncomingData = (e: MessageEvent) => {
 		this.emit('receive');
 		// We suppose that the data received is small enough to be all included in 1 message
 		this.emit('done', e.data);
 	};
 
 	private registerListeners = () => {
-		this.channel?.on('new', ({ channel }) => {
+		this.channel?.on('new', () => {
 			this.emit('new');
 		});
 		this.channel?.on('waiting-for-client', (event) => {

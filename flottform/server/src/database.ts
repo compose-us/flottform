@@ -15,7 +15,6 @@ type EndpointInfo = {
 	};
 };
 type SafeEndpointInfo = Omit<EndpointInfo, 'hostKey' | 'clientKey'>;
-type Exact<A, B> = A extends B ? (B extends A ? A : never) : never;
 
 function createRandomHostKey(): string {
 	return crypto.randomUUID();
@@ -47,7 +46,6 @@ class FlottformDatabase {
 		if (!entry) {
 			throw Error('Endpoint not found');
 		}
-
 		const { hostKey: _ignore1, clientKey: _ignore2, ...endpoint } = entry;
 
 		return endpoint;
