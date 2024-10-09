@@ -1,7 +1,7 @@
 import { FlottformFileInputHost } from './flottform-file-input-host';
 import { FlottformTextInputHost } from './flottform-text-input-host';
 import { BaseInputHost, BaseListeners } from './internal';
-import { FlottformCreateFileParams, FlottformCreateItemParams } from './types';
+import { FlottformCreateFileParams, FlottformCreateTextParams } from './types';
 
 const openInputsList = () => {
 	const flottformElementsContainerWrapper: HTMLDivElement = document.querySelector(
@@ -55,7 +55,7 @@ export const createDefaultFlottformComponent = ({
 }): {
 	flottformRoot: HTMLElement;
 	createFileItem: (params: FlottformCreateFileParams) => void;
-	createTextItem: (params: FlottformCreateItemParams) => void;
+	createTextItem: (params: FlottformCreateTextParams) => void;
 	getAllFlottformItems: () => NodeListOf<Element> | null;
 } => {
 	const flottformRoot: HTMLElement =
@@ -138,6 +138,7 @@ export const createDefaultFlottformComponent = ({
 		createTextItem: ({
 			flottformApi,
 			createClientUrl,
+			inputField,
 			id,
 			additionalItemClasses,
 			label,
@@ -147,6 +148,7 @@ export const createDefaultFlottformComponent = ({
 		}: {
 			flottformApi: string;
 			createClientUrl: (params: { endpointId: string }) => Promise<string>;
+			inputField?: HTMLInputElement | HTMLTextAreaElement;
 			id?: string;
 			additionalItemClasses?: string;
 			label?: string;
@@ -177,7 +179,8 @@ export const createDefaultFlottformComponent = ({
 				refreshChannelButton,
 				flottformTextInputHost: flottformBaseInputHost,
 				id,
-				onSuccessText
+				onSuccessText,
+				inputField
 			});
 		}
 	};
@@ -290,7 +293,8 @@ const handleTextInputStates = ({
 	refreshChannelButton,
 	flottformTextInputHost,
 	id,
-	onSuccessText
+	onSuccessText,
+	inputField
 }: {
 	flottformItem: HTMLLIElement;
 	statusInformation: HTMLDivElement;
@@ -298,14 +302,18 @@ const handleTextInputStates = ({
 	flottformTextInputHost: FlottformTextInputHost;
 	id?: string;
 	onSuccessText?: string;
+	inputField?: HTMLInputElement | HTMLTextAreaElement;
 }) => {
 	if (id) {
 		flottformItem.setAttribute('id', id);
 	}
 	flottformTextInputHost.on('done', (message: string) => {
-		statusInformation.innerHTML = onSuccessText ?? `✨ You have succesfully submitted ${message}`;
+		statusInformation.innerHTML = onSuccessText ?? `✨ You have succesfully submitted your message`;
 		statusInformation.appendChild(refreshChannelButton);
 		flottformItem.replaceChildren(statusInformation);
+		if (inputField) {
+			inputField.value = message;
+		}
 	});
 };
 

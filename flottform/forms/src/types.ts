@@ -13,10 +13,16 @@ export interface FlottformCreateItemParams {
 	 */
 	onErrorText?: string | ((error: Error) => string);
 	/**
-	 * Text for a success state (default: ✨ You have succesfully downloaded all your files.
+	 * Text for a success state (default: ✨ You have succesfully downloaded all your files).
 	 */
 	onSuccessText?: string;
 }
 export interface FlottformCreateFileParams extends FlottformCreateItemParams {
 	inputField: HTMLInputElement;
+}
+export interface FlottformCreateTextParams extends FlottformCreateItemParams {
+	/**
+	 * An optional input field that can be passed to display the user's submitted text.
+	 */
+	inputField?: HTMLInputElement | HTMLTextAreaElement;
 }
