@@ -51,15 +51,13 @@ export type FlottformState =
 	| 'done'
 	| 'error';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 export type Logger = {
-	debug: (...args: any[]) => void;
-	info: (...args: any[]) => void;
-	log: (...args: any[]) => void;
-	warn: (...args: any[]) => void;
-	error: (...args: any[]) => void;
+	debug: typeof console.debug;
+	info: typeof console.info;
+	log: typeof console.log;
+	warn: typeof console.warn;
+	error: typeof console.error;
 };
-/* eslint-enable @typescript-eslint/no-explicit-any */
 
 export type FileMetaInfos = {
 	data: string;
