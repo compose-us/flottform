@@ -18,7 +18,8 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 	let data: unknown;
 	try {
 		data = await request.json();
-	} catch {
+	} catch (e) {
+		console.log(e);
 		return error(400, 'Could not parse request data as JSON');
 	}
 
