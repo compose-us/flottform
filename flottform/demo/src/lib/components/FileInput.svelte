@@ -8,20 +8,26 @@
 		label = 'Please upload your photo',
 		class: inputClass = '',
 		...rest
-	} = $props<
-		{
-			id: string;
-			name: string;
-			fileInput: HTMLInputElement;
-			label?: string;
-			class?: string;
-			children?: any;
-		} & HTMLAttributes<HTMLInputElement>
-	>();
+	}: {
+		id: string;
+		name: string;
+		fileInput: HTMLInputElement;
+		label?: string;
+		class?: string;
+	} & HTMLAttributes<HTMLInputElement> = $props();
 
 	let dragTarget = $state(false);
-	function handleDrag(e: Event) {
+	function handleDrag() {
 		dragTarget = true;
+	}
+	function handleDrop(event: DragEvent) {
+		event.preventDefault();
+		dragTarget = false;
+		const droppedFiles = event.dataTransfer?.files;
+		if (droppedFiles) {
+			fileInput.files = droppedFiles;
+			previewUploadedImage();
+		}
 	}
 
 	let previewImage: string | null | undefined = $state(undefined);
@@ -53,12 +59,10 @@
 			type="file"
 			class:drag={dragTarget}
 			required
-			on:drop={(e) => {
-				dragTarget = false;
-				e.dataTransfer?.files;
-			}}
-			on:dragenter={(e) => handleDrag(e)}
-			on:change={previewUploadedImage}
+			ondrop={(e) => handleDrop(e)}
+			ondragenter={() => handleDrag()}
+			onchange={previewUploadedImage}
+			multiple
 		/>
 		<svg
 			class="w-6 h-6 fill-primary-blue opacity-80"

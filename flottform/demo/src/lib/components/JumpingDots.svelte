@@ -1,8 +1,8 @@
 <div class="connecting">Connecting to form</div>
 <div class="loadingWrapper">
-	<span class="dots" />
-	<span class="dots" />
-	<span class="dots" />
+	<span class="dots"></span>
+	<span class="dots"></span>
+	<span class="dots"></span>
 </div>
 
 <style>

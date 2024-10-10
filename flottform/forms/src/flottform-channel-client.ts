@@ -56,6 +56,7 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		this.logger = logger;
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	private changeState = (newState: ClientState, details?: any) => {
 		this.state = newState;
 		this.emit(newState, details);
@@ -110,6 +111,8 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		this.changeState('disconnected');
 	};
 
+	// sendData = (data: string | Blob | ArrayBuffer | ArrayBufferView) => {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	sendData = (data: any) => {
 		if (this.dataChannel == null) {
 			this.changeState('error', 'dataChannel is null. Unable to send the file to the Host!');
@@ -154,7 +157,7 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 				}
 			}
 		};
-		this.openPeerConnection.onicegatheringstatechange = async (e) => {
+		this.openPeerConnection.onicegatheringstatechange = async () => {
 			this.logger.info(`onicegatheringstatechange - ${this.openPeerConnection!.iceGatheringState}`);
 		};
 		this.openPeerConnection.onicecandidateerror = (e) => {
@@ -188,7 +191,7 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 			}
 		};
 
-		this.openPeerConnection.oniceconnectionstatechange = (e) => {
+		this.openPeerConnection.oniceconnectionstatechange = () => {
 			this.logger.info(
 				`oniceconnectionstatechange - ${this.openPeerConnection!.iceConnectionState}`
 			);

@@ -17,9 +17,8 @@ type Listeners = BaseListeners & {
 		overallProgress: number;
 	}[]; // Emitted to signal the progress of receiving the file(s)
 	done: [];
+	'webrtc:waiting-for-file': [];
 };
-
-const noop = () => {};
 
 export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 	private channel: FlottformChannelHost | null = null;
@@ -42,7 +41,6 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 		inputField,
 		rtcConfiguration = DEFAULT_WEBRTC_CONFIG,
 		pollTimeForIceInMs = POLL_TIME_IN_MS,
-		theme,
 		logger = console
 	}: {
 		flottformApi: string | URL;
@@ -65,7 +63,6 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 		this.logger = logger;
 
 		this.registerListeners();
-		theme && theme(this);
 	}
 
 	start = () => {
@@ -94,7 +91,7 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 		return this.qrCode;
 	};
 
-	private handleIncomingData = (e: MessageEvent<any>) => {
+	private handleIncomingData = (e: MessageEvent) => {
 		if (typeof e.data === 'string') {
 			// string can be either metadata or end transfer marker.
 			const message = JSON.parse(e.data);
@@ -178,7 +175,7 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 	};
 
 	private registerListeners = () => {
-		this.channel?.on('new', ({ channel }) => {
+		this.channel?.on('new', () => {
 			this.emit('new');
 		});
 		this.channel?.on('waiting-for-client', (event) => {

@@ -58,6 +58,7 @@ export const actions: Actions = {
 	}
 };
 
+/* eslint-disable  @typescript-eslint/no-explicit-any */
 function isString(x: any): x is string {
 	return typeof x === 'string';
 }
@@ -67,6 +68,7 @@ function isFile(x: any): x is File {
 		x !== null && x !== undefined && x.name !== undefined && typeof x.arrayBuffer === 'function'
 	);
 }
+/* eslint-enable  @typescript-eslint/no-explicit-any */
 
 async function tryRemovingOldUploads(): Promise<void> {
 	try {

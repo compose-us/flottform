@@ -13,23 +13,23 @@
 	const tileProviderAttribution = {
 		attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
 	};
-	const customIcon = {
-		iconUrl: markerIcon,
-		iconRetinaUrl: markerIcon2x,
-		shadowUrl: markerShadow,
-		iconAnchor: [12.5, 41]
-	};
+	let customIcon: L.Icon;
 	let mapInstance: L.Map | null;
 	let markerInstance: L.Marker | null;
 	const mapId = 'leaflet-map';
 
 	onMount(async () => {
 		const leaflet = await import('leaflet');
-
+		customIcon = leaflet.icon({
+			iconUrl: markerIcon,
+			iconRetinaUrl: markerIcon2x,
+			shadowUrl: markerShadow,
+			iconAnchor: [12.5, 41]
+		});
 		mapInstance = leaflet.map(mapId).setView([latitude, longitude], 13);
 
 		leaflet.tileLayer(tileProvider, tileProviderAttribution).addTo(mapInstance);
-		markerInstance = leaflet.marker([latitude, longitude]).addTo(mapInstance);
+		markerInstance = leaflet.marker([latitude, longitude], { icon: customIcon }).addTo(mapInstance);
 	});
 
 	$effect(() => {
@@ -41,7 +41,9 @@
 					mapInstance?.removeLayer(markerInstance);
 				}
 				if (mapInstance) {
-					markerInstance = leaflet.marker([latitude, longitude]).addTo(mapInstance);
+					markerInstance = leaflet
+						.marker([latitude, longitude], { icon: customIcon })
+						.addTo(mapInstance);
 
 					mapInstance.setView([latitude, longitude]);
 				}

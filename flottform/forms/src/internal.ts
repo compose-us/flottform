@@ -20,14 +20,13 @@ type EndpointInfo = {
 export type BaseListeners = {
 	new: [];
 	disconnected: [];
-	error: [error: any];
+	error: [error: Error];
 	connected: [];
 	'endpoint-created': [{ link: string; qrCode: string }];
 	'webrtc:waiting-for-client': [
 		event: { link: string; qrCode: string; channel: FlottformChannelHost }
 	];
 	'webrtc:waiting-for-ice': [];
-	'webrtc:waiting-for-file': [];
 };
 
 export type SafeEndpointInfo = Omit<EndpointInfo, 'hostKey' | 'clientKey'>;
@@ -53,11 +52,11 @@ export type FlottformState =
 	| 'error';
 
 export type Logger = {
-	debug: (...args: any[]) => void;
-	info: (...args: any[]) => void;
-	log: (...args: any[]) => void;
-	warn: (...args: any[]) => void;
-	error: (...args: any[]) => void;
+	debug: typeof console.debug;
+	info: typeof console.info;
+	log: typeof console.log;
+	warn: typeof console.warn;
+	error: typeof console.error;
 };
 
 export type FileMetaInfos = {
@@ -105,7 +104,7 @@ export function setIncludes<T>(set: Set<T>, x: T): boolean {
 	return false;
 }
 
-type Listener<T extends Array<any>> = (...args: T) => void;
+type Listener<T extends Array<any>> = (...args: T) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
 export type FlottformEventMap = {
 	new: [details: { channel: FlottformChannelHost }];
 	'waiting-for-client': [
@@ -117,14 +116,15 @@ export type FlottformEventMap = {
 	];
 	'waiting-for-data': [];
 	'waiting-for-ice': [];
-	'receiving-data': [e: MessageEvent<any>];
+	'receiving-data': [e: MessageEvent];
 	'file-received': [{ fileMeta: FileMetaInfos; arrayBuffer: Array<ArrayBuffer> }];
 	done: [];
-	error: [error: any];
+	error: [error: Error];
 	connected: [];
 	disconnected: [];
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class EventEmitter<EventMap extends Record<string, Array<any>>> {
 	private eventListeners: { [K in keyof EventMap]?: Set<Listener<EventMap[K]>> } = {};
 

@@ -18,5 +18,5 @@ export const RTCIceCandidateInitSchema = z.object({
 export type RTCIceCandidateInitValidated = z.infer<typeof RTCIceCandidateInitSchema>;
 assertType<TypeEqualityGuard<RTCIceCandidateInitValidated, RTCIceCandidateInit>>();
 
-function assertType<T extends never>() {}
+function assertType<T extends never>(_value?: T) {}
 type TypeEqualityGuard<A, B> = Exclude<A, B> | Exclude<B, A>;

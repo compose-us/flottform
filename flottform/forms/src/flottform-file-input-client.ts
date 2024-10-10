@@ -132,7 +132,7 @@ export class FlottformFileInputClient extends EventEmitter<Listeners> {
 				this.logger.log('Buffer is full. Pausing sending chunks!');
 				break;
 			}
-			let progress = ((this.currentChunkIndex * this.chunkSize) / currentFileSize).toFixed(2);
+			const progress = ((this.currentChunkIndex * this.chunkSize) / currentFileSize).toFixed(2);
 
 			this.emit('progress', {
 				fileIndex: this.currentFileIndex,

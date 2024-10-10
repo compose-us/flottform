@@ -42,14 +42,12 @@ const createLinkAndQrCode = (qrCode: string, link: string) => {
 };
 export const createDefaultFlottformComponent = ({
 	flottformAnchorElement,
-	id,
 	flottformRootElement,
 	additionalComponentClass,
 	flottformRootTitle,
 	flottformRootDescription
 }: {
 	flottformAnchorElement: HTMLElement;
-	id?: string;
 	flottformRootElement?: HTMLElement;
 	additionalComponentClass?: string;
 	flottformRootTitle?: string;
@@ -227,7 +225,9 @@ const createBaseFlottformItems = <L extends BaseListeners>({
 	});
 	flottformBaseInputHost.on('error', (error) => {
 		statusInformation.innerHTML =
-			typeof onErrorText === "function" ? onErrorText(error) : (onErrorText ?? `🚨 An error occured (${error.message}). Please try again`);
+			typeof onErrorText === 'function'
+				? onErrorText(error)
+				: (onErrorText ?? `🚨 An error occured (${error.message}). Please try again`);
 		createChannelButton.innerText = 'Retry';
 		flottformStateItemsContainer.replaceChildren(statusInformation);
 		flottformStateItemsContainer.appendChild(createChannelButton);
@@ -409,7 +409,7 @@ const createCopyToClipboardButton = () => {
 	copyToClipboardButton.setAttribute('aria-label', 'Copy Flottform link to clipboard');
 	copyToClipboardButton.innerText = '📋';
 	copyToClipboardButton.addEventListener('click', async () => {
-		let flottformLink = (document.querySelector('.flottform-link-offer') as HTMLDivElement)
+		const flottformLink = (document.querySelector('.flottform-link-offer') as HTMLDivElement)
 			.innerText;
 		navigator.clipboard
 			.writeText(flottformLink)
@@ -480,7 +480,7 @@ const updateCurrentFileStatusBar = (
 		`progress#flottform-status-bar-${fileIndex}`
 	);
 	if (!currentFileStatusBar) {
-		let { currentFileLabel, progressBar } = createCurrentFileStatusBar(fileIndex, fileName);
+		const { currentFileLabel, progressBar } = createCurrentFileStatusBar(fileIndex, fileName);
 		currentFileStatusBar = progressBar;
 
 		const detailsContainer = details.querySelector('.details-container')!;
@@ -516,13 +516,13 @@ const updateOverallFilesStatusBar = (
 	let overallFilesStatusBar: HTMLProgressElement | null =
 		flottformStateItemsContainer.querySelector('progress#flottform-status-bar-overall-progress');
 	if (!overallFilesStatusBar) {
-		let { overallFilesLabel, progressBar } = createOverallFilesStatusBar();
+		const { overallFilesLabel, progressBar } = createOverallFilesStatusBar();
 		overallFilesStatusBar = progressBar;
 
 		flottformStateItemsContainer.appendChild(overallFilesLabel);
 		flottformStateItemsContainer.appendChild(overallFilesStatusBar);
 	}
-	let overallFilesLabel: HTMLLabelElement = flottformStateItemsContainer.querySelector(
+	const overallFilesLabel: HTMLLabelElement = flottformStateItemsContainer.querySelector(
 		'label#flottform-status-bar-overall-progress'
 	)!;
 	overallFilesStatusBar.value = overallProgress * 100;
