@@ -54,6 +54,11 @@
 				you need, offering complete freedom to match your design preferences."
 		/>
 		<DemoLink
+			href="{base}/expense-report"
+			title="Expense report"
+			description="Discover how Flottform can enhance your expense report forms, making it simple to upload and manage receipts. This demo shows how easy it is to integrate Flottform into your existing workflow, streamlining the process of collecting and submitting expenses."
+		/>
+		<DemoLink
 			href="{base}/customized-default-ui"
 			title="Customized default UI"
 			description="See how you can tailor Flottform's default UI to better match your design, while still retaining all the powerful features of the original interface. This demo lets you explore how easy it is to adapt the default elements to fit seamlessly with your brand's style."

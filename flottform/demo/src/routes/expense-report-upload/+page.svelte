@@ -28,7 +28,7 @@
 	{/if}
 	<div>
 		<a
-			href="{base}/custom-ui"
+			href="{base}/expense-report"
 			class="block group relative w-fit cursor-pointer overflow-hidden rounded-md border bg-white text-blue border-secondary-blue px-12 py-3"
 		>
 			<span

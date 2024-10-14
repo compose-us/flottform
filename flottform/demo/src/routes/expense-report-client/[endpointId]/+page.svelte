@@ -2,7 +2,6 @@
 	import { FlottformFileInputClient } from '@flottform/forms';
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
-	import FileInput from '$lib/components/FileInput.svelte';
 	import { sdpExchangeServerBase } from '../../../api';
 
 	type State =
@@ -57,12 +56,21 @@
 </script>
 
 <div class="max-w-screen-xl mx-auto p-8 box-border grid grid-cols-1 gap-8">
-	<h1>Flottform "multiple Inputs Form" client</h1>
+	<h1 class="font-sans">Upload your receipt</h1>
 	<p>Use this form to send a file from this device to the open form on the main device.</p>
 
 	<form action="" on:submit={sendFileToPeer}>
 		<div class="flex flex-col gap-4">
-			<FileInput id="document" name="document" bind:fileInput />
+			<div>
+				<label class="block mb-2" for="file_input">Upload your receipt</label>
+				<input
+					class="block w-full border border-gray-200 rounded-sm cursor-pointer file:bg-secondary-blue file:text-white file:py-4 file:border-none"
+					id="file_input"
+					type="file"
+					bind:this={fileInput}
+				/>
+				<p class="italic text-sm">Click to upload or drag and drop</p>
+			</div>
 
 			{#if currentState === 'sending'}
 				<div class="h-24 items-center">
@@ -89,12 +97,12 @@
 				<button
 					type="submit"
 					bind:this={button}
-					class="group relative w-fit cursor-pointer overflow-hidden rounded-md border-2 bg-primary-blue text-white border-primary-blue px-12 py-3 font-semibold disabled:border-gray-300 disabled:bg-gray-200 disabled:text-gray-500 disabled:pointer-events-none"
+					class="group relative w-fit cursor-pointer overflow-hidden rounded-md border-2 bg-secondary-blue text-white border-secondary-blue px-12 py-3 font-semibold disabled:border-gray-300 disabled:bg-gray-200 disabled:text-gray-500 disabled:pointer-events-none"
 				>
 					<span
 						class="ease absolute top-1/2 h-0 w-64 origin-center -translate-x-20 rotate-45 bg-white transition-all duration-300 group-hover:h-64 group-hover:-translate-y-32"
 					></span>
-					<span class="ease relative transition duration-300 group-hover:text-primary-blue"
+					<span class="ease relative transition duration-300 group-hover:text-secondary-blue"
 						>Send file</span
 					>
 				</button>
@@ -115,7 +123,7 @@
 	}
 
 	.spinner {
-		@apply block fill-transparent stroke-primary-blue;
+		@apply block fill-transparent stroke-secondary-blue;
 		stroke-linecap: round;
 		stroke-dasharray: 283;
 		stroke-dashoffset: 280;
