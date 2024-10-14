@@ -3,37 +3,40 @@
 	import { onMount } from 'svelte';
 	import { FlottformFileInputHost } from '@flottform/forms';
 	import { writable } from 'svelte/store';
-	import FileInput from '$lib/components/FileInput.svelte';
 	import { env } from '$env/dynamic/public';
 	import { browser } from '$app/environment';
 	import { sdpExchangeServerBase } from '../../api';
-
-	let highlighted = false;
+	import waiting from './images/status-svgs/waiting.svg';
+	import done from './images/status-svgs/done.svg';
+	import errorSvg from './images/status-svgs/error.svg';
 
 	let fileInput: HTMLInputElement;
 	let flottformButton: HTMLButtonElement;
 	let flottformDialogCardButton: HTMLButtonElement;
 	let flottformDialogCard: HTMLDialogElement;
-	let flottformStatusWrapper: string;
-	let flottformQrCode: string;
-	let flottformQrCodeDisplay: string;
-	let flottformLinkOffer: string;
-	let flottformLinkOfferDisplay: string;
-	let flottformDialogDescription: string;
+	let copyToClipboardButton: HTMLButtonElement;
+	let flottformStatusWrapper: string = $state('');
+	let flottformQrCode: string = $state('');
+	let flottformLinkOffer: string = $state('');
+	let flottformDialogDescription: string = $state('');
+
+	let isFlottformDialogOpened: boolean = $state(false);
+
+	let flottformState: string = $state('');
+	let flottformStatusSvg: string = $state('');
 
 	let isEndpointCreated = false;
-	let flottformButtonBackgroundColor = '';
 
 	let createWebRtcChannel: () => void;
 
 	const openFlottformDialogCard = () => {
 		flottformDialogCard.showModal();
-		flottformDialogCard.style.display = 'flex';
+		isFlottformDialogOpened = true;
 	};
 
 	const closeFlottformDialogCard = () => {
 		flottformDialogCard.close();
-		flottformDialogCard.style.display = 'none';
+		isFlottformDialogOpened = false;
 	};
 
 	const handleFlottformButtonClick = () => {
@@ -51,53 +54,81 @@
 		return `${clientBase}/${endpointId}`;
 	};
 
+	const expenseReportMockData = [
+		{
+			description: 'Lunch with clients at a local restaurant',
+			receiptType: 'Restaurant',
+			invoiceDate: '2024-10-01',
+			paidAmount: '85.50',
+			currency: 'EUR',
+			paymentMethod: 'corporate',
+			costCenter: 'Sales',
+			costObject: 'Client Meeting'
+		},
+		{
+			description: "Taxi ride to client's office",
+			receiptType: 'Taxi',
+			invoiceDate: '2024-10-02',
+			paidAmount: '40.00',
+			currency: 'EUR',
+			paymentMethod: 'private',
+			costCenter: 'Sales',
+			costObject: 'Client Visit'
+		},
+		{
+			description: 'Hotel accommodation during a business trip',
+			receiptType: 'Hotel',
+			invoiceDate: '2024-10-05',
+			paidAmount: '450.00',
+			currency: 'EUR',
+			paymentMethod: 'corporate',
+			costCenter: 'Travel',
+			costObject: 'Business Trip'
+		},
+		{
+			description: 'Dinner with potential business partners',
+			receiptType: 'Restaurant',
+			invoiceDate: '2024-10-06',
+			paidAmount: '135.75',
+			currency: 'EUR',
+			paymentMethod: 'private',
+			costCenter: 'Business Development',
+			costObject: 'Partnership Meeting'
+		},
+		{
+			description: 'Flight to Berlin for a business trip',
+			receiptType: 'Flight',
+			invoiceDate: '2024-10-03',
+			paidAmount: '350.00',
+			currency: 'EUR',
+			paymentMethod: 'corporate',
+			costCenter: 'Travel',
+			costObject: 'Business Trip'
+		}
+	];
+
 	let prefilledForm = writable<{ [key: string]: string }>({
-		name: '',
-		surname: '',
-		email: '',
-		phone: '',
-		street: '',
-		houseNumber: '',
-		city: '',
-		postcode: '',
-		problemDescription: ''
+		description: '',
+		receiptType: '',
+		invoiceDate: '',
+		paidAmount: '',
+		currency: 'EUR',
+		paymentMethod: 'private',
+		costCenter: '',
+		costObject: ''
 	});
 
 	const resetValues = () => {
 		for (const key in $prefilledForm) {
 			$prefilledForm[key] = '';
 		}
-		highlighted = false;
 	};
 
-	const randomArrayElement = (arr: string[]): string => arr[Math.floor(Math.random() * arr.length)];
+	const randomArrayElement = (arr: Array<{ [key: string]: string }>): { [key: string]: string } =>
+		arr[Math.floor(Math.random() * arr.length)];
 
-	const mockUser = {
-		name: ['Alice', 'John', 'Emily', 'Michael', 'Emma', 'Codey'],
-		surname: ['Smith', 'Doe', 'Johnson', 'Brown', 'Wilson', 'Bugsworth'],
-		phone: [
-			'+1 (555) 123-4567',
-			'+1 (123) 456-7890',
-			'+1 (987) 654-3210',
-			'+1 (543) 210-9876',
-			'+1 (123) 456-7890',
-			'+1 (404) 555-1234'
-		],
-		street: ['Main St', 'Elm St', 'Park Ave', 'Oak St', 'Cedar St', 'Null Pointer Lane'],
-		houseNumber: ['123', '42', '7', '99', '777', '404'],
-		city: ['Anytown', 'Springfield', 'Metroville', 'Greenville', 'Oakland', 'Devsville'],
-		postcode: ['54321', '98765', '12345', '54321', '88888', '1337'],
-		problemDescription: [
-			"I'm facing an unusual challenge where the system is asking me to upload a photo of myself wearing a unicorn costume while holding a rubber chicken. It's as if the authentication process has taken a whimsical turn into a surreal circus!",
-			'My transaction is on hold until I upload a selfie balancing a pineapple on my head while reciting the alphabet backward. Is this some sort of cognitive test or an initiation into the secret society of online shoppers?',
-			"To access the restricted area, the system demands a photo of me impersonating a famous historical figure of my choice while juggling three rubber ducks. It's like stepping into a time-traveling talent show!",
-			"I'm stuck in authentication limbo where the system insists on a photo of me wearing a pirate hat and holding a sign that says 'Arrr! I solemnly swear I'm up to no good'. Is this a security measure or a comedic treasure hunt?",
-			"I'm trying to unlock a premium feature, but the system demands a selfie of me wearing a Viking helmet while riding a hobby horse and reciting Shakespearean sonnets. To be or not to be a verified user, that is the question!",
-			"I'm experiencing a hardware glitch where my mouse pointer seems to be stuck in an infinite loop, circling endlessly. It's as if my computer is caught in a dance routine it can't escape. This quirky performance has turned my hardware into a dance floor, and now my head is spinning too—literally! I fear it might be broken. Is there a reboot button for humans as well?"
-		]
-	};
-
-	let isFillingOut = false;
+	let isFillingOut = $state(false);
+	let showSpinner = $state(false);
 
 	async function typeValue(valueToFill: string, refValue: string, delay = 10) {
 		const letters = valueToFill.split('');
@@ -118,27 +149,22 @@
 	const fillOutForm = async () => {
 		resetValues();
 		isFillingOut = true;
-		await typeValue(randomArrayElement(mockUser.name), 'name');
+		showSpinner = true;
+		let data = randomArrayElement(expenseReportMockData);
+		await waitForMs(500);
+		showSpinner = false;
+		$prefilledForm.receiptType = data.receiptType;
+		$prefilledForm.invoiceDate = data.invoiceDate;
+		$prefilledForm.paidAmount = data.paidAmount;
+		$prefilledForm.currency = data.currency;
+		await waitForMs(80);
+		await typeValue(data.description, 'description');
 		await waitForMs(100);
-		await typeValue(randomArrayElement(mockUser.surname), 'surname');
+		$prefilledForm.paymentMethod = data.paymentMethod;
 		await waitForMs(50);
-		await typeValue(
-			`${$prefilledForm.name}.${$prefilledForm.surname}@example.com`.toLocaleLowerCase(),
-			'email'
-		);
-		await waitForMs(80);
-		await typeValue(randomArrayElement(mockUser.phone), 'phone');
-		await waitForMs(110);
-		await typeValue(randomArrayElement(mockUser.street), 'street');
-		await waitForMs(40);
-		await typeValue(randomArrayElement(mockUser.houseNumber), 'houseNumber');
-		await waitForMs(80);
-		await typeValue(randomArrayElement(mockUser.city), 'city');
-		await waitForMs(50);
-		await typeValue(randomArrayElement(mockUser.postcode), 'postcode');
+		await typeValue(data.costCenter, 'costCenter');
 		await waitForMs(70);
-		await typeValue(randomArrayElement(mockUser.problemDescription), 'problemDescription', 5);
-		highlighted = true;
+		await typeValue(data.costObject, 'costObject', 5);
 		isFillingOut = false;
 	};
 
@@ -156,23 +182,21 @@
 		});
 
 		flottformFileInputHost.on('endpoint-created', ({ link, qrCode }) => {
+			flottformStatusSvg = '';
+			flottformState = 'endpoint-created';
 			isEndpointCreated = true;
-			flottformButtonBackgroundColor = 'bg-[#F9F871]';
 			flottformLinkOffer = link;
 			flottformQrCode = qrCode;
-			flottformLinkOfferDisplay = 'block';
-			flottformQrCodeDisplay = 'block';
 			flottformStatusWrapper = 'Upload a file';
 			flottformDialogDescription = 'Use this QR-Code or Link on your other device.';
 		});
 
 		flottformFileInputHost.on('connected', () => {
-			flottformQrCodeDisplay = 'hidden';
-			flottformLinkOfferDisplay = 'hidden';
+			flottformState = 'connected';
 			flottformStatusWrapper = 'Connected!';
 			flottformDialogDescription =
 				'Another device is connected. Start the data transfer from your other device';
-			flottformButtonBackgroundColor = 'bg-[#D4F1EF]';
+			flottformStatusSvg = waiting;
 		});
 
 		flottformFileInputHost.on('webrtc:waiting-for-ice', () => {
@@ -180,20 +204,22 @@
 		});
 
 		flottformFileInputHost.on('receive', () => {
+			flottformState = 'receive';
 			flottformStatusWrapper = 'Receiving data';
 			flottformDialogDescription =
 				'Another device is sending data. Waiting for incoming data transfer to complete';
-			flottformButtonBackgroundColor = 'bg-[#7EA4FF]';
 		});
 
 		flottformFileInputHost.on('done', () => {
+			flottformState = 'done';
+			flottformStatusSvg = done;
 			flottformStatusWrapper = 'Done!';
-			flottformDialogDescription =
-				'You have received a file from another device. Please close this dialog to finish your form.';
-			flottformButtonBackgroundColor = 'bg-[#FFFFFF]';
+			flottformDialogDescription = 'You have received a file from another device.';
 		});
 
 		flottformFileInputHost.on('error', (e) => {
+			flottformState = 'error';
+			flottformStatusSvg = errorSvg;
 			console.error(e);
 			let errorMessage = 'Connection failed - please retry!';
 			if (e.message === 'connection-failed') {
@@ -206,7 +232,6 @@
 			}
 			flottformStatusWrapper = 'Oops! Something went wrong';
 			flottformDialogDescription = errorMessage;
-			flottformButtonBackgroundColor = 'bg-[#F57C6B]';
 		});
 	});
 </script>
@@ -215,215 +240,319 @@
 	<title>Flottform DEMO</title>
 </svelte:head>
 
-<div class="max-w-screen-xl mx-auto p-8 box-border grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-0">
-	<button
-		type="button"
-		on:click={fillOutForm}
-		class="group relative w-fit cursor-pointer overflow-hidden rounded-md border border-primary-blue px-12 py-3 order-1 md:order-3 place-self-center disabled:border-gray-300 disabled:bg-gray-200 disabled:pointer-events-none"
-		disabled={isFillingOut}
+<div class="flex flex-col lg:flex-row h-full min-h-dvh font-sans">
+	<aside class="md:block lg:w-44 bg-secondary-blue px-2 py-9">
+		<h1 class="text-lg font-bold text-white font-sans">
+			<svg
+				fill="currentColor"
+				height="30px"
+				width="30px"
+				version="1.1"
+				xmlns="http://www.w3.org/2000/svg"
+				xmlns:xlink="http://www.w3.org/1999/xlink"
+				viewBox="0 0 512 512"
+				xml:space="preserve"
+				class="inline-block"
+			>
+				<g>
+					<g>
+						<path
+							d="M427.692,0H86.442C72.304,0,59.733,10.4,59.733,24.5v460.867c0,14.1,12.571,26.633,26.708,26.633h341.25
+			c14.137,0,24.575-12.533,24.575-26.633V24.5C452.267,10.4,441.829,0,427.692,0z M435.2,485.367c0,4.683-2.779,9.567-7.508,9.567
+			H86.442c-4.729,0-9.642-4.883-9.642-9.567V24.5c0-4.683,4.912-7.433,9.642-7.433h341.25c4.729,0,7.508,2.75,7.508,7.433V485.367z"
+						/>
+					</g>
+				</g>
+				<g>
+					<g>
+						<path
+							d="M299.733,59.733H214.4c-4.713,0-8.533,3.817-8.533,8.533c0,4.717,3.821,8.533,8.533,8.533h85.333
+			c4.713,0,8.533-3.817,8.533-8.533C308.267,63.55,304.446,59.733,299.733,59.733z"
+						/>
+					</g>
+				</g>
+				<g>
+					<g>
+						<path
+							d="M376.533,119.467H137.6c-4.713,0-8.533,3.817-8.533,8.533c0,4.717,3.821,8.533,8.533,8.533h238.933
+			c4.713,0,8.533-3.817,8.533-8.533C385.067,123.283,381.246,119.467,376.533,119.467z"
+						/>
+					</g>
+				</g>
+				<g>
+					<g>
+						<path
+							d="M376.533,179.2H137.6c-4.713,0-8.533,3.817-8.533,8.533c0,4.717,3.821,8.533,8.533,8.533h238.933
+			c4.713,0,8.533-3.817,8.533-8.533C385.067,183.017,381.246,179.2,376.533,179.2z"
+						/>
+					</g>
+				</g>
+				<g>
+					<g>
+						<path
+							d="M376.533,238.933H137.6c-4.713,0-8.533,3.817-8.533,8.533c0,4.717,3.821,8.533,8.533,8.533h238.933
+			c4.713,0,8.533-3.817,8.533-8.533C385.067,242.75,381.246,238.933,376.533,238.933z"
+						/>
+					</g>
+				</g>
+				<g>
+					<g>
+						<path
+							d="M376.533,298.667H137.6c-4.713,0-9.6,2.75-9.6,7.467v128c0,4.717,4.887,9.6,9.6,9.6h238.933
+			c4.713,0,7.467-4.883,7.467-9.6v-128C384,301.417,381.246,298.667,376.533,298.667z M366.933,426.667H145.067V315.733h221.867
+			V426.667z"
+						/>
+					</g>
+				</g>
+			</svg>
+			Cost report
+		</h1>
+	</aside>
+	<form
+		action="{base}/custom-ui-upload"
+		method="POST"
+		enctype="multipart/form-data"
+		class="grid sm:grid-cols-[1fr_3fr] gap-6 p-6 w-full"
 	>
-		<span
-			class="ease absolute top-1/2 h-0 w-64 origin-center -translate-x-20 rotate-45 bg-primary-blue transition-all duration-300 group-hover:h-64 group-hover:-translate-y-32"
-		></span>
-		<span class="ease relative transition duration-300 group-hover:text-white">Auto-fill form</span>
-	</button>
-	<div class="sm:col-span-2 order-2 md:order-1 gap-4 flex flex-col">
-		<h1>Returns and complaints</h1>
-		<p>
-			Welcome to our support section. We acknowledge you're here because you want something fixed.
-			One of our products broke down or didn't arrive in the shape you expected it to. Please let us
-			know about the issue below and we will try our best to support you!
-		</p>
-		<p class="text-xs">
-			<sup>*</sup> This is a demo. Your data will only be stored temporarily. Uploads will be cleaned
-			up every few hours.
-		</p>
-		<form action="{base}/upload" method="POST" enctype="multipart/form-data" class="grid gap-8">
-			<div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-				<div class="flex flex-col">
-					<label for="name">Name</label>
+		<div class="border rounded-sm border-gray-200 p-3 flex flex-col">
+			<h2 class="mb-4 font-sans">Receipt</h2>
+			<div class="flex flex-col gap-4 h-full">
+				<div>
+					<label class="block mb-2" for="document">Upload your receipt</label>
 					<input
-						class="border-2 box-border border-primary-blue rounded-md py-2 px-4"
-						id="name"
-						type="text"
-						name="name"
-						bind:value={$prefilledForm.name}
+						class="block w-full border border-gray-200 rounded-sm cursor-pointer file:bg-secondary-blue file:text-white file:py-4 file:border-none"
+						id="document"
+						name="document"
+						type="file"
+						bind:this={fileInput}
 					/>
+					<p class="italic text-xs">Click to upload or drag and drop</p>
 				</div>
-				<div class="flex flex-col">
-					<label for="surname">Surname</label>
-					<input
-						class="border-2 box-border border-primary-blue rounded-md py-2 px-4"
-						id="surname"
-						type="text"
-						name="surname"
-						bind:value={$prefilledForm.surname}
-					/>
+				<div class="flex flex-col gap-2">
+					<p>Or use other device to upload your receipt</p>
+					<button
+						type="button"
+						class="rounded bg-yellow-300 p-4 font-medium hover:shadow-md w-fit"
+						bind:this={flottformButton}
+						onclick={() => {
+							handleFlottformButtonClick();
+							openFlottformDialogCard();
+						}}>Upload from other device</button
+					>
+					{#if flottformStatusSvg}
+						<div
+							class="flex gap-2 items-center"
+							class:animate-bounce={flottformStatusSvg === errorSvg}
+						>
+							<img
+								class="w-5 h-5"
+								class:animate-spin-slow={flottformStatusSvg === waiting}
+								src={flottformStatusSvg}
+								alt="Flottform status SVG"
+							/>
+							<p class="text-sm" class:text-red-600={flottformStatusSvg === errorSvg}>
+								{flottformDialogDescription}
+							</p>
+						</div>
+					{/if}
+				</div>
+				<div class="flex flex-col gap-2 flex-1 justify-end">
+					<p>Pre-fill your form with the data from a receipt</p>
+					<button
+						type="button"
+						onclick={fillOutForm}
+						disabled={isFillingOut}
+						class="border-secondary-blue border text-secondary-blue px-4 py-3 rounded h-fit w-fit hover:shadow-md font-medium"
+						>Pre-fill form</button
+					>
+					<p class="italic text-xs text-gray-600">
+						We won't actually fill the form with the real data from the uploaded receipt since it's
+						just a demo to showcase Flottform :)
+					</p>
 				</div>
 			</div>
-			<div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-				<div class="flex flex-col">
-					<label for="email">E-Mail</label>
-					<input
-						class="border-2 box-border border-primary-blue rounded-md py-2 px-4"
-						id="email"
-						type="email"
-						name="email"
-						bind:value={$prefilledForm.email}
-					/>
-				</div>
-				<div class="flex flex-col">
-					<label for="phone">Phone number</label>
-					<input
-						class="border-2 box-border border-primary-blue rounded-md py-2 px-4"
-						id="phone"
-						type="tel"
-						name="phone"
-						bind:value={$prefilledForm.phone}
-					/>
-				</div>
-			</div>
-			<div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-				<div class="flex flex-col sm:col-span-2">
-					<label for="street">Street</label>
-					<input
-						class="border-2 box-border border-primary-blue rounded-md py-2 px-4"
-						id="street"
-						type="text"
-						name="street"
-						bind:value={$prefilledForm.street}
-					/>
-				</div>
-				<div class="flex flex-col">
-					<label for="houseNumber">House number</label>
-					<input
-						class="border-2 box-border border-primary-blue rounded-md py-2 px-4"
-						id="houseNumber"
-						type="text"
-						name="houseNumber"
-						bind:value={$prefilledForm.houseNumber}
-					/>
-				</div>
-				<div class="flex flex-col sm:col-span-2">
-					<label for="city">City</label>
-					<input
-						class="border-2 box-border border-primary-blue rounded-md py-2 px-4"
-						id="city"
-						type="text"
-						name="city"
-						bind:value={$prefilledForm.city}
-					/>
-				</div>
-				<div class="flex flex-col">
-					<label for="postcode">Postcode</label>
-					<input
-						class="border-2 box-border border-primary-blue rounded-md py-2 px-4"
-						id="postcode"
-						type="text"
-						name="postcode"
-						bind:value={$prefilledForm.postcode}
-					/>
-				</div>
-			</div>
-			<div class="grid grid-cols-1">
-				<div class="flex flex-col">
-					<label for="problemDescription">Please describe your problem</label>
-					<textarea
-						class="border-2 box-border border-primary-blue rounded-md py-2 px-4"
-						id="problemDescription"
-						name="problemDescription"
-						rows="4"
-						bind:value={$prefilledForm.problemDescription}
-					></textarea>
-				</div>
-			</div>
-			<div class="grid gap-2 sm:gap-0 grid-cols-1 sm:grid-cols-[390px_1fr]">
-				<FileInput id="document" name="document" {fileInput} />
-
-				{#if highlighted}
-					<div class="text-primary-green hidden sm:flex flex-col">
+		</div>
+		<div class="border rounded-sm border-gray-200 p-3 flex flex-col h-full relative">
+			<h2 class="font-sans">Receipt information</h2>
+			<section class="grid lg:grid-cols-2 gap-x-8 gap-y-4 py-4 border-b">
+				{#if showSpinner}
+					<div
+						class="absolute inset-0 w-full h-full grid place-items-center bg-black/20 z-50 rounded"
+					>
 						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							xmlns:xlink="http://www.w3.org/1999/xlink"
-							version="1.1"
-							viewBox="0 0 133 133"
-							class="w-24 h-auto -rotate-[60deg]"
+							class="animate-spin h-20 w-20"
+							width="40px"
+							height="40px"
+							viewBox="0 0 24 24"
 							fill="none"
+							xmlns="http://www.w3.org/2000/svg"
 						>
 							<path
-								d="M 15.47 8.184 c -2.396 -0.946 -4.889 -1.667 -7.455 -2.158 C 6.732 5.786 5.432 5.603 4.12 5.44 L 2.142 5.267 C 1.48 5.244 0.814 5.188 0.146 5.149 C 0.077 5.145 0.015 5.095 0.002 5.024 c -0.015 -0.083 0.041 -0.162 0.124 -0.177 C 2.771 4.379 5.492 4.181 8.218 4.33 c 2.725 0.144 5.455 0.621 8.094 1.423 c 2.643 0.79 5.186 1.913 7.591 3.25 c 2.41 1.336 4.653 2.938 6.752 4.683 l 0.027 0.023 c 0.221 0.183 0.393 0.431 0.484 0.726 c 0.247 0.806 -0.205 1.66 -1.011 1.907 c -2.312 0.71 -4.606 1.501 -6.844 2.453 c -2.235 0.957 -4.094 1.86 -6.228 3.058 c -2.074 4.808 -3.751 9.359 -4.519 14.473 l -0.006 0.037 c -0.033 0.218 -0.148 0.425 -0.337 0.57 c -0.389 0.298 -0.945 0.224 -1.243 -0.164 C 4.447 28.247 0.611 17.769 0.102 7.189 C 0.099 7.109 0.159 7.038 0.24 7.031 c 0.083 -0.008 0.157 0.054 0.165 0.137 c 0.506 5.241 1.848 10.373 3.892 15.181 c 2.051 4.807 3.499 7.649 6.786 11.667 c 0.611 -5.415 2.041 -8.479 3.969 -13.456 c 0.085 -0.219 0.239 -0.413 0.454 -0.545 l 0.042 -0.026 c 2.145 -1.321 4.354 -2.558 6.637 -3.662 c 2.279 -1.11 2.035 -1.183 4.457 -1.975 l -4.285 -2.701 C 20.163 10.3 17.863 9.138 15.47 8.184 z"
-								transform="matrix(1 0 0 1 0 0) "
-								stroke-linecap="round"
-								pathLength="1"
-								stroke-width="4"
-								stroke="#3ab53a"
-								class="first"
-							/>
-							<path
-								d="M 24.03 25.941 l 0.011 0.011 c 5.022 5.103 10.433 9.868 16.471 13.582 l 2.278 1.361 c 0.758 0.457 1.566 0.803 2.347 1.211 c 1.552 0.853 3.208 1.411 4.827 2.086 c 0.196 0.065 0.394 0.124 0.591 0.187 l 0.355 0.101 c -0.289 -2.125 -0.383 -4.281 -0.214 -6.436 c 0.287 -3.725 1.39 -7.46 3.476 -10.654 c 0.268 -0.392 0.481 -0.827 0.797 -1.184 l 0.925 -1.091 c 0.591 -0.738 1.29 -1.435 2.077 -2.033 c 1.56 -1.2 3.479 -2.04 5.487 -2.233 c 2.002 -0.184 4.039 0.149 5.846 0.942 c 1.812 0.783 3.468 1.902 4.831 3.316 c 1.36 1.41 2.519 3.051 3.235 4.924 c 0.722 1.856 1.077 3.932 0.759 5.98 c -0.289 2.042 -1.181 4.005 -2.484 5.555 c -0.338 0.367 -0.655 0.787 -1.017 1.106 l -1.08 0.974 c -0.372 0.311 -0.698 0.678 -1.11 0.94 l -1.205 0.827 c -3.247 2.165 -7.133 3.335 -10.995 3.512 c -2.208 0.111 -4.397 -0.075 -6.544 -0.457 l 0.002 0.008 l -0.177 -0.038 c -0.184 -0.034 -0.369 -0.065 -0.553 -0.101 c 0.034 0.145 0.063 0.291 0.099 0.435 c 0.862 3.481 2.297 6.811 4.031 9.961 c 3.437 6.369 8.64 11.594 14.107 16.347 c 2.766 2.349 5.663 4.564 8.788 6.422 c 3.106 1.871 6.442 3.44 10.008 4.216 c -3.583 -0.693 -6.973 -2.191 -10.136 -3.998 c -3.183 -1.795 -6.147 -3.954 -8.984 -6.252 c -2.818 -2.328 -5.546 -4.756 -8.046 -7.445 c -0.64 -0.658 -1.269 -1.326 -1.833 -2.052 c -0.576 -0.714 -1.181 -1.407 -1.734 -2.141 l -1.59 -2.253 c -0.545 -0.742 -0.967 -1.564 -1.457 -2.343 c -1.847 -3.179 -3.4 -6.561 -4.375 -10.14 c -0.095 -0.352 -0.182 -0.708 -0.268 -1.063 c -0.108 -0.026 -0.214 -0.056 -0.322 -0.082 l -0.15 -0.032 l -0.001 -0.006 c -0.736 -0.186 -1.466 -0.386 -2.188 -0.609 c -1.762 -0.678 -3.579 -1.258 -5.25 -2.121 c -0.843 -0.415 -1.722 -0.774 -2.535 -1.237 l -2.446 -1.385 c -6.475 -3.785 -12.193 -8.605 -17.501 -13.752 c -0.009 -0.009 -0.025 -0.024 -0.033 -0.033 c -0.782 -0.795 -0.772 -2.074 0.023 -2.856 C 21.969 25.135 23.248 25.146 24.03 25.941 z M 52.331 44.886 l 0.422 0.12 c 2.426 0.61 4.897 0.959 7.358 0.892 c 3.404 -0.08 6.756 -1.01 9.619 -2.82 l 1.066 -0.692 c 0.367 -0.215 0.656 -0.539 0.989 -0.802 l 0.971 -0.831 c 0.33 -0.274 0.563 -0.591 0.853 -0.882 c 1.071 -1.215 1.763 -2.684 2.026 -4.241 c 1.041 -6.355 -5.397 -13.25 -11.99 -12.771 c -1.629 0.12 -3.192 0.756 -4.536 1.736 c -0.675 0.487 -1.29 1.068 -1.851 1.74 l -0.866 0.971 c -0.299 0.317 -0.495 0.711 -0.75 1.063 c -1.969 2.867 -3.085 6.299 -3.438 9.811 C 51.977 40.401 52.04 42.653 52.331 44.886 z"
-								transform=" matrix(1 0 0 1 0 0) "
-								stroke-linecap="round"
-								pathLength="1"
-								stroke-width="4"
-								stroke="#3ab53a"
-								class="second"
+								d="M12 21C10.5316 20.9987 9.08574 20.6382 7.78865 19.9498C6.49156 19.2614 5.38261 18.2661 4.55853 17.0507C3.73446 15.8353 3.22029 14.4368 3.06088 12.977C2.90147 11.5172 3.10167 10.0407 3.644 8.67604C4.18634 7.31142 5.05434 6.10024 6.17229 5.14813C7.29024 4.19603 8.62417 3.53194 10.0577 3.21378C11.4913 2.89563 12.9809 2.93307 14.3967 3.32286C15.8124 3.71264 17.1113 4.44292 18.18 5.45C18.3205 5.59062 18.3993 5.78125 18.3993 5.98C18.3993 6.17875 18.3205 6.36937 18.18 6.51C18.1111 6.58075 18.0286 6.63699 17.9376 6.67539C17.8466 6.71378 17.7488 6.73357 17.65 6.73357C17.5512 6.73357 17.4534 6.71378 17.3624 6.67539C17.2714 6.63699 17.189 6.58075 17.12 6.51C15.8591 5.33065 14.2303 4.62177 12.508 4.5027C10.7856 4.38362 9.07478 4.86163 7.66357 5.85624C6.25237 6.85085 5.22695 8.30132 4.75995 9.96345C4.29296 11.6256 4.41292 13.3979 5.09962 14.9819C5.78633 16.5659 6.99785 17.865 8.53021 18.6604C10.0626 19.4558 11.8222 19.6989 13.5128 19.3488C15.2034 18.9987 16.7218 18.0768 17.8123 16.7383C18.9028 15.3998 19.4988 13.7265 19.5 12C19.5 11.8011 19.579 11.6103 19.7197 11.4697C19.8603 11.329 20.0511 11.25 20.25 11.25C20.4489 11.25 20.6397 11.329 20.7803 11.4697C20.921 11.6103 21 11.8011 21 12C21 14.3869 20.0518 16.6761 18.364 18.364C16.6761 20.0518 14.387 21 12 21Z"
+								fill="#FDE047"
 							/>
 						</svg>
-						<p class="text-2xl font-handwriting typewriter">Upload your photo</p>
 					</div>
 				{/if}
-				<div class="flex items-center">
-					<button
-						bind:this={flottformButton}
-						type="button"
-						class="border border-[#1a3066] py-3 px-4 text-[#1a3066] font-bold rounded cursor-pointer inline-block {flottformButtonBackgroundColor} hover:shadow-[0_2px_4px_0_rgba(26,48,102)] focus:shadow-[0_2px_4px_0_rgba(26,48,102)] transition-shadow duration-200"
-						on:click={handleFlottformButtonClick}
-						on:click={openFlottformDialogCard}
-						><svg
-							xmlns="http://www.w3.org/2000/svg"
-							width="12"
-							height="24"
-							viewBox="0 0 32 74"
-							fill="#1a3066"
-							><path
-								d="M29.2146 12.4C28.9001 12.2308 28.5069 12.1038 28.0351 12.0192C27.6027 11.8922 27.1505 11.8287 26.6788 11.8287C25.3027 11.8287 24.3395 12.2731 23.7891 13.1618C23.2387 14.0081 22.8455 15.1084 22.6096 16.4626L22.4917 17.2244H29.0377L30.1287 26.6192L21.0174 27.4444L17.1842 50.6139L13.3542 73.7835H0.200073L4.03326 50.6139L7.86648 27.4444H2.55894L4.21018 17.2244H9.3408L9.51772 16.2087C9.87155 14.1351 10.363 12.1673 10.992 10.3052C11.6604 8.44322 12.5843 6.81394 13.7637 5.41742C14.9825 3.97858 16.5355 2.85713 18.4226 2.05307C20.3097 1.2067 22.649 0.783508 25.4403 0.783508C26.3446 0.783508 27.3668 0.868146 28.5069 1.03742C29.6471 1.16438 30.5906 1.39713 31.3376 1.73568L29.2146 12.4Z"
-								fill="#1a3066"
-							></path></svg
-						></button
-					>
+				<div class="flex flex-col">
+					<label for="description">Description</label>
+					<input
+						type="text"
+						name="description"
+						id="description"
+						bind:value={$prefilledForm.description}
+						class="border border-gray-400 rounded-sm px-3 py-2"
+					/>
 				</div>
+				<div class="flex flex-col">
+					<label for="receiptType">Receipt type</label>
+					<input
+						type="text"
+						name="receiptType"
+						id="receiptType"
+						bind:value={$prefilledForm.receiptType}
+						class="border border-gray-400 rounded-sm px-3 py-2"
+					/>
+				</div>
+				<div class="flex flex-col">
+					<label for="invoiceDate">Invoice date</label>
+					<input
+						type="date"
+						name="invoiceDate"
+						id="invoiceDate"
+						bind:value={$prefilledForm.invoiceDate}
+						class="border border-gray-400 rounded-sm px-3 py-2"
+					/>
+				</div>
+			</section>
+			<section class="grid grid-cols-2 gap-x-8 gap-y-4 py-4 border-b">
+				<div class="flex flex-col">
+					<label for="paidAmount">Paid amount (gross)</label>
+					<input
+						type="number"
+						step="0.01"
+						placeholder="0.00"
+						name="paidAmount"
+						id="paidAmount"
+						bind:value={$prefilledForm.paidAmount}
+						class="border border-gray-400 rounded-sm px-3 py-2"
+					/>
+				</div>
+				<div class="flex flex-col">
+					<label for="currency">Currency</label>
+					<select
+						name="currency"
+						id="currency"
+						class="border border-gray-400 rounded-sm px-3 py-2"
+						bind:value={$prefilledForm.currency}
+					>
+						<option value="EUR">Euro</option>
+						<option value="GBP">British Pound</option>
+						<option value="USD">US Dollar</option>
+						<option value="BRL">Brazilian real</option>
+						<option value="JPY">Japanese yen</option>
+					</select>
+				</div>
+				<div class="flex flex-col">
+					<label for="paymentMethod">Payment method</label>
+					<select
+						name="paymentMethod"
+						bind:value={$prefilledForm.paymentMethod}
+						id="paymentMethod"
+						class="border border-gray-400 rounded-sm px-3 py-2"
+					>
+						<option value="private">Cash private</option>
+						<option value="corporate">Corporate card</option>
+					</select>
+				</div>
+				<div class="flex flex-col col-span-2">
+					<label for="costCenter">Cost center</label>
+					<input
+						type="text"
+						name="costCenter"
+						bind:value={$prefilledForm.costCenter}
+						id="costCenter"
+						class="border border-gray-400 rounded-sm px-3 py-2"
+					/>
+				</div>
+				<div class="flex flex-col col-span-2">
+					<label for="costObject">Cost object</label>
+					<input
+						type="text"
+						name="costObject"
+						bind:value={$prefilledForm.costObject}
+						id="costObject"
+						class="border border-gray-400 rounded-sm px-3 py-2"
+					/>
+				</div>
+			</section>
+			<div class="flex justify-between mt-4">
+				<button
+					type="submit"
+					class="group relative w-fit cursor-pointer overflow-hidden rounded-md border bg-secondary-blue text-white border-secondary-blue px-12 py-3 font-semibold disabled:border-gray-300 disabled:bg-gray-200 disabled:text-gray-500 disabled:pointer-events-none"
+				>
+					<span
+						class="ease absolute top-1/2 h-0 w-64 origin-center -translate-x-20 rotate-45 bg-white transition-all duration-300 group-hover:h-64 group-hover:-translate-y-32"
+					></span>
+					<span class="ease relative transition duration-300 group-hover:text-secondary-blue"
+						>Submit</span
+					>
+				</button>
 			</div>
-			<button
-				type="submit"
-				class="group relative w-fit cursor-pointer overflow-hidden rounded-md border-2 border-primary-blue px-12 py-3 font-semibold"
-			>
-				<span
-					class="ease absolute top-1/2 h-0 w-64 origin-center -translate-x-20 rotate-45 bg-primary-blue transition-all duration-300 group-hover:h-64 group-hover:-translate-y-32"
-				></span>
-				<span class="ease relative transition duration-300 group-hover:text-white">Send</span>
-			</button>
-		</form>
-	</div>
+		</div>
+	</form>
 </div>
 
 <dialog
 	bind:this={flottformDialogCard}
-	class="h-full w-full flex-col gap-12 rounded-lg border border-blue-900 text-black py-16 px-8 border-box text-lg"
+	class="h-full w-full sm:w-1/2 flex-col gap-12 rounded-lg border border-gray-400 py-16 px-8 border-box text-lg {isFlottformDialogOpened
+		? 'flex'
+		: 'hidden'}"
 >
-	<div class="m-auto text-black text-4xl font-bold font-display">
+	<div class="m-auto text-4xl font-bold">
 		{flottformStatusWrapper}
 	</div>
-	<img class="m-auto w-[21.875rem] {flottformQrCodeDisplay}" alt="qrCode" src={flottformQrCode} /><a
-		href={flottformLinkOffer}
-		class="m-auto {flottformLinkOfferDisplay}"
-		rel="noopener noreferrer"
-		target="_blank"
-		>{flottformLinkOffer}
-	</a>
+	<img
+		class="m-auto w-72"
+		class:block={flottformState === 'endpoint-created'}
+		class:hidden={flottformState !== 'endpoint-created'}
+		alt="qrCode"
+		src={flottformQrCode}
+	/>
+	<div
+		class="flex flex-row-reverse gap-4 items-center"
+		class:block={flottformState === 'endpoint-created'}
+		class:hidden={flottformState !== 'endpoint-created'}
+	>
+		<button
+			class="border rounded bg-gray-200 p-2 text-sm"
+			type="button"
+			bind:this={copyToClipboardButton}
+			title="Copy Flottform link to clipboard"
+			aria-label="Copy Flottform link to clipboard"
+			onclick={async () => {
+				navigator.clipboard
+					.writeText(flottformLinkOffer)
+					.then(() => {
+						copyToClipboardButton.innerText = '✅';
+						setTimeout(() => {
+							copyToClipboardButton.innerText = '📋';
+						}, 1000);
+					})
+					.catch((error) => {
+						copyToClipboardButton.innerText = `❌ Failed to copy: ${error}`;
+						setTimeout(() => {
+							copyToClipboardButton.innerText = '📋';
+						}, 1000);
+					});
+			}}>📋</button
+		>
+		<div class="flottform-link-offer">
+			{flottformLinkOffer}
+		</div>
+	</div>
 	<p class="m-auto">{flottformDialogDescription}</p>
-	<button
-		on:click={closeFlottformDialogCard}
-		class="absolute top-4 right-8 p-4 text-[#1a3066] m-auto"
+	<button onclick={closeFlottformDialogCard} class="absolute top-4 right-4 p-4 m-auto"
 		><svg
 			xmlns="http://www.w3.org/2000/svg"
 			width="30"
@@ -441,15 +570,12 @@
 	</button>
 	<button
 		bind:this={flottformDialogCardButton}
-		class="rounded border border-blue-900 py-2 px-3 m-auto hover:shadow-[0_2px_4px_0_rgba(26,48,102)] focus:shadow-[0_2px_4px_0_rgba(26,48,102)] transition-shadow duration-200"
-		on:click={createWebRtcChannel}>Refresh</button
+		class="rounded border border-gray-400 py-2 px-3 m-auto hover:shadow-md focus:shadow transition-shadow"
+		onclick={() => createWebRtcChannel()}>Refresh</button
 	>
 </dialog>
 
 <style lang="postcss">
-	.drag {
-		@apply border-2 border-dotted border-primary-blue;
-	}
 	.first,
 	.second {
 		stroke-dasharray: 1;
