@@ -4,6 +4,7 @@
 	import { sdpExchangeServerBase, createClientUrl } from './api';
 
 	import backgroundImage from './undraw.svg';
+	import { base } from '$app/paths';
 
 	let flottformAnchor: HTMLElement;
 
@@ -33,7 +34,9 @@
 			<img src={backgroundImage} alt="Background" class="self-end h-auto max-h-96" />
 		</div>
 		<form
-			action="#"
+			action="{base}/customized-ui-upload"
+			method="POST"
+			enctype="multipart/form-data"
 			class="md:col-span-2 py-14 grid grid-cols-1 md:grid-cols-2 gap-y-4 md:gap-x-12 auto-rows-min px-6"
 		>
 			<h2 class="md:col-span-2">Let us know you better</h2>
