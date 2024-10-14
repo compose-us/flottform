@@ -520,8 +520,8 @@
 		src={flottformQrCode}
 	/>
 	<div
-		class="flex flex-row-reverse gap-4 items-center"
-		class:block={flottformState === 'endpoint-created'}
+		class="flex flex-row-reverse gap-4 items-center justify-center"
+		class:flex={flottformState === 'endpoint-created'}
 		class:hidden={flottformState !== 'endpoint-created'}
 	>
 		<button
@@ -547,7 +547,9 @@
 					});
 			}}>📋</button
 		>
-		<div class="flottform-link-offer">
+		<div
+			class="content-center inline-block whitespace-break-spaces break-all text-base overflow-auto border-none outline-none shadow-none resize-none"
+		>
 			{flottformLinkOffer}
 		</div>
 	</div>

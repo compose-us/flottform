@@ -29,10 +29,10 @@
 	<div>
 		<a
 			href="{base}/custom-ui"
-			class="block group relative w-fit cursor-pointer overflow-hidden rounded-md border bg-white text-blue border-primary-blue px-12 py-3"
+			class="block group relative w-fit cursor-pointer overflow-hidden rounded-md border bg-white text-blue border-secondary-blue px-12 py-3"
 		>
 			<span
-				class="ease absolute top-1/2 h-0 w-64 origin-center -translate-x-20 rotate-45 bg-primary-blue transition-all duration-300 group-hover:h-64 group-hover:-translate-y-32"
+				class="ease absolute top-1/2 h-0 w-64 origin-center -translate-x-20 rotate-45 bg-secondary-blue transition-all duration-300 group-hover:h-64 group-hover:-translate-y-32"
 			></span>
 			<span class="ease relative transition duration-300 group-hover:text-white"
 				>Start a new demo</span
