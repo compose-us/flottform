@@ -126,17 +126,21 @@
 </svelte:head>
 
 <div class="max-w-screen-xl mx-auto p-8 box-border grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-0">
-	<button
-		type="button"
-		on:click={fillOutForm}
-		class="group relative w-fit cursor-pointer overflow-hidden rounded-md border border-primary-blue px-12 py-3 order-1 md:order-3 place-self-center disabled:border-gray-300 disabled:bg-gray-200 disabled:pointer-events-none"
-		disabled={isFillingOut}
-	>
-		<span
-			class="ease absolute top-1/2 h-0 w-64 origin-center -translate-x-20 rotate-45 bg-primary-blue transition-all duration-300 group-hover:h-64 group-hover:-translate-y-32"
-		></span>
-		<span class="ease relative transition duration-300 group-hover:text-white">Auto-fill form</span>
-	</button>
+	<div class="sticky sm:static top-0 order-1 md:order-3 place-self-center bg-white w-full flex">
+		<button
+			type="button"
+			on:click={fillOutForm}
+			class="group relative w-fit cursor-pointer mx-auto overflow-hidden rounded-md border border-primary-blue px-12 py-3 disabled:border-gray-300 disabled:bg-gray-200 disabled:pointer-events-none"
+			disabled={isFillingOut}
+		>
+			<span
+				class="ease absolute top-1/2 h-0 w-64 origin-center -translate-x-20 rotate-45 bg-primary-blue transition-all duration-300 group-hover:h-64 group-hover:-translate-y-32"
+			></span>
+			<span class="ease relative transition duration-300 group-hover:text-white"
+				>Auto-fill form</span
+			>
+		</button>
+	</div>
 	<div class="sm:col-span-2 order-2 md:order-1 gap-4 flex flex-col">
 		<h1>Returns and complaints</h1>
 		<p>
@@ -149,7 +153,11 @@
 			up every few hours.
 		</p>
 		<form action="{base}/upload" method="POST" enctype="multipart/form-data" class="grid gap-8">
-			<div id="flottform-anchor" bind:this={flottformAnchor} class="flottform-anchor"></div>
+			<div
+				id="flottform-anchor"
+				bind:this={flottformAnchor}
+				class="flottform-anchor sticky sm:static top-14 bg-white z-50"
+			></div>
 			<div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
 				<div class="flex flex-col">
 					<label for="name">Name</label>
