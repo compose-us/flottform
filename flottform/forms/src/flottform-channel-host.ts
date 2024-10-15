@@ -5,6 +5,7 @@ import {
 	FlottformState,
 	Logger,
 	retrieveEndpointInfo,
+	DEFAULT_WEBRTC_CONFIG,
 	setIncludes
 } from './internal';
 
@@ -24,20 +25,18 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 	constructor({
 		flottformApi,
 		createClientUrl,
-		rtcConfiguration,
 		pollTimeForIceInMs,
 		logger
 	}: {
 		flottformApi: string | URL;
 		createClientUrl: (params: { endpointId: string }) => Promise<string>;
-		rtcConfiguration: RTCConfiguration;
 		pollTimeForIceInMs: number;
 		logger: Logger;
 	}) {
 		super();
 		this.flottformApi = flottformApi;
 		this.createClientUrl = createClientUrl;
-		this.rtcConfiguration = rtcConfiguration;
+		this.rtcConfiguration = DEFAULT_WEBRTC_CONFIG;
 		this.pollTimeForIceInMs = pollTimeForIceInMs;
 		this.logger = logger;
 		Promise.resolve().then(() => {
@@ -56,19 +55,24 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		if (this.openPeerConnection) {
 			this.close();
 		}
+		const baseApi = (
+			this.flottformApi instanceof URL ? this.flottformApi : new URL(this.flottformApi)
+		)
+			.toString()
+			.replace(/\/$/, '');
 
+		try {
+			this.rtcConfiguration.iceServers = await this.fetchIceServers(baseApi);
+		} catch (error) {
+			// Use the default configuration as a fallback
+			this.logger.error(error);
+		}
 		this.openPeerConnection = new RTCPeerConnection(this.rtcConfiguration);
 
 		this.dataChannel = this.createDataChannel();
 
 		const session = await this.openPeerConnection.createOffer();
 		await this.openPeerConnection.setLocalDescription(session);
-
-		const baseApi = (
-			this.flottformApi instanceof URL ? this.flottformApi : new URL(this.flottformApi)
-		)
-			.toString()
-			.replace(/\/$/, '');
 
 		const { endpointId, hostKey } = await this.createEndpoint(baseApi, session);
 		this.logger.log('Created endpoint', { endpointId, hostKey });
@@ -217,6 +221,25 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		});
 
 		return response.json();
+	};
+
+	private fetchIceServers = async (baseApi: string) => {
+		const response = await fetch(`${baseApi}/turn-credentials`, {
+			method: 'GET',
+			headers: {
+				Accept: 'application/json'
+			}
+		});
+		if (!response.ok) {
+			throw new Error('Fetching Error!');
+		}
+		const data = await response.json();
+
+		if (data.success === false) {
+			throw new Error(data.message || 'Unknown error occurred');
+		}
+
+		return data.iceServers;
 	};
 
 	private pollForConnection = async (getEndpointInfoUrl: string) => {
