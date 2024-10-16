@@ -25,9 +25,6 @@
 						>Contact Us</a
 					>
 				</li>
-				<li>
-					<a href="{base}/turn-server-control">TURN Server Control</a>
-				</li>
 			</ul>
 		</nav>
 	</div>

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import Logo from '$lib/components/Logo.svelte';
+	import { sdpExchangeServerBase } from '../../api';
 
 	let authKey = '';
 	let useTurnServer = false;
@@ -15,7 +16,7 @@
 		}
 
 		try {
-			const response = await fetch(`${window.location.origin}${base}/turn-control`, {
+			const response = await fetch(`${sdpExchangeServerBase}/turn-control`, {
 				method: 'PUT',
 				headers: {
 					'Content-Type': 'application/json',
