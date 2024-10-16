@@ -51,10 +51,13 @@ export const actions: Actions = {
 	}
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function isFile(x: any): x is File {
+function isFile(x: unknown): x is File {
 	return (
-		x !== null && x !== undefined && x.name !== undefined && typeof x.arrayBuffer === 'function'
+		x instanceof File &&
+		x !== null &&
+		x !== undefined &&
+		x.name !== undefined &&
+		typeof x.arrayBuffer === 'function'
 	);
 }
 
