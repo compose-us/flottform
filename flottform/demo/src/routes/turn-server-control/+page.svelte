@@ -78,7 +78,7 @@
 		<input
 			id="auth-key"
 			class="w-full p-2 mb-4 border border-[#ccc] rounded"
-			type="text"
+			type="password"
 			bind:value={authKey}
 			placeholder="Enter authentication key"
 		/>
