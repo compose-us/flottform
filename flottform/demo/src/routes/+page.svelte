@@ -38,20 +38,21 @@
 			> in action: check our demos
 		</h1>
 	</div>
-	<div class="grid grid-cols-1 gap-4 sm:gap-8 sm:grid-cols-2 md:grid-cols-3">
+	<div class="grid grid-cols-1 gap-4 sm:gap-8 sm:grid-cols-2 md:grid-cols-3 auto-rows-auto">
 		<DemoLink
-			href="{base}/default-ui"
-			title="Default UI"
-			description="Explore how Flottform integrates seamlessly into forms. This demo lets you see our default
-				UI in action, giving you a hands-on experience of how Flottform can enhance form
-				functionality and user interaction."
+			href="{base}/return-and-complaints-default"
+			title="Return and complaints form (Default UI)"
+			description="Experience the ease of integrating Flottform's default UI into your return and complaints forms, allowing you to enhance your form functionality without any complex setup."
 		/>
 		<DemoLink
-			href="{base}/custom-ui"
-			title="Custom UI"
-			description="See how Flottform can power your forms without any default UI constraints. This demo
-				showcases how you can leverage Flottform's functionality while styling your forms exactly as
-				you need, offering complete freedom to match your design preferences."
+			href="{base}/return-and-complaints-custom"
+			title="Return and complaints form (Custom UI)"
+			description="Integrate Flottform into your return and complaints forms with full control over the UI design. This demo shows how you can customize every aspect of the interface while using Flottform's core features."
+		/>
+		<DemoLink
+			href="{base}/expense-report"
+			title="Expense report"
+			description="Discover how Flottform can enhance your expense report forms, making it simple to upload and manage receipts. This demo shows how easy it is to integrate Flottform into your existing workflow, streamlining the process of collecting and submitting expenses."
 		/>
 		<DemoLink
 			href="{base}/customized-default-ui"

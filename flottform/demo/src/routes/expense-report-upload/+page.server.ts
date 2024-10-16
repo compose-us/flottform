@@ -9,22 +9,16 @@ const UPLOAD_FOLDER = env.UPLOAD_FOLDER ?? 'static/uploads';
 
 export const actions: Actions = {
 	default: async ({ request }) => {
-		console.log('got a request');
 		const fd = await request.formData();
-		const name = fd.get('name');
-		const surname = fd.get('surname');
-		const email = fd.get('email');
-		const phone = fd.get('phone');
-		const street = fd.get('street');
-		const houseNumber = fd.get('houseNumber');
-		const city = fd.get('city');
-		const postcode = fd.get('postcode');
-		const problemDescription = fd.get('problemDescription');
+		const description = fd.get('description');
+		const receiptType = fd.get('receiptType');
+		const invoiceDate = fd.get('invoiceDate');
+		const paidAmount = fd.get('paidAmount');
+		const currency = fd.get('currency');
+		const paymentMethod = fd.get('paymentMethod');
+		const costCenter = fd.get('costCenter');
+		const costObject = fd.get('costObject');
 		const document = fd.get('document');
-
-		if (!isString(problemDescription)) {
-			return fail(422, { error: true, message: 'problemDescription needs to be a string' });
-		}
 
 		if (!isFile(document)) {
 			return fail(422, { error: true, message: 'document needs to be a file' });
@@ -43,24 +37,19 @@ export const actions: Actions = {
 
 		return {
 			success: true,
-			name,
-			surname,
-			email,
-			phone,
-			street,
-			houseNumber,
-			city,
-			postcode,
-			problemDescription,
+			description,
+			receiptType,
+			invoiceDate,
+			paidAmount,
+			currency,
+			paymentMethod,
+			costCenter,
+			costObject,
 			document: uuid,
 			filenameDoc
 		};
 	}
 };
-
-function isString(x: unknown): x is string {
-	return typeof x === 'string';
-}
 
 function isFile(x: unknown): x is File {
 	return (

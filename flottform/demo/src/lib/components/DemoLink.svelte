@@ -15,8 +15,8 @@
 	} & HTMLAttributes<HTMLLinkElement | HTMLAnchorElement> = $props();
 </script>
 
-<a {href} class="contents {linkClass}" {...rest}>
-	<div class="perspective">
+<a {href} class="{linkClass} grid-rows-subgrid grid row-span-2" {...rest}>
+	<div class="perspective grid-rows-subgrid grid row-span-2">
 		<h2 class="text-2xl">{title}</h2>
 		<p class="italic text-lg">
 			{description}
