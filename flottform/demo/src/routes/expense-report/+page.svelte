@@ -3,16 +3,13 @@
 	import { onMount } from 'svelte';
 	import { FlottformFileInputHost } from '@flottform/forms';
 	import { writable } from 'svelte/store';
-	import { env } from '$env/dynamic/public';
-	import { browser } from '$app/environment';
-	import { sdpExchangeServerBase } from '../../api';
+	import { sdpExchangeServerBase, createExpenseReportClientUrl } from '../../api';
 	import waiting from './images/status-svgs/waiting.svg';
 	import done from './images/status-svgs/done.svg';
 	import errorSvg from './images/status-svgs/error.svg';
 
 	let fileInput: HTMLInputElement;
 	let flottformButton: HTMLButtonElement;
-	let flottformDialogCardButton: HTMLButtonElement;
 	let flottformDialogCard: HTMLDialogElement;
 	let copyToClipboardButton: HTMLButtonElement;
 	let flottformStatusWrapper: string = $state('');
@@ -43,15 +40,6 @@
 		if (!isEndpointCreated) {
 			createWebRtcChannel();
 		}
-	};
-
-	const clientBase = env.PUBLIC_FLOTTFORM_CLIENT_BASE || 'https://192.168.0.21:5177/custom-ui';
-
-	export const createClientUrl = async ({ endpointId }: { endpointId: string }) => {
-		if (browser) {
-			return `${window.location.origin}${base}/custom-ui-client/${endpointId}`;
-		}
-		return `${clientBase}/${endpointId}`;
 	};
 
 	const expenseReportMockData = [
@@ -169,11 +157,9 @@
 	};
 
 	onMount(async () => {
-		const fileInput = document.querySelector('input[type=file]') as HTMLInputElement;
-
 		const flottformFileInputHost = new FlottformFileInputHost({
 			flottformApi: sdpExchangeServerBase,
-			createClientUrl,
+			createClientUrl: createExpenseReportClientUrl,
 			inputField: fileInput
 		});
 
@@ -374,6 +360,10 @@
 		</div>
 		<div class="border rounded-sm border-gray-200 p-3 flex flex-col h-full relative">
 			<h2 class="font-sans">Receipt information</h2>
+			<p class="text-xs">
+				<sup>*</sup> This is a demo. Your data will only be stored temporarily. Uploads will be cleaned
+				up every few hours.
+			</p>
 			<section class="grid lg:grid-cols-2 gap-x-8 gap-y-4 py-4 border-b">
 				{#if showSpinner}
 					<div
@@ -486,7 +476,7 @@
 					/>
 				</div>
 			</section>
-			<div class="flex justify-between mt-4">
+			<div class="flex flex-col justify-between mt-4">
 				<button
 					type="submit"
 					class="group relative w-fit cursor-pointer overflow-hidden rounded-md border bg-secondary-blue text-white border-secondary-blue px-12 py-3 font-semibold disabled:border-gray-300 disabled:bg-gray-200 disabled:text-gray-500 disabled:pointer-events-none"
@@ -571,44 +561,7 @@
 		</svg>
 	</button>
 	<button
-		bind:this={flottformDialogCardButton}
 		class="rounded border border-gray-400 py-2 px-3 m-auto hover:shadow-md focus:shadow transition-shadow"
 		onclick={() => createWebRtcChannel()}>Refresh</button
 	>
 </dialog>
-
-<style lang="postcss">
-	.first,
-	.second {
-		stroke-dasharray: 1;
-		stroke-dashoffset: 1;
-		animation: dash 2s linear 1 forwards;
-	}
-	.first {
-		animation-delay: 2s;
-	}
-
-	.typewriter {
-		overflow: hidden;
-		white-space: nowrap;
-		animation: typing 3.5s steps(50, end);
-	}
-
-	@keyframes typing {
-		from {
-			width: 0;
-		}
-		to {
-			width: 100%;
-		}
-	}
-
-	@keyframes dash {
-		from {
-			stroke-dashoffset: 1;
-		}
-		to {
-			stroke-dashoffset: 0;
-		}
-	}
-</style>

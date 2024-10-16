@@ -9,7 +9,6 @@ const UPLOAD_FOLDER = env.UPLOAD_FOLDER ?? 'static/uploads';
 
 export const actions: Actions = {
 	default: async ({ request }) => {
-		console.log('got a request');
 		const fd = await request.formData();
 		const name = fd.get('name');
 		const surname = fd.get('surname');
@@ -50,17 +49,16 @@ export const actions: Actions = {
 	}
 };
 
-/* eslint-disable  @typescript-eslint/no-explicit-any */
-function isString(x: any): x is string {
+function isString(x: unknown): x is string {
 	return typeof x === 'string';
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function isFile(x: any): x is File {
 	return (
 		x !== null && x !== undefined && x.name !== undefined && typeof x.arrayBuffer === 'function'
 	);
 }
-/* eslint-enable  @typescript-eslint/no-explicit-any */
 
 async function tryRemovingOldUploads(): Promise<void> {
 	try {

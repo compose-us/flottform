@@ -1,10 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { createDefaultFlottformComponent } from '@flottform/forms';
-	import { sdpExchangeServerBase, createClientUrl } from './api';
-
 	import backgroundImage from './undraw.svg';
 	import { base } from '$app/paths';
+	import { sdpExchangeServerBase, createCustomizedUiClientUrl } from '../../api';
 
 	let flottformAnchor: HTMLElement;
 
@@ -19,7 +18,7 @@
 		for (const file of fileInputs) {
 			flottformComponent.createFileItem({
 				flottformApi: sdpExchangeServerBase,
-				createClientUrl,
+				createClientUrl: createCustomizedUiClientUrl,
 				inputField: file,
 				label: 'Your CV',
 				onSuccessText: 'You have successfully uploaded your CV'
@@ -39,7 +38,13 @@
 			enctype="multipart/form-data"
 			class="md:col-span-2 py-14 grid grid-cols-1 md:grid-cols-2 gap-y-4 md:gap-x-12 auto-rows-min px-6"
 		>
-			<h2 class="md:col-span-2">Let us know you better</h2>
+			<div class="md:col-span-2">
+				<h2>Let us know you better</h2>
+				<p class="text-xs mt-1">
+					<sup>*</sup> This is a demo. Your data will only be stored temporarily. Uploads will be cleaned
+					up every few hours.
+				</p>
+			</div>
 			<div class="flex flex-col gap-2">
 				<label for="name">Name</label>
 				<input
@@ -114,8 +119,6 @@
 	}
 	form {
 		color: #051e0c;
-		font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial,
-			sans-serif;
 	}
 	h2 {
 		font-family: 'Unbounded';

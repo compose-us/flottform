@@ -4,9 +4,7 @@
 	import { FlottformFileInputHost } from '@flottform/forms';
 	import { writable } from 'svelte/store';
 	import FileInput from '$lib/components/FileInput.svelte';
-	import { env } from '$env/dynamic/public';
-	import { browser } from '$app/environment';
-	import { sdpExchangeServerBase } from '../../api';
+	import { sdpExchangeServerBase, createCustomClientUrl } from '../../api';
 
 	let highlighted = false;
 
@@ -40,15 +38,6 @@
 		if (!isEndpointCreated) {
 			createWebRtcChannel();
 		}
-	};
-
-	const clientBase = env.PUBLIC_FLOTTFORM_CLIENT_BASE || 'https://192.168.0.21:5177/custom-ui';
-
-	export const createClientUrl = async ({ endpointId }: { endpointId: string }) => {
-		if (browser) {
-			return `${window.location.origin}${base}/custom-ui-client/${endpointId}`;
-		}
-		return `${clientBase}/${endpointId}`;
 	};
 
 	let prefilledForm = writable<{ [key: string]: string }>({
@@ -147,7 +136,7 @@
 
 		const flottformFileInputHost = new FlottformFileInputHost({
 			flottformApi: sdpExchangeServerBase,
-			createClientUrl,
+			createClientUrl: createCustomClientUrl,
 			inputField: fileInput
 		});
 
