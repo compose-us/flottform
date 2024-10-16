@@ -224,7 +224,7 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 	};
 
 	private fetchIceServers = async (baseApi: string) => {
-		const response = await fetch(`${baseApi}/turn-credentials`, {
+		const response = await fetch(`${baseApi}/ice-server-credentials`, {
 			method: 'GET',
 			headers: {
 				Accept: 'application/json'

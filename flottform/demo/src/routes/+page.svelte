@@ -26,9 +26,7 @@
 					>
 				</li>
 				<li>
-					<a href="{base}/turn-server-control"
-						>TURN Server Control</a
-					>
+					<a href="{base}/turn-server-control">TURN Server Control</a>
 				</li>
 			</ul>
 		</nav>

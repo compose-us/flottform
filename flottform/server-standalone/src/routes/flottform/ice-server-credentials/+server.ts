@@ -61,7 +61,7 @@ export const OPTIONS: RequestHandler = async () => {
 	return text('', {
 		headers: {
 			'Access-Control-Allow-Origin': '*',
-			'Access-Control-Allow-Methods': 'GET,DELETE,OPTIONS',
+			'Access-Control-Allow-Methods': 'GET,OPTIONS',
 			'Access-Control-Allow-Headers': '*'
 		}
 	});
