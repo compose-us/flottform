@@ -1,55 +1,14 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { onMount } from 'svelte';
-	import { FlottformFileInputHost } from '@flottform/forms';
+	import { createDefaultFlottformComponent } from '@flottform/forms';
 	import { writable } from 'svelte/store';
 	import FileInput from '$lib/components/FileInput.svelte';
-	import { env } from '$env/dynamic/public';
-	import { browser } from '$app/environment';
-	import { sdpExchangeServerBase } from '../../api';
+	import { createClientUrl, sdpExchangeServerBase } from '../../api';
 
 	let highlighted = false;
 
 	let fileInput: HTMLInputElement;
-	let flottformButton: HTMLButtonElement;
-	let flottformDialogCardButton: HTMLButtonElement;
-	let flottformDialogCard: HTMLDialogElement;
-	let flottformStatusWrapper: string;
-	let flottformQrCode: string;
-	let flottformQrCodeDisplay: string;
-	let flottformLinkOffer: string;
-	let flottformLinkOfferDisplay: string;
-	let flottformDialogDescription: string;
-
-	let isEndpointCreated = false;
-	let flottformButtonBackgroundColor = '';
-
-	let createWebRtcChannel: () => void;
-
-	const openFlottformDialogCard = () => {
-		flottformDialogCard.showModal();
-		flottformDialogCard.style.display = 'flex';
-	};
-
-	const closeFlottformDialogCard = () => {
-		flottformDialogCard.close();
-		flottformDialogCard.style.display = 'none';
-	};
-
-	const handleFlottformButtonClick = () => {
-		if (!isEndpointCreated) {
-			createWebRtcChannel();
-		}
-	};
-
-	const clientBase = env.PUBLIC_FLOTTFORM_CLIENT_BASE || 'https://192.168.0.21:5177/custom-ui';
-
-	export const createClientUrl = async ({ endpointId }: { endpointId: string }) => {
-		if (browser) {
-			return `${window.location.origin}${base}/custom-ui-client/${endpointId}`;
-		}
-		return `${clientBase}/${endpointId}`;
-	};
 
 	let prefilledForm = writable<{ [key: string]: string }>({
 		name: '',
@@ -142,72 +101,23 @@
 		isFillingOut = false;
 	};
 
+	let flottformAnchor: HTMLElement;
+
 	onMount(async () => {
-		const fileInput = document.querySelector('input[type=file]') as HTMLInputElement;
-
-		const flottformFileInputHost = new FlottformFileInputHost({
-			flottformApi: sdpExchangeServerBase,
-			createClientUrl,
-			inputField: fileInput
+		const fileInputs = document.querySelectorAll(
+			'input[type=file]'
+		) as NodeListOf<HTMLInputElement>;
+		const flottformComponent = createDefaultFlottformComponent({
+			flottformAnchorElement: flottformAnchor
 		});
-
-		flottformFileInputHost.on('new', () => {
-			createWebRtcChannel = flottformFileInputHost.start;
-		});
-
-		flottformFileInputHost.on('endpoint-created', ({ link, qrCode }) => {
-			isEndpointCreated = true;
-			flottformButtonBackgroundColor = 'bg-[#F9F871]';
-			flottformLinkOffer = link;
-			flottformQrCode = qrCode;
-			flottformLinkOfferDisplay = 'block';
-			flottformQrCodeDisplay = 'block';
-			flottformStatusWrapper = 'Upload a file';
-			flottformDialogDescription = 'Use this QR-Code or Link on your other device.';
-		});
-
-		flottformFileInputHost.on('connected', () => {
-			flottformQrCodeDisplay = 'hidden';
-			flottformLinkOfferDisplay = 'hidden';
-			flottformStatusWrapper = 'Connected!';
-			flottformDialogDescription =
-				'Another device is connected. Start the data transfer from your other device';
-			flottformButtonBackgroundColor = 'bg-[#D4F1EF]';
-		});
-
-		flottformFileInputHost.on('webrtc:waiting-for-ice', () => {
-			flottformDialogDescription = 'Waiting for data channel connection';
-		});
-
-		flottformFileInputHost.on('receive', () => {
-			flottformStatusWrapper = 'Receiving data';
-			flottformDialogDescription =
-				'Another device is sending data. Waiting for incoming data transfer to complete';
-			flottformButtonBackgroundColor = 'bg-[#7EA4FF]';
-		});
-
-		flottformFileInputHost.on('done', () => {
-			flottformStatusWrapper = 'Done!';
-			flottformDialogDescription =
-				'You have received a file from another device. Please close this dialog to finish your form.';
-			flottformButtonBackgroundColor = 'bg-[#FFFFFF]';
-		});
-
-		flottformFileInputHost.on('error', (e) => {
-			console.error(e);
-			let errorMessage = 'Connection failed - please retry!';
-			if (e.message === 'connection-failed') {
-				errorMessage = 'Client connection failed!';
-			} else if (e.message === 'connection-impossible') {
-				errorMessage =
-					'Connection to this client with the current network environment is impossible';
-			} else if (e.message === 'file-transfer') {
-				errorMessage = 'Error during file transfer';
-			}
-			flottformStatusWrapper = 'Oops! Something went wrong';
-			flottformDialogDescription = errorMessage;
-			flottformButtonBackgroundColor = 'bg-[#F57C6B]';
-		});
+		for (const file of fileInputs) {
+			flottformComponent.createFileItem({
+				flottformApi: sdpExchangeServerBase,
+				createClientUrl,
+				inputField: file,
+				label: 'Upload your photo'
+			});
+		}
 	});
 </script>
 
@@ -216,17 +126,21 @@
 </svelte:head>
 
 <div class="max-w-screen-xl mx-auto p-8 box-border grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-0">
-	<button
-		type="button"
-		on:click={fillOutForm}
-		class="group relative w-fit cursor-pointer overflow-hidden rounded-md border border-primary-blue px-12 py-3 order-1 md:order-3 place-self-center disabled:border-gray-300 disabled:bg-gray-200 disabled:pointer-events-none"
-		disabled={isFillingOut}
-	>
-		<span
-			class="ease absolute top-1/2 h-0 w-64 origin-center -translate-x-20 rotate-45 bg-primary-blue transition-all duration-300 group-hover:h-64 group-hover:-translate-y-32"
-		></span>
-		<span class="ease relative transition duration-300 group-hover:text-white">Auto-fill form</span>
-	</button>
+	<div class="sticky sm:static top-0 order-1 md:order-3 place-self-center bg-white w-full flex">
+		<button
+			type="button"
+			on:click={fillOutForm}
+			class="group relative w-fit cursor-pointer mx-auto overflow-hidden rounded-md border border-primary-blue px-12 py-3 disabled:border-gray-300 disabled:bg-gray-200 disabled:pointer-events-none"
+			disabled={isFillingOut}
+		>
+			<span
+				class="ease absolute top-1/2 h-0 w-64 origin-center -translate-x-20 rotate-45 bg-primary-blue transition-all duration-300 group-hover:h-64 group-hover:-translate-y-32"
+			></span>
+			<span class="ease relative transition duration-300 group-hover:text-white"
+				>Auto-fill form</span
+			>
+		</button>
+	</div>
 	<div class="sm:col-span-2 order-2 md:order-1 gap-4 flex flex-col">
 		<h1>Returns and complaints</h1>
 		<p>
@@ -239,6 +153,11 @@
 			up every few hours.
 		</p>
 		<form action="{base}/upload" method="POST" enctype="multipart/form-data" class="grid gap-8">
+			<div
+				id="flottform-anchor"
+				bind:this={flottformAnchor}
+				class="flottform-anchor sticky sm:static top-14 bg-white z-50"
+			></div>
 			<div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
 				<div class="flex flex-col">
 					<label for="name">Name</label>
@@ -337,7 +256,7 @@
 					></textarea>
 				</div>
 			</div>
-			<div class="grid gap-2 sm:gap-0 grid-cols-1 sm:grid-cols-[390px_1fr]">
+			<div class="grid gap-6 grid-cols-1 sm:grid-cols-[390px_1fr]">
 				<FileInput id="document" name="document" {fileInput} />
 
 				{#if highlighted}
@@ -372,26 +291,6 @@
 						<p class="text-2xl font-handwriting typewriter">Upload your photo</p>
 					</div>
 				{/if}
-				<div class="flex items-center">
-					<button
-						bind:this={flottformButton}
-						type="button"
-						class="border border-[#1a3066] py-3 px-4 text-[#1a3066] font-bold rounded cursor-pointer inline-block {flottformButtonBackgroundColor} hover:shadow-[0_2px_4px_0_rgba(26,48,102)] focus:shadow-[0_2px_4px_0_rgba(26,48,102)] transition-shadow duration-200"
-						on:click={handleFlottformButtonClick}
-						on:click={openFlottformDialogCard}
-						><svg
-							xmlns="http://www.w3.org/2000/svg"
-							width="12"
-							height="24"
-							viewBox="0 0 32 74"
-							fill="#1a3066"
-							><path
-								d="M29.2146 12.4C28.9001 12.2308 28.5069 12.1038 28.0351 12.0192C27.6027 11.8922 27.1505 11.8287 26.6788 11.8287C25.3027 11.8287 24.3395 12.2731 23.7891 13.1618C23.2387 14.0081 22.8455 15.1084 22.6096 16.4626L22.4917 17.2244H29.0377L30.1287 26.6192L21.0174 27.4444L17.1842 50.6139L13.3542 73.7835H0.200073L4.03326 50.6139L7.86648 27.4444H2.55894L4.21018 17.2244H9.3408L9.51772 16.2087C9.87155 14.1351 10.363 12.1673 10.992 10.3052C11.6604 8.44322 12.5843 6.81394 13.7637 5.41742C14.9825 3.97858 16.5355 2.85713 18.4226 2.05307C20.3097 1.2067 22.649 0.783508 25.4403 0.783508C26.3446 0.783508 27.3668 0.868146 28.5069 1.03742C29.6471 1.16438 30.5906 1.39713 31.3376 1.73568L29.2146 12.4Z"
-								fill="#1a3066"
-							></path></svg
-						></button
-					>
-				</div>
 			</div>
 			<button
 				type="submit"
@@ -406,47 +305,11 @@
 	</div>
 </div>
 
-<dialog
-	bind:this={flottformDialogCard}
-	class="h-full w-full flex-col gap-12 rounded-lg border border-blue-900 text-black py-16 px-8 border-box text-lg"
->
-	<div class="m-auto text-black text-4xl font-bold font-display">
-		{flottformStatusWrapper}
-	</div>
-	<img class="m-auto w-[21.875rem] {flottformQrCodeDisplay}" alt="qrCode" src={flottformQrCode} /><a
-		href={flottformLinkOffer}
-		class="m-auto {flottformLinkOfferDisplay}"
-		rel="noopener noreferrer"
-		target="_blank"
-		>{flottformLinkOffer}
-	</a>
-	<p class="m-auto">{flottformDialogDescription}</p>
-	<button
-		on:click={closeFlottformDialogCard}
-		class="absolute top-4 right-8 p-4 text-[#1a3066] m-auto"
-		><svg
-			xmlns="http://www.w3.org/2000/svg"
-			width="30"
-			height="30"
-			viewBox="0 0 15 15"
-			fill="#1a3066"
-		>
-			<path
-				fill-rule="evenodd"
-				clip-rule="evenodd"
-				d="M6.79289 7.49998L4.14645 4.85353L4.85355 4.14642L7.5 6.79287L10.1464 4.14642L10.8536 4.85353L8.20711 7.49998L10.8536 10.1464L10.1464 10.8535L7.5 8.20708L4.85355 10.8535L4.14645 10.1464L6.79289 7.49998Z"
-				fill="#1a3066"
-			></path>
-		</svg>
-	</button>
-	<button
-		bind:this={flottformDialogCardButton}
-		class="rounded border border-blue-900 py-2 px-3 m-auto hover:shadow-[0_2px_4px_0_rgba(26,48,102)] focus:shadow-[0_2px_4px_0_rgba(26,48,102)] transition-shadow duration-200"
-		on:click={createWebRtcChannel}>Refresh</button
-	>
-</dialog>
-
 <style lang="postcss">
+	.flottform-anchor {
+		--flottform-border-width: 2px;
+		--flottform-border-color: #343af0;
+	}
 	.drag {
 		@apply border-2 border-dotted border-primary-blue;
 	}

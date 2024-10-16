@@ -9,21 +9,16 @@ const UPLOAD_FOLDER = env.UPLOAD_FOLDER ?? 'static/uploads';
 
 export const actions: Actions = {
 	default: async ({ request }) => {
-		console.log('got a request');
 		const fd = await request.formData();
 		const name = fd.get('name');
 		const surname = fd.get('surname');
-		const email = fd.get('email');
 		const phone = fd.get('phone');
-		const street = fd.get('street');
-		const houseNumber = fd.get('houseNumber');
-		const city = fd.get('city');
-		const postcode = fd.get('postcode');
-		const problemDescription = fd.get('problemDescription');
-		const document = fd.get('document');
+		const email = fd.get('email');
+		const presentation = fd.get('presentation');
+		const document = fd.get('cv');
 
-		if (!isString(problemDescription)) {
-			return fail(422, { error: true, message: 'problemDescription needs to be a string' });
+		if (!isString(presentation)) {
+			return fail(422, { error: true, message: 'presentation needs to be a string' });
 		}
 
 		if (!isFile(document)) {
@@ -47,11 +42,7 @@ export const actions: Actions = {
 			surname,
 			email,
 			phone,
-			street,
-			houseNumber,
-			city,
-			postcode,
-			problemDescription,
+			presentation,
 			document: uuid,
 			filenameDoc
 		};
