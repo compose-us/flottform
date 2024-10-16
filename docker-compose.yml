@@ -74,9 +74,10 @@ services:
     environment:
       - 'PROTOCOL_HEADER=x-forwarded-proto'
       - 'HOST_HEADER=x-forwarded-host'
-      - 'AUTH_KEY=${AUTH_KEY}'
-      - 'PUBLIC_IS_ONLINE_DEMO=true'
       - 'ALLOWED_ORIGINS=https://${HOST},https://where-are-you.at'
+      - 'AUTH_KEY=${AUTH_KEY}'
+      - 'ICE_SERVERS_CONFIGURATION=${ICE_SERVERS_CONFIGURATION}'
+      - 'PUBLIC_IS_ONLINE_DEMO=true'
     volumes:
       - 'app-modules:/app/node_modules'
       - 'demo-modules:/app/flottform/demo/node_modules'
@@ -157,7 +158,7 @@ services:
       - 'BODY_SIZE_LIMIT=33554432'
       - 'PROTOCOL_HEADER=x-forwarded-proto'
       - 'HOST_HEADER=x-forwarded-host'
-      - 'PUBLIC_FLOTTFORM_SERVER_BASE=https://demo.flottform.io/flottform'
+      - 'PUBLIC_FLOTTFORM_SERVER_BASE=https://${HOST}/flottform'
       - 'PUBLIC_IS_ONLINE_DEMO=true'
     volumes:
       - /app/node_modules
