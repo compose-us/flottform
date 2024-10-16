@@ -15,7 +15,7 @@
 		}
 
 		try {
-			const response = await fetch(`${window.location.origin}/flottform/turn-control`, {
+			const response = await fetch(`${window.location.origin}${base}/turn-control`, {
 				method: 'PUT',
 				headers: {
 					'Content-Type': 'application/json',

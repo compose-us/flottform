@@ -2,6 +2,12 @@ import { json, type RequestHandler, text } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import { getUseTurnServer, setUseTurnServer } from './global';
 
+const corsHeaders = {
+	'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN ?? '*',
+	'Access-Control-Allow-Methods': 'GET,OPTIONS,PUT',
+	'Access-Control-Allow-Headers': '*'
+};
+
 export const PUT: RequestHandler = async ({ request }) => {
 	try {
 		const envAuthKey = env.AUTH_KEY;
@@ -12,11 +18,7 @@ export const PUT: RequestHandler = async ({ request }) => {
 				{ success: false, message: 'No Authentication Key found in the environment' },
 				{
 					status: 500,
-					headers: {
-						'Access-Control-Allow-Origin': '*',
-						'Access-Control-Allow-Methods': 'GET,OPTIONS,PUT',
-						'Access-Control-Allow-Headers': '*'
-					}
+					headers: corsHeaders
 				}
 			);
 		}
@@ -27,11 +29,7 @@ export const PUT: RequestHandler = async ({ request }) => {
 				{ success: false, message: 'Unauthorized: Invalid authentication key' },
 				{
 					status: 401,
-					headers: {
-						'Access-Control-Allow-Origin': '*',
-						'Access-Control-Allow-Methods': 'GET,OPTIONS,PUT',
-						'Access-Control-Allow-Headers': '*'
-					}
+					headers: corsHeaders
 				}
 			);
 		}
@@ -43,11 +41,7 @@ export const PUT: RequestHandler = async ({ request }) => {
 			return json(
 				{ success: false, message: "Expecting boolean for 'useTurnServer' !" },
 				{
-					headers: {
-						'Access-Control-Allow-Origin': '*',
-						'Access-Control-Allow-Methods': 'GET,OPTIONS,PUT',
-						'Access-Control-Allow-Headers': '*'
-					}
+					headers: corsHeaders
 				}
 			);
 		}
@@ -57,11 +51,7 @@ export const PUT: RequestHandler = async ({ request }) => {
 		return json(
 			{ success: true, useTurnServer: getUseTurnServer() },
 			{
-				headers: {
-					'Access-Control-Allow-Origin': '*',
-					'Access-Control-Allow-Methods': 'GET,OPTIONS,PUT',
-					'Access-Control-Allow-Headers': '*'
-				}
+				headers: corsHeaders
 			}
 		);
 	} catch (error) {
@@ -69,11 +59,7 @@ export const PUT: RequestHandler = async ({ request }) => {
 			{ success: false, message: error },
 			{
 				status: 500,
-				headers: {
-					'Access-Control-Allow-Origin': '*',
-					'Access-Control-Allow-Methods': 'GET,OPTIONS,PUT',
-					'Access-Control-Allow-Headers': '*'
-				}
+				headers: corsHeaders
 			}
 		);
 	}
@@ -81,10 +67,6 @@ export const PUT: RequestHandler = async ({ request }) => {
 
 export const OPTIONS: RequestHandler = async () => {
 	return text('', {
-		headers: {
-			'Access-Control-Allow-Origin': '*',
-			'Access-Control-Allow-Methods': 'GET,OPTIONS,PUT',
-			'Access-Control-Allow-Headers': '*'
-		}
+		headers: corsHeaders
 	});
 };
