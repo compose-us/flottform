@@ -14,9 +14,13 @@ type HttpMethod =
 export const corsHeaders = (allowedMethods: Array<HttpMethod>, request: Request) => {
 	const allowedOrigins = env.ALLOWED_ORIGINS.split(',');
 	const originHeader = request.headers.get('Origin');
-	const allowedOrigin = allowedOrigins.find((x) => x === originHeader) ?? 'null';
+	const allowedOrigin = allowedOrigins.find((x) => x === originHeader) ?? allowedOrigins?.[0];
+	console.log('headers:', ...request.headers);
+	console.log({ allowedOrigins, allowedOrigin });
 	return {
-		'Access-Control-Allow-Origin': allowedOrigin ?? '*',
+		...(allowedOrigin
+			? { 'Access-Control-Allow-Origin': allowedOrigin }
+			: { 'Access-Control-Allow-Origin': '*' }),
 		'Access-Control-Allow-Methods': allowedMethods.join(','),
 		'Access-Control-Allow-Headers': '*',
 		Vary: 'Origin'
