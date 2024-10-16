@@ -74,8 +74,9 @@ services:
     environment:
       - 'PROTOCOL_HEADER=x-forwarded-proto'
       - 'HOST_HEADER=x-forwarded-host'
+      - 'AUTH_KEY=${AUTH_KEY}'
       - 'PUBLIC_IS_ONLINE_DEMO=true'
-      - 'ORIGIN=https://${HOST}'
+      - 'ALLOWED_ORIGINS=https://${HOST},https://where-are-you.at'
     volumes:
       - 'app-modules:/app/node_modules'
       - 'demo-modules:/app/flottform/demo/node_modules'
@@ -115,9 +116,7 @@ services:
       - 'PROTOCOL_HEADER=x-forwarded-proto'
       - 'HOST_HEADER=x-forwarded-host'
       - 'PUBLIC_FLOTTFORM_SERVER_BASE=https://${HOST}/flottform'
-      - 'PUBLIC_FLOTTFORM_CLIENT_BASE=https://${HOST}/flottform-client'
       - 'PUBLIC_IS_ONLINE_DEMO=true'
-      - 'ORIGIN=https://${HOST}'
       - 'UPLOAD_FOLDER=/app/flottform/demo/static/uploads'
     volumes:
       - 'app-modules:/app/node_modules'
@@ -159,9 +158,7 @@ services:
       - 'PROTOCOL_HEADER=x-forwarded-proto'
       - 'HOST_HEADER=x-forwarded-host'
       - 'PUBLIC_FLOTTFORM_SERVER_BASE=https://demo.flottform.io/flottform'
-      - 'PUBLIC_FLOTTFORM_CLIENT_BASE=https://where-are-you.at/now/'
       - 'PUBLIC_IS_ONLINE_DEMO=true'
-      - 'ORIGIN=https://where-are-you.at'
     volumes:
       - /app/node_modules
       - /app/flottform/demo/node_modules

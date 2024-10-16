@@ -1,11 +1,5 @@
 import { FlottformChannelHost } from './flottform-channel-host';
-import {
-	BaseInputHost,
-	BaseListeners,
-	DEFAULT_WEBRTC_CONFIG,
-	Logger,
-	POLL_TIME_IN_MS
-} from './internal';
+import { BaseInputHost, BaseListeners, Logger, POLL_TIME_IN_MS } from './internal';
 
 type Listeners = BaseListeners & {
 	done: [data: string];
@@ -23,13 +17,11 @@ export class FlottformTextInputHost extends BaseInputHost<Listeners> {
 	constructor({
 		flottformApi,
 		createClientUrl,
-		rtcConfiguration = DEFAULT_WEBRTC_CONFIG,
 		pollTimeForIceInMs = POLL_TIME_IN_MS,
 		logger = console
 	}: {
 		flottformApi: string | URL;
 		createClientUrl: (params: { endpointId: string }) => Promise<string>;
-		rtcConfiguration?: RTCConfiguration;
 		pollTimeForIceInMs?: number;
 		logger?: Logger;
 	}) {
@@ -37,7 +29,6 @@ export class FlottformTextInputHost extends BaseInputHost<Listeners> {
 		this.channel = new FlottformChannelHost({
 			flottformApi,
 			createClientUrl,
-			rtcConfiguration,
 			pollTimeForIceInMs,
 			logger
 		});

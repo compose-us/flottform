@@ -23,7 +23,7 @@ type Listeners = {
 };
 
 export class FlottformChannelClient extends EventEmitter<Listeners> {
-	private flottformApi: string;
+	private flottformApi: string | URL;
 	private endpointId: string;
 	private rtcConfiguration: RTCConfiguration;
 	private pollTimeForIceInMs: number;
@@ -38,20 +38,18 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 	constructor({
 		endpointId,
 		flottformApi,
-		rtcConfiguration = DEFAULT_WEBRTC_CONFIG,
 		pollTimeForIceInMs = POLL_TIME_IN_MS,
 		logger = console
 	}: {
 		endpointId: string;
-		flottformApi: string;
-		rtcConfiguration?: RTCConfiguration;
+		flottformApi: string | URL;
 		pollTimeForIceInMs?: number;
 		logger?: Logger;
 	}) {
 		super();
 		this.endpointId = endpointId;
 		this.flottformApi = flottformApi;
-		this.rtcConfiguration = rtcConfiguration;
+		this.rtcConfiguration = DEFAULT_WEBRTC_CONFIG;
 		this.pollTimeForIceInMs = pollTimeForIceInMs;
 		this.logger = logger;
 	}
@@ -67,6 +65,19 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		if (this.openPeerConnection) {
 			this.close();
 		}
+		const baseApi = (
+			this.flottformApi instanceof URL ? this.flottformApi : new URL(this.flottformApi)
+		)
+			.toString()
+			.replace(/\/$/, '');
+
+		try {
+			this.rtcConfiguration.iceServers = await this.fetchIceServers(baseApi);
+		} catch (error) {
+			// Use the default configuration as a fallback
+			this.logger.error(error);
+		}
+
 		this.openPeerConnection = new RTCPeerConnection(this.rtcConfiguration);
 		const clientKey = generateSecretKey();
 		const clientIceCandidates = new Set<RTCIceCandidateInit>();
@@ -247,5 +258,23 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		if (!response.ok) {
 			throw Error('Could not update client info. Did another peer already connect?');
 		}
+	};
+	private fetchIceServers = async (baseApi: string) => {
+		const response = await fetch(`${baseApi}/ice-server-credentials`, {
+			method: 'GET',
+			headers: {
+				Accept: 'application/json'
+			}
+		});
+		if (!response.ok) {
+			throw new Error('Fetching Error!');
+		}
+		const data = await response.json();
+
+		if (data.success === false) {
+			throw new Error(data.message || 'Unknown error occurred');
+		}
+
+		return data.iceServers;
 	};
 }
