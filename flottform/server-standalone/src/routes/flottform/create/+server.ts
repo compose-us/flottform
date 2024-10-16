@@ -1,13 +1,7 @@
 import { type RequestHandler, json, error, text } from '@sveltejs/kit';
 import { retrieveFlottformDatabase } from '$lib/database';
 import { RTCSessionDescriptionInitSchema } from '$lib/validations';
-import { env } from '$env/dynamic/private';
-
-const corsHeaders = {
-	'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN ?? '*',
-	'Access-Control-Allow-Methods': 'POST,OPTIONS',
-	'Access-Control-Allow-Headers': '*'
-};
+import { corsHeaders } from '$lib/cors-headers';
 
 export const POST: RequestHandler = async ({ request }) => {
 	const data = await request.json();
@@ -27,12 +21,12 @@ export const POST: RequestHandler = async ({ request }) => {
 	const endpoint = await db.createEndpoint({ session });
 
 	return json(endpoint, {
-		headers: corsHeaders
+		headers: corsHeaders(['POST', 'OPTIONS'], request)
 	});
 };
 
-export const OPTIONS: RequestHandler = async () => {
+export const OPTIONS: RequestHandler = async ({ request }) => {
 	return text('', {
-		headers: corsHeaders
+		headers: corsHeaders(['POST', 'OPTIONS'], request)
 	});
 };

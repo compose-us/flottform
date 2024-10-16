@@ -1,15 +1,11 @@
 import { type RequestHandler, json, text } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import { getUseTurnServer } from '../turn-control/global';
+import { corsHeaders } from '$lib/cors-headers';
 
 const iceServersEnv = env.ICE_SERVERS_CONFIGURATION;
-const corsHeaders = {
-	'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN ?? '*',
-	'Access-Control-Allow-Methods': 'GET,OPTIONS',
-	'Access-Control-Allow-Headers': '*'
-};
 
-export const GET: RequestHandler = async () => {
+export const GET: RequestHandler = async ({ request }) => {
 	const useTurnServer = getUseTurnServer();
 
 	if (!iceServersEnv) {
@@ -17,7 +13,7 @@ export const GET: RequestHandler = async () => {
 			{ success: false, message: 'No ICE server configuration found in the environment' },
 			{
 				status: 500,
-				headers: corsHeaders
+				headers: corsHeaders(['GET', 'OPTIONS'], request)
 			}
 		);
 	}
@@ -30,7 +26,7 @@ export const GET: RequestHandler = async () => {
 			},
 			{
 				status: 200,
-				headers: corsHeaders
+				headers: corsHeaders(['GET', 'OPTIONS'], request)
 			}
 		);
 	} else {
@@ -45,14 +41,14 @@ export const GET: RequestHandler = async () => {
 			},
 			{
 				status: 200,
-				headers: corsHeaders
+				headers: corsHeaders(['GET', 'OPTIONS'], request)
 			}
 		);
 	}
 };
 
-export const OPTIONS: RequestHandler = async () => {
+export const OPTIONS: RequestHandler = async ({ request }) => {
 	return text('', {
-		headers: corsHeaders
+		headers: corsHeaders(['GET', 'OPTIONS'], request)
 	});
 };

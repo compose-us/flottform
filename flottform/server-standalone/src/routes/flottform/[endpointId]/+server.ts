@@ -1,15 +1,9 @@
 import { type RequestHandler, json, error, text } from '@sveltejs/kit';
 import { retrieveFlottformDatabase } from '$lib/database';
 import { ZodError, z } from 'zod';
-import { env } from '$env/dynamic/private';
+import { corsHeaders } from '$lib/cors-headers';
 
-const corsHeaders = {
-	'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN ?? '*',
-	'Access-Control-Allow-Methods': 'GET,DELETE,OPTIONS',
-	'Access-Control-Allow-Headers': '*'
-};
-
-export const GET: RequestHandler = async ({ params }) => {
+export const GET: RequestHandler = async ({ params, request }) => {
 	const { endpointId } = params;
 	if (!endpointId) {
 		return error(400, 'No endpointId provided.');
@@ -19,7 +13,7 @@ export const GET: RequestHandler = async ({ params }) => {
 	try {
 		const endpointInfos = await db.getEndpoint({ endpointId });
 		return json(endpointInfos, {
-			headers: corsHeaders
+			headers: corsHeaders(['GET', 'DELETE', 'OPTIONS'], request)
 		});
 	} catch (err) {
 		if (err instanceof Error && err.message === 'Endpoint not found') {
@@ -52,7 +46,10 @@ export const DELETE: RequestHandler = async ({ params, request }) => {
 		const db = await retrieveFlottformDatabase();
 		await db.deleteEndpoint({ endpointId, hostKey });
 
-		return json({ success: true, endpointId }, { headers: corsHeaders });
+		return json(
+			{ success: true, endpointId },
+			{ headers: corsHeaders(['GET', 'DELETE', 'OPTIONS'], request) }
+		);
 	} catch (err) {
 		if (err instanceof ZodError) {
 			return error(400, 'Could not parse body: ' + err.message);
@@ -61,8 +58,8 @@ export const DELETE: RequestHandler = async ({ params, request }) => {
 	}
 };
 
-export const OPTIONS: RequestHandler = async () => {
+export const OPTIONS: RequestHandler = async ({ request }) => {
 	return text('', {
-		headers: corsHeaders
+		headers: corsHeaders(['GET', 'DELETE', 'OPTIONS'], request)
 	});
 };

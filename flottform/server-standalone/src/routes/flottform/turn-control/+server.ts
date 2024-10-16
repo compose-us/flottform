@@ -1,11 +1,15 @@
 import { json, type RequestHandler, text } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import { getUseTurnServer, setUseTurnServer } from './global';
+import { corsHeaders } from '$lib/cors-headers';
 
-const corsHeaders = {
-	'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN ?? '*',
-	'Access-Control-Allow-Methods': 'GET,OPTIONS,PUT',
-	'Access-Control-Allow-Headers': '*'
+export const GET: RequestHandler = async ({ request }) => {
+	return json(
+		{ success: true, useTurnServer: getUseTurnServer() },
+		{
+			headers: corsHeaders(['GET', 'OPTIONS', 'PUT'], request)
+		}
+	);
 };
 
 export const PUT: RequestHandler = async ({ request }) => {
@@ -18,7 +22,7 @@ export const PUT: RequestHandler = async ({ request }) => {
 				{ success: false, message: 'No Authentication Key found in the environment' },
 				{
 					status: 500,
-					headers: corsHeaders
+					headers: corsHeaders(['GET', 'OPTIONS', 'PUT'], request)
 				}
 			);
 		}
@@ -29,7 +33,7 @@ export const PUT: RequestHandler = async ({ request }) => {
 				{ success: false, message: 'Unauthorized: Invalid authentication key' },
 				{
 					status: 401,
-					headers: corsHeaders
+					headers: corsHeaders(['GET', 'OPTIONS', 'PUT'], request)
 				}
 			);
 		}
@@ -41,7 +45,7 @@ export const PUT: RequestHandler = async ({ request }) => {
 			return json(
 				{ success: false, message: "Expecting boolean for 'useTurnServer' !" },
 				{
-					headers: corsHeaders
+					headers: corsHeaders(['GET', 'OPTIONS', 'PUT'], request)
 				}
 			);
 		}
@@ -51,7 +55,7 @@ export const PUT: RequestHandler = async ({ request }) => {
 		return json(
 			{ success: true, useTurnServer: getUseTurnServer() },
 			{
-				headers: corsHeaders
+				headers: corsHeaders(['GET', 'OPTIONS', 'PUT'], request)
 			}
 		);
 	} catch (error) {
@@ -59,14 +63,14 @@ export const PUT: RequestHandler = async ({ request }) => {
 			{ success: false, message: error },
 			{
 				status: 500,
-				headers: corsHeaders
+				headers: corsHeaders(['GET', 'OPTIONS', 'PUT'], request)
 			}
 		);
 	}
 };
 
-export const OPTIONS: RequestHandler = async () => {
+export const OPTIONS: RequestHandler = async ({ request }) => {
 	return text('', {
-		headers: corsHeaders
+		headers: corsHeaders(['GET', 'OPTIONS', 'PUT'], request)
 	});
 };

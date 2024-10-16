@@ -1,8 +1,7 @@
 import { base } from '$app/paths';
 import { env } from '$env/dynamic/public';
 
-export const sdpExchangeServerBase =
-	env.PUBLIC_FLOTTFORM_SERVER_BASE || `${env.PUBLIC_HOST}:5177/flottform`;
+export const sdpExchangeServerBase = env.PUBLIC_FLOTTFORM_SERVER_BASE;
 
 export const createClientUrl = async ({ endpointId }: { endpointId: string }) => {
 	return `${window.location.origin}${base}/flottform-client/${endpointId}`;
