@@ -120,7 +120,26 @@
 		</div>
 	</form>
 
-	<div>Status der Verbindung: {currentState}</div>
+	<div>
+		Status der Verbindung:
+		{#if currentState === 'init'}
+			Wird aufgebaut...
+		{:else if currentState === 'connected'}
+			Verbunden!
+		{:else if currentState === 'webrtc:connection-impossible'}
+			Verbindung in diesem Netzwerk nicht möglich!
+		{:else if currentState === 'sending'}
+			Sende Daten...
+		{:else if currentState === 'done'}
+			Senden abgeschlossen!
+		{:else if currentState === 'disconnected'}
+			Verbindung verloren!
+		{:else if currentState === 'error'}
+			Ein Fehler ist aufgetreten!
+		{:else}
+			Unklar!
+		{/if}
+	</div>
 </div>
 
 <style lang="postcss">

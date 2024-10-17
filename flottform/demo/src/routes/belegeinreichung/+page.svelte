@@ -49,7 +49,7 @@
 		paidAmount: '8.80',
 		currency: 'EUR',
 		paymentMethod: 'private',
-		costCenter: 'Reise',
+		costCenter: 'Vertrieb',
 		costObject: 'Geschäftsreise'
 	};
 
@@ -137,19 +137,19 @@
 			flottformState = 'connected';
 			flottformStatusWrapper = 'Verbunden!';
 			flottformDialogDescription =
-				'Ein anderes Gerät ist verbunden. Starten Sie die Datenübertragung von Ihrem anderen Gerät';
+				'Ein anderes Gerät ist nun verbunden. Starten Sie die Datenübertragung von dem verbundenen Gerät.';
 			flottformStatusSvg = waiting;
 		});
 
 		flottformFileInputHost.on('webrtc:waiting-for-ice', () => {
-			flottformDialogDescription = 'Warten auf eine Verbindung';
+			flottformDialogDescription = 'Warte auf eine Verbindung...';
 		});
 
 		flottformFileInputHost.on('receive', () => {
 			flottformState = 'receive';
-			flottformStatusWrapper = 'Empfangen von Daten';
+			flottformStatusWrapper = 'Empfange Daten';
 			flottformDialogDescription =
-				'Ein anderes Gerät sendet gerade Daten. Warten auf den Abschluss der Übertragung eingehender Daten';
+				'Ein anderes Gerät sendet gerade Daten. Warte auf den Abschluss der Übertragung...';
 		});
 
 		flottformFileInputHost.on('done', () => {
@@ -166,11 +166,12 @@
 			console.error(e);
 			let errorMessage = 'Verbindung fehlgeschlagen - bitte versuchen Sie es erneut!';
 			if (e.message === 'connection-failed') {
-				errorMessage = 'Client-Verbindung fehlgeschlagen!';
+				errorMessage = 'Verbindung zu anderem Gerät fehlgeschlagen!';
 			} else if (e.message === 'connection-impossible') {
-				errorMessage = 'Verbindung zu diesem Client ist in dem aktuellen Netzwerk nicht möglich';
+				errorMessage =
+					'Eine Verbindung zu diesem Client kann in der aktuellen Netzwerkkonfiguration nicht hergestellt werden.';
 			} else if (e.message === 'file-transfer') {
-				errorMessage = 'Fehler beim Dateitransfer';
+				errorMessage = 'Fehler beim Dateitransfer.';
 			}
 			flottformStatusWrapper = 'Hoppla! Etwas ist schief gelaufen';
 			flottformDialogDescription = errorMessage;
@@ -260,7 +261,7 @@
 			<h2 class="mb-4 font-sans">Beleg</h2>
 			<div class="flex flex-col gap-4 h-full">
 				<div>
-					<label class="block mb-2" for="document">Laden Sie Ihren Beleg hoch</label>
+					<label class="block mb-2" for="document"><h3>Laden Sie Ihren Beleg hoch:</h3></label>
 					<input
 						class="block w-full border border-gray-200 rounded-sm cursor-pointer file:bg-secondary-blue file:text-white file:py-4 file:border-none"
 						id="document"
@@ -272,7 +273,7 @@
 					<p class="italic text-xs">Klicken Sie zum Hochladen oder ziehen Sie es per Drag & Drop</p>
 				</div>
 				<div class="flex flex-col gap-2">
-					<p>Oder verwenden Sie ein anderes Gerät, um Ihren Beleg hochzuladen</p>
+					<p>Sie können auch ein anderes Gerät verwenden, um Ihren Beleg hochzuladen:</p>
 					<button
 						type="button"
 						class="rounded bg-yellow-300 p-4 font-medium hover:shadow-md w-fit"
@@ -299,8 +300,8 @@
 						</div>
 					{/if}
 				</div>
-				<div class="flex flex-col gap-2 flex-1 justify-end">
-					<p>Füllen Sie das Formular mit den Daten des Belegs aus</p>
+				<div class="flex flex-col gap-2 flex-1 mt-8">
+					<h3>Befüllen Sie das Formular mit den Daten des hochgeladenen Belegs:</h3>
 					<button
 						type="button"
 						onclick={fillOutForm}
@@ -382,7 +383,7 @@
 						name="paidAmount"
 						id="paidAmount"
 						bind:value={$prefilledForm.paidAmount}
-						class="border border-gray-400 rounded-sm px-3 py-2"
+						class="border border-gray-400 rounded-sm px-3 py-2 text-right"
 					/>
 				</div>
 				<div class="flex flex-col">
@@ -410,12 +411,12 @@
 						id="paymentMethod"
 						class="border border-gray-400 rounded-sm px-3 py-2"
 					>
-						<option value="private">Privat</option>
-						<option value="corporate">Firmenkarte</option>
+						<option value="private">Privatauslage</option>
+						<option value="corporate">Firmenkreditkarte</option>
 					</select>
 				</div>
 				<div class="flex flex-col col-span-2">
-					<label for="costCenter">Kostenstelle</label>
+					<label for="costCenter">Kostenstelle (optional)</label>
 					<input
 						type="text"
 						name="costCenter"
@@ -425,7 +426,7 @@
 					/>
 				</div>
 				<div class="flex flex-col col-span-2">
-					<label for="costObject">Kostenträger</label>
+					<label for="costObject">Kostenart (optional)</label>
 					<input
 						type="text"
 						name="costObject"
@@ -475,7 +476,7 @@
 		class:hidden={flottformState !== 'endpoint-created'}
 	>
 		<button
-			class="border rounded bg-gray-200 p-2 text-sm"
+			class="border rounded border-gray-200 hover:bg-blue-700 p-2 text-sm"
 			type="button"
 			bind:this={copyToClipboardButton}
 			title="Flottform-Link in die Zwischenablage kopieren"
@@ -522,6 +523,6 @@
 	</button>
 	<button
 		class="rounded border border-gray-400 py-2 px-3 m-auto hover:shadow-md focus:shadow transition-shadow"
-		onclick={() => createWebRtcChannel()}>Aktualisieren</button
+		onclick={() => createWebRtcChannel()}>Neuen Code erstellen</button
 	>
 </dialog>
