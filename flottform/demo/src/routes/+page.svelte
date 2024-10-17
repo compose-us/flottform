@@ -57,7 +57,7 @@
 		<DemoLink
 			href="{base}/belegeinreichung"
 			title="🇩🇪 Belegeinreichung"
-			description="Entdecken Sie, wie Flottform Ihre Kostenabrechnungsformulare verbessern kann, indem es das Hochladen und Verwalten von Belegen vereinfacht. Diese Demo zeigt, wie einfach sich Flottform in Ihren bestehenden Arbeitsprozess integrieren lässt, um die Erfassung und Einreichung von Ausgaben zu optimieren."
+			description="Nutzen Sie Flottform für Ihre Kostenabrechnungsformulare: Diese Demo zeigt, wie einfach sich Flottform in Ihren bestehenden Arbeitsprozess integrieren lässt, um die Erfassung und Einreichung von Belegen zu optimieren."
 		/>
 		<DemoLink
 			href="{base}/customized-default-ui"
