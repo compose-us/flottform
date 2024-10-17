@@ -55,6 +55,11 @@
 			description="Discover how Flottform can enhance your expense report forms, making it simple to upload and manage receipts. This demo shows how easy it is to integrate Flottform into your existing workflow, streamlining the process of collecting and submitting expenses."
 		/>
 		<DemoLink
+			href="{base}/belegeinreichung"
+			title="🇩🇪 Belegeinreichung"
+			description="Entdecken Sie, wie Flottform Ihre Kostenabrechnungsformulare verbessern kann, indem es das Hochladen und Verwalten von Belegen vereinfacht. Diese Demo zeigt, wie einfach sich Flottform in Ihren bestehenden Arbeitsprozess integrieren lässt, um die Erfassung und Einreichung von Ausgaben zu optimieren."
+		/>
+		<DemoLink
 			href="{base}/customized-default-ui"
 			title="Customized default UI"
 			description="See how you can tailor Flottform's default UI to better match your design, while still retaining all the powerful features of the original interface. This demo lets you explore how easy it is to adapt the default elements to fit seamlessly with your brand's style."

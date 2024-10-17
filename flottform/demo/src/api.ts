@@ -18,3 +18,6 @@ export const createCustomizedUiClientUrl = async ({ endpointId }: { endpointId: 
 export const createExpenseReportClientUrl = async ({ endpointId }: { endpointId: string }) => {
 	return `${window.location.origin}${base}/expense-report-client/${endpointId}`;
 };
+export const createDeExpenseReportClientUrl = async ({ endpointId }: { endpointId: string }) => {
+	return `${window.location.origin}${base}/belegeinreichung-client/${endpointId}`;
+};
