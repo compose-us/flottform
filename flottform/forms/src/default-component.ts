@@ -3,6 +3,54 @@ import { FlottformTextInputHost } from './flottform-text-input-host';
 import { BaseInputHost, BaseListeners } from './internal';
 import { FlottformCreateFileParams, FlottformCreateTextParams } from './types';
 
+/**
+ * The result object returned when creating a Flottform component.
+ * Contains the root element and methods to interact with the component.
+ */
+export type DefaultFlottformComponentResult = {
+	/** The root HTML element of the Flottform component */
+	flottformRoot: HTMLElement;
+	/**
+	 * Retrieves all existing Flottform items (both file and text entries) in the UI.
+	 *
+	 * @returns {NodeListOf<Element> | null} - A NodeList of Flottform input items (file and text entries), or `null` if no items are found.
+	 */
+	getAllFlottformItems: () => NodeListOf<Element> | null;
+	/**
+	 * Creates a UI entry for receiving a file via WebRTC.
+	 *
+	 * @param {Object} params - Configuration options for the file input entry.
+	 * @param {string} params.flottformApi - URL of the WebRTC signaling server.
+	 * @param {Function} params.createClientUrl - A function that returns the URL where the second peer can upload the file.
+	 * @param {HTMLInputElement} params.inputField - The file input field in the main form where the received file will be displayed or processed.
+	 * @param {string} [params.id] - Optional ID for the file input entry.
+	 * @param {string} [params.additionalItemClasses] - Optional additional CSS classes for styling the file input entry.
+	 * @param {string} [params.label] - Optional label text for the file input entry.
+	 * @param {string} [params.buttonLabel] - Optional text for the button that triggers the file reception.
+	 * @param {string | Function} [params.onErrorText] - Optional error message displayed if the file transfer fails.
+	 * @param {string} [params.onSuccessText] - Optional success message displayed after the file is successfully received.
+	 *
+	 * @returns {void}
+	 */
+	createFileItem: (params: FlottformCreateFileParams) => void;
+	/**
+	 * Creates a UI entry for receiving text via WebRTC.
+	 *
+	 * @param {Object} params - Configuration options for the text input entry.
+	 * @param {string} params.flottformApi - URL of the WebRTC signaling server.
+	 * @param {Function} params.createClientUrl - A function that returns the URL where the second peer can send the text.
+	 * @param {string} [params.id] - Optional ID for the text input entry.
+	 * @param {string} [params.additionalItemClasses] - Optional additional CSS classes for styling the text input entry.
+	 * @param {string} [params.label] - Optional label text for the text input entry.
+	 * @param {string} [params.buttonLabel] - Optional text for the button that triggers the text reception.
+	 * @param {string | Function} [params.onErrorText] - Optional error message displayed if the text transfer fails.
+	 * @param {string} [params.onSuccessText] - Optional success message displayed after the text is successfully received.
+	 *
+	 * @returns {void}
+	 */
+	createTextItem: (params: FlottformCreateTextParams) => void;
+};
+
 const openInputsList = () => {
 	const flottformElementsContainerWrapper: HTMLDivElement = document.querySelector(
 		'.flottform-elements-container-wrapper'
@@ -54,7 +102,6 @@ const createLinkAndQrCode = (qrCode: string, link: string) => {
  *
  * @param {Object} params - Configuration options for setting up the Flottform component.
  * @param {HTMLElement} params.flottformAnchorElement - The HTML element to which the Flottform component will be attached. It determines where the UI will be built on the page.
- * @param {string} [params.id] - Optional ID for the UI used for File of Text element.
  * @param {HTMLElement} [params.flottformRootElement] - An optional root element to use. If not provided, a new default root element (a `div` with the class `flottform-root`) will be created.
  * @param {string} [params.additionalComponentClass] - Optional additional class to add for custom styling of the component.
  * @param {string} [params.flottformRootTitle] - Optional title to set for the Flottform root element This is the text displayed on the button that opens the dialog (with the class `flottform-root-opener-button`).
@@ -109,12 +156,7 @@ export const createDefaultFlottformComponent = ({
 	additionalComponentClass?: string;
 	flottformRootTitle?: string;
 	flottformRootDescription?: string;
-}): {
-	flottformRoot: HTMLElement;
-	createFileItem: (params: FlottformCreateFileParams) => void;
-	createTextItem: (params: FlottformCreateTextParams) => void;
-	getAllFlottformItems: () => NodeListOf<Element> | null;
-} => {
+}): DefaultFlottformComponentResult => {
 	const flottformRoot: HTMLElement =
 		flottformRootElement ??
 		document.querySelector('.flottform-root') ??
@@ -129,11 +171,6 @@ export const createDefaultFlottformComponent = ({
 	flottformAnchorElement.appendChild(flottformRoot);
 	return {
 		flottformRoot,
-		/**
-		 * Retrieves all existing Flottform items (both file and text entries) in the UI.
-		 *
-		 * @returns {NodeListOf<Element> | null} - A NodeList of Flottform input items (file and text entries), or `null` if no items are found.
-		 */
 		getAllFlottformItems: () => {
 			const flottformInputsList = flottformRoot.querySelector('.flottform-inputs-list');
 			if (!flottformInputsList) {
@@ -142,22 +179,6 @@ export const createDefaultFlottformComponent = ({
 			}
 			return flottformInputsList.childNodes as NodeListOf<Element>;
 		},
-		/**
-		 * Creates a UI entry for receiving a file via WebRTC.
-		 *
-		 * @param {Object} params - Configuration options for the file input entry.
-		 * @param {string} params.flottformApi - URL of the WebRTC signaling server.
-		 * @param {Function} params.createClientUrl - A function that returns the URL where the second peer can upload the file.
-		 * @param {HTMLInputElement} params.inputField - The file input field in the main form where the received file will be displayed or processed.
-		 * @param {string} [params.id] - Optional ID for the file input entry.
-		 * @param {string} [params.additionalItemClasses] - Optional additional CSS classes for styling the file input entry.
-		 * @param {string} [params.label] - Optional label text for the file input entry.
-		 * @param {string} [params.buttonLabel] - Optional text for the button that triggers the file reception.
-		 * @param {string | Function} [params.onErrorText] - Optional error message displayed if the file transfer fails.
-		 * @param {string} [params.onSuccessText] - Optional success message displayed after the file is successfully received.
-		 *
-		 * @returns {void}
-		 */
 		createFileItem: ({
 			flottformApi,
 			createClientUrl,
@@ -213,21 +234,6 @@ export const createDefaultFlottformComponent = ({
 				onSuccessText
 			});
 		},
-		/**
-		 * Creates a UI entry for receiving text via WebRTC.
-		 *
-		 * @param {Object} params - Configuration options for the text input entry.
-		 * @param {string} params.flottformApi - URL of the WebRTC signaling server.
-		 * @param {Function} params.createClientUrl - A function that returns the URL where the second peer can send the text.
-		 * @param {string} [params.id] - Optional ID for the text input entry.
-		 * @param {string} [params.additionalItemClasses] - Optional additional CSS classes for styling the text input entry.
-		 * @param {string} [params.label] - Optional label text for the text input entry.
-		 * @param {string} [params.buttonLabel] - Optional text for the button that triggers the text reception.
-		 * @param {string | Function} [params.onErrorText] - Optional error message displayed if the text transfer fails.
-		 * @param {string} [params.onSuccessText] - Optional success message displayed after the text is successfully received.
-		 *
-		 * @returns {void}
-		 */
 		createTextItem: ({
 			flottformApi,
 			createClientUrl,

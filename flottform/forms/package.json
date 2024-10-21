@@ -49,6 +49,7 @@
 		"@vitest/browser": "^2.1.2",
 		"globals": "^15.10.0",
 		"qrcode": "^1.5.4",
+		"typedoc": "^0.26.10",
 		"vite": "^5.4.8",
 		"vite-plugin-dts": "^4.2.3",
 		"vitest": "^2.1.2",

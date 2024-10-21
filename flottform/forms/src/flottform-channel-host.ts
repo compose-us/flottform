@@ -47,7 +47,6 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 	 * @param {Object} config - The configuration for setting up the channel for the host.
 	 * @param {flottformApi} - The API endpoint for retrieving connection information.
 	 * @param {createClientUrl} - A function that generates the client URL given an endpoint ID.
-	 * @param {rtcConfiguration} - The RTC configuration for the WebRTC connection.
 	 * @param {pollTimeForIceInMs} - The time interval (in ms) for polling ICE candidates.
 	 * @param {logger} - Optional logger for logging connection events.
 	 */

@@ -27,7 +27,6 @@ export class FlottformTextInputClient extends EventEmitter<Listeners> {
 	 * @param {Object} config - The configuration for setting up the text input client.
 	 * @param {string} config.endpointId - The unique ID for the WebRTC endpoint.
 	 * @param {string} config.flottformApi - The API URL for retrieving connection information.
-	 * @param {RTCConfiguration} [config.rtcConfiguration=DEFAULT_WEBRTC_CONFIG] - WebRTC configuration settings.
 	 * @param {number} [config.pollTimeForIceInMs=POLL_TIME_IN_MS] - The polling time for ICE candidates in milliseconds.
 	 * @param {Logger} [config.logger=console] - Logger for capturing logs and errors.
 	 */

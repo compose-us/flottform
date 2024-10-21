@@ -60,7 +60,6 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 	 *
 	 * @param {endpointId} - The unique identifier of the endpoint to connect to.
 	 * @param {flottformApi} - The API endpoint for retrieving connection information.
-	 * @param {rtcConfiguration} - Optional RTC configuration for WebRTC connection.
 	 * @param {pollTimeForIceInMs} - Optional time in milliseconds for polling ICE candidates.
 	 * @param {logger} - Optional logger for logging connection events (default: `console`).
 	 */
@@ -92,7 +91,6 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 
 	/**
 	 * Starts the WebRTC connection process. The connection is not established until this method is called.
-	 *
 	 */
 	start = async () => {
 		if (this.openPeerConnection) {
