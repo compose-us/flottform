@@ -42,7 +42,7 @@ type Listeners = {
  * @extends EventEmitter
  */
 export class FlottformChannelClient extends EventEmitter<Listeners> {
-	private flottformApi: string;
+	private flottformApi: string | URL;
 	private endpointId: string;
 	private rtcConfiguration: RTCConfiguration;
 	private pollTimeForIceInMs: number;
@@ -67,24 +67,23 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 	constructor({
 		endpointId,
 		flottformApi,
-		rtcConfiguration = DEFAULT_WEBRTC_CONFIG,
 		pollTimeForIceInMs = POLL_TIME_IN_MS,
 		logger = console
 	}: {
 		endpointId: string;
-		flottformApi: string;
-		rtcConfiguration?: RTCConfiguration;
+		flottformApi: string | URL;
 		pollTimeForIceInMs?: number;
 		logger?: Logger;
 	}) {
 		super();
 		this.endpointId = endpointId;
 		this.flottformApi = flottformApi;
-		this.rtcConfiguration = rtcConfiguration;
+		this.rtcConfiguration = DEFAULT_WEBRTC_CONFIG;
 		this.pollTimeForIceInMs = pollTimeForIceInMs;
 		this.logger = logger;
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	private changeState = (newState: ClientState, details?: any) => {
 		this.state = newState;
 		this.emit(newState, details);
@@ -99,6 +98,19 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		if (this.openPeerConnection) {
 			this.close();
 		}
+		const baseApi = (
+			this.flottformApi instanceof URL ? this.flottformApi : new URL(this.flottformApi)
+		)
+			.toString()
+			.replace(/\/$/, '');
+
+		try {
+			this.rtcConfiguration.iceServers = await this.fetchIceServers(baseApi);
+		} catch (error) {
+			// Use the default configuration as a fallback
+			this.logger.error(error);
+		}
+
 		this.openPeerConnection = new RTCPeerConnection(this.rtcConfiguration);
 		const clientKey = generateSecretKey();
 		const clientIceCandidates = new Set<RTCIceCandidateInit>();
@@ -154,6 +166,8 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 	 * @param data - The data to send to the peer.
 	 * @fires error - Emits the state error if the connection is not established.
 	 */
+	// sendData = (data: string | Blob | ArrayBuffer | ArrayBufferView) => {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	sendData = (data: any) => {
 		if (this.dataChannel == null) {
 			this.changeState('error', 'dataChannel is null. Unable to send the file to the Host!');
@@ -203,8 +217,7 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 				}
 			}
 		};
-		// @ts-ignore: Unused variable
-		this.openPeerConnection.onicegatheringstatechange = async (e) => {
+		this.openPeerConnection.onicegatheringstatechange = async () => {
 			this.logger.info(`onicegatheringstatechange - ${this.openPeerConnection!.iceGatheringState}`);
 		};
 		this.openPeerConnection.onicecandidateerror = (e) => {
@@ -238,8 +251,8 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 				}
 			}
 		};
-		// @ts-ignore: Unused variable
-		this.openPeerConnection.oniceconnectionstatechange = (e) => {
+
+		this.openPeerConnection.oniceconnectionstatechange = () => {
 			this.logger.info(
 				`oniceconnectionstatechange - ${this.openPeerConnection!.iceConnectionState}`
 			);
@@ -299,5 +312,23 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		if (!response.ok) {
 			throw Error('Could not update client info. Did another peer already connect?');
 		}
+	};
+	private fetchIceServers = async (baseApi: string) => {
+		const response = await fetch(`${baseApi}/ice-server-credentials`, {
+			method: 'GET',
+			headers: {
+				Accept: 'application/json'
+			}
+		});
+		if (!response.ok) {
+			throw new Error('Fetching Error!');
+		}
+		const data = await response.json();
+
+		if (data.success === false) {
+			throw new Error(data.message || 'Unknown error occurred');
+		}
+
+		return data.iceServers;
 	};
 }

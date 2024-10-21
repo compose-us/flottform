@@ -4,7 +4,8 @@
 	import { onMount } from 'svelte';
 	import { writable } from 'svelte/store';
 	import ShowLocation from './ShowLocation.svelte';
-	import { clientBase, sdpExchangeServerBase } from '$lib/api';
+	import { sdpExchangeServerBase } from '$lib/api';
+	import { base } from '$app/paths';
 
 	type Coordinates = {
 		accuracy: number;
@@ -20,7 +21,7 @@
 		if (!browser) {
 			throw Error('should not create a client URL when not in browser mode');
 		}
-		return `${clientBase}${endpointId}`;
+		return `${window.location.origin}${base}/now/${endpointId}`;
 	};
 
 	let qrCodeImage: HTMLImageElement;
@@ -59,7 +60,7 @@
 			// Channel will be closed since we won't receive data anymore.
 			flottformTextInputHost.close();
 		});
-		flottformTextInputHost.on('error', (error) => {
+		flottformTextInputHost.on('error', () => {
 			$currentState = 'error';
 		});
 	});

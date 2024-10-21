@@ -74,8 +74,10 @@ services:
     environment:
       - 'PROTOCOL_HEADER=x-forwarded-proto'
       - 'HOST_HEADER=x-forwarded-host'
+      - 'ALLOWED_ORIGINS=https://${HOST},https://where-are-you.at'
+      - 'AUTH_KEY=${AUTH_KEY}'
+      - 'ICE_SERVERS_CONFIGURATION=${ICE_SERVERS_CONFIGURATION}'
       - 'PUBLIC_IS_ONLINE_DEMO=true'
-      - 'ORIGIN=https://${HOST}'
     volumes:
       - 'app-modules:/app/node_modules'
       - 'demo-modules:/app/flottform/demo/node_modules'
@@ -115,9 +117,7 @@ services:
       - 'PROTOCOL_HEADER=x-forwarded-proto'
       - 'HOST_HEADER=x-forwarded-host'
       - 'PUBLIC_FLOTTFORM_SERVER_BASE=https://${HOST}/flottform'
-      - 'PUBLIC_FLOTTFORM_CLIENT_BASE=https://${HOST}/flottform-client'
       - 'PUBLIC_IS_ONLINE_DEMO=true'
-      - 'ORIGIN=https://${HOST}'
       - 'UPLOAD_FOLDER=/app/flottform/demo/static/uploads'
     volumes:
       - 'app-modules:/app/node_modules'
@@ -158,20 +158,18 @@ services:
       - 'BODY_SIZE_LIMIT=33554432'
       - 'PROTOCOL_HEADER=x-forwarded-proto'
       - 'HOST_HEADER=x-forwarded-host'
-      - 'PUBLIC_FLOTTFORM_SERVER_BASE=https://demo.flottform.io/flottform'
-      - 'PUBLIC_FLOTTFORM_CLIENT_BASE=https://where-are-you.at/now/'
+      - 'PUBLIC_FLOTTFORM_SERVER_BASE=https://${HOST}/flottform'
       - 'PUBLIC_IS_ONLINE_DEMO=true'
-      - 'ORIGIN=https://where-are-you.at'
     volumes:
-      - /app/node_modules
-      - /app/flottform/demo/node_modules
-      - /app/flottform/forms/node_modules
-      - /app/flottform/server/node_modules
-      - /app/flottform/server-standalone/node_modules
-      - /app/flottform/where-are-you-at/node_modules
-      - node-cache:/root/.cache
-      - pnpm-cache:/root/.npm
-      - pnpm-store:/app/.pnpm-store
+      - 'app-modules:/app/node_modules'
+      - 'demo-modules:/app/flottform/demo/node_modules'
+      - 'forms-modules:/app/flottform/forms/node_modules'
+      - 'server-modules:/app/flottform/server/node_modules'
+      - 'server-standalone-modules:/app/flottform/server-standalone/node_modules'
+      - 'where-are-you-at-modules:/app/flottform/where-are-you-at/node_modules'
+      - 'node-cache:/root/.cache'
+      - 'pnpm-cache:/root/.npm'
+      - 'pnpm-store:/app/.pnpm-store'
     labels:
       - 'traefik.enable=true'
       - 'traefik.docker.network=web'

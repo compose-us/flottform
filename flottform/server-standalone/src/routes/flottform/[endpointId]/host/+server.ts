@@ -2,6 +2,7 @@ import { type RequestHandler, json, error, text } from '@sveltejs/kit';
 import { retrieveFlottformDatabase } from '$lib/database';
 import { RTCIceCandidateInitSchema, RTCSessionDescriptionInitSchema } from '$lib/validations';
 import { ZodError, z } from 'zod';
+import { corsHeaders } from '$lib/cors-headers';
 
 const validatePutPeerInfosBody = z.object({
 	hostKey: z.string(),
@@ -19,6 +20,7 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 	try {
 		data = await request.json();
 	} catch (e) {
+		console.log(e);
 		return error(400, 'Could not parse request data as JSON');
 	}
 
@@ -27,11 +29,7 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 		const db = await retrieveFlottformDatabase();
 		const endpoint = await db.putHostInfo({ endpointId, iceCandidates, session, hostKey });
 		return json(endpoint, {
-			headers: {
-				'Access-Control-Allow-Origin': '*',
-				'Access-Control-Allow-Methods': 'PUT,OPTIONS',
-				'Access-Control-Allow-Headers': '*'
-			}
+			headers: corsHeaders(['PUT', 'OPTIONS'], request)
 		});
 	} catch (err) {
 		if (err instanceof ZodError) {
@@ -41,12 +39,8 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 	}
 };
 
-export const OPTIONS: RequestHandler = async () => {
+export const OPTIONS: RequestHandler = async ({ request }) => {
 	return text('', {
-		headers: {
-			'Access-Control-Allow-Origin': '*',
-			'Access-Control-Allow-Methods': 'PUT,OPTIONS',
-			'Access-Control-Allow-Headers': '*'
-		}
+		headers: corsHeaders(['PUT', 'OPTIONS'], request)
 	});
 };

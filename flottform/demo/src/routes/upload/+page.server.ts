@@ -58,13 +58,17 @@ export const actions: Actions = {
 	}
 };
 
-function isString(x: any): x is string {
+function isString(x: unknown): x is string {
 	return typeof x === 'string';
 }
 
-function isFile(x: any): x is File {
+function isFile(x: unknown): x is File {
 	return (
-		x !== null && x !== undefined && x.name !== undefined && typeof x.arrayBuffer === 'function'
+		x instanceof File &&
+		x !== null &&
+		x !== undefined &&
+		x.name !== undefined &&
+		typeof x.arrayBuffer === 'function'
 	);
 }
 

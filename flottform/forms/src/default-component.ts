@@ -1,7 +1,7 @@
 import { FlottformFileInputHost } from './flottform-file-input-host';
 import { FlottformTextInputHost } from './flottform-text-input-host';
 import { BaseInputHost, BaseListeners } from './internal';
-import { FlottformCreateFileParams, FlottformCreateItemParams } from './types';
+import { FlottformCreateFileParams, FlottformCreateTextParams } from './types';
 
 const openInputsList = () => {
 	const flottformElementsContainerWrapper: HTMLDivElement = document.querySelector(
@@ -99,15 +99,12 @@ const createLinkAndQrCode = (qrCode: string, link: string) => {
  */
 export const createDefaultFlottformComponent = ({
 	flottformAnchorElement,
-	// @ts-ignore: Unused variable
-	id,
 	flottformRootElement,
 	additionalComponentClass,
 	flottformRootTitle,
 	flottformRootDescription
 }: {
 	flottformAnchorElement: HTMLElement;
-	id?: string;
 	flottformRootElement?: HTMLElement;
 	additionalComponentClass?: string;
 	flottformRootTitle?: string;
@@ -115,7 +112,7 @@ export const createDefaultFlottformComponent = ({
 }): {
 	flottformRoot: HTMLElement;
 	createFileItem: (params: FlottformCreateFileParams) => void;
-	createTextItem: (params: FlottformCreateItemParams) => void;
+	createTextItem: (params: FlottformCreateTextParams) => void;
 	getAllFlottformItems: () => NodeListOf<Element> | null;
 } => {
 	const flottformRoot: HTMLElement =
@@ -234,6 +231,7 @@ export const createDefaultFlottformComponent = ({
 		createTextItem: ({
 			flottformApi,
 			createClientUrl,
+			inputField,
 			id,
 			additionalItemClasses,
 			label,
@@ -243,6 +241,7 @@ export const createDefaultFlottformComponent = ({
 		}: {
 			flottformApi: string;
 			createClientUrl: (params: { endpointId: string }) => Promise<string>;
+			inputField?: HTMLInputElement | HTMLTextAreaElement;
 			id?: string;
 			additionalItemClasses?: string;
 			label?: string;
@@ -273,7 +272,8 @@ export const createDefaultFlottformComponent = ({
 				refreshChannelButton,
 				flottformTextInputHost: flottformBaseInputHost,
 				id,
-				onSuccessText
+				onSuccessText,
+				inputField
 			});
 		}
 	};
@@ -323,7 +323,7 @@ const createBaseFlottformItems = <L extends BaseListeners>({
 		statusInformation.innerHTML =
 			typeof onErrorText === 'function'
 				? onErrorText(error)
-				: onErrorText ?? `🚨 An error occured (${error.message}). Please try again`;
+				: (onErrorText ?? `🚨 An error occured (${error.message}). Please try again`);
 		createChannelButton.innerText = 'Retry';
 		flottformStateItemsContainer.replaceChildren(statusInformation);
 		flottformStateItemsContainer.appendChild(createChannelButton);
@@ -386,7 +386,8 @@ const handleTextInputStates = ({
 	refreshChannelButton,
 	flottformTextInputHost,
 	id,
-	onSuccessText
+	onSuccessText,
+	inputField
 }: {
 	flottformItem: HTMLLIElement;
 	statusInformation: HTMLDivElement;
@@ -394,14 +395,18 @@ const handleTextInputStates = ({
 	flottformTextInputHost: FlottformTextInputHost;
 	id?: string;
 	onSuccessText?: string;
+	inputField?: HTMLInputElement | HTMLTextAreaElement;
 }) => {
 	if (id) {
 		flottformItem.setAttribute('id', id);
 	}
 	flottformTextInputHost.on('done', (message: string) => {
-		statusInformation.innerHTML = onSuccessText ?? `✨ You have succesfully submitted ${message}`;
+		statusInformation.innerHTML = onSuccessText ?? `✨ You have succesfully submitted your message`;
 		statusInformation.appendChild(refreshChannelButton);
 		flottformItem.replaceChildren(statusInformation);
+		if (inputField) {
+			inputField.value = message;
+		}
 	});
 };
 
@@ -505,7 +510,7 @@ const createCopyToClipboardButton = () => {
 	copyToClipboardButton.setAttribute('aria-label', 'Copy Flottform link to clipboard');
 	copyToClipboardButton.innerText = '📋';
 	copyToClipboardButton.addEventListener('click', async () => {
-		let flottformLink = (document.querySelector('.flottform-link-offer') as HTMLDivElement)
+		const flottformLink = (document.querySelector('.flottform-link-offer') as HTMLDivElement)
 			.innerText;
 		navigator.clipboard
 			.writeText(flottformLink)
@@ -576,7 +581,7 @@ const updateCurrentFileStatusBar = (
 		`progress#flottform-status-bar-${fileIndex}`
 	);
 	if (!currentFileStatusBar) {
-		let { currentFileLabel, progressBar } = createCurrentFileStatusBar(fileIndex, fileName);
+		const { currentFileLabel, progressBar } = createCurrentFileStatusBar(fileIndex, fileName);
 		currentFileStatusBar = progressBar;
 
 		const detailsContainer = details.querySelector('.details-container')!;
@@ -612,13 +617,13 @@ const updateOverallFilesStatusBar = (
 	let overallFilesStatusBar: HTMLProgressElement | null =
 		flottformStateItemsContainer.querySelector('progress#flottform-status-bar-overall-progress');
 	if (!overallFilesStatusBar) {
-		let { overallFilesLabel, progressBar } = createOverallFilesStatusBar();
+		const { overallFilesLabel, progressBar } = createOverallFilesStatusBar();
 		overallFilesStatusBar = progressBar;
 
 		flottformStateItemsContainer.appendChild(overallFilesLabel);
 		flottformStateItemsContainer.appendChild(overallFilesStatusBar);
 	}
-	let overallFilesLabel: HTMLLabelElement = flottformStateItemsContainer.querySelector(
+	const overallFilesLabel: HTMLLabelElement = flottformStateItemsContainer.querySelector(
 		'label#flottform-status-bar-overall-progress'
 	)!;
 	overallFilesStatusBar.value = overallProgress * 100;

@@ -1,11 +1,5 @@
 import { FlottformChannelHost } from './flottform-channel-host';
-import {
-	BaseInputHost,
-	BaseListeners,
-	DEFAULT_WEBRTC_CONFIG,
-	Logger,
-	POLL_TIME_IN_MS
-} from './internal';
+import { BaseInputHost, BaseListeners, Logger, POLL_TIME_IN_MS } from './internal';
 
 type Listeners = BaseListeners & {
 	receive: []; // Emitted to signal the start of receiving the file(s)
@@ -19,8 +13,6 @@ type Listeners = BaseListeners & {
 	done: [];
 	'webrtc:waiting-for-file': [];
 };
-// @ts-ignore: Unused variable
-const noop = () => {};
 
 /**
  * The `FlottformFileInputHost` class uses the `FlottformChannelHost` to manage the WebRTC connection and handle the reception of large files from a peer.
@@ -73,14 +65,12 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 		flottformApi,
 		createClientUrl,
 		inputField,
-		rtcConfiguration = DEFAULT_WEBRTC_CONFIG,
 		pollTimeForIceInMs = POLL_TIME_IN_MS,
 		logger = console
 	}: {
 		flottformApi: string | URL;
 		createClientUrl: (params: { endpointId: string }) => Promise<string>;
 		inputField: HTMLInputElement;
-		rtcConfiguration?: RTCConfiguration;
 		pollTimeForIceInMs?: number;
 		logger?: Logger;
 	}) {
@@ -88,7 +78,6 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 		this.channel = new FlottformChannelHost({
 			flottformApi,
 			createClientUrl,
-			rtcConfiguration,
 			pollTimeForIceInMs,
 			logger
 		});
@@ -140,7 +129,7 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 		return this.qrCode;
 	};
 
-	private handleIncomingData = (e: MessageEvent<any>) => {
+	private handleIncomingData = (e: MessageEvent) => {
 		if (typeof e.data === 'string') {
 			// string can be either metadata or end transfer marker.
 			const message = JSON.parse(e.data);
@@ -224,8 +213,7 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 	};
 
 	private registerListeners = () => {
-		// @ts-ignore: Unused variable
-		this.channel?.on('new', ({ channel }) => {
+		this.channel?.on('new', () => {
 			this.emit('new');
 		});
 		this.channel?.on('waiting-for-client', (event) => {

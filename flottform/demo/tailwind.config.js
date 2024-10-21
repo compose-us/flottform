@@ -13,7 +13,14 @@ export default {
 				},
 				fonts: {
 					blue: '#1a3066'
+				},
+				secondary: {
+					blue: '#15047C',
+					green: '#00E2C1'
 				}
+			},
+			animation: {
+				'spin-slow': 'spin 3s linear infinite'
 			}
 		},
 		fontFamily: {

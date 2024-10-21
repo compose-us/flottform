@@ -1,19 +1,11 @@
 <script lang="ts">
 	import { createDefaultFlottformComponent } from '@flottform/forms';
 	import { onMount } from 'svelte';
-	import { browser } from '$app/environment';
-	import { env } from '$env/dynamic/public';
 	import { base } from '$app/paths';
 	import { sdpExchangeServerBase } from '../../api';
 
-	const clientBase =
-		env.PUBLIC_FLOTTFORM_CLIENT_BASE || 'https://192.168.0.21:5177/multiple-input-form-client';
-
 	export const createClientUrl = async ({ endpointId }: { endpointId: string }) => {
-		if (browser) {
-			return `${window.location.origin}${base}/multiple-input-form-client/${endpointId}`;
-		}
-		return `${clientBase}/${endpointId}`;
+		return `${window.location.origin}${base}/multiple-input-form-client/${endpointId}`;
 	};
 
 	let flottformAnchor: HTMLElement;
@@ -64,9 +56,9 @@
 			<span>Please Enter your OTP (One Time password):</span>
 			<input type="text" name="one-time-pwd" style="border:1px solid gray; border-radius:0.2rem;" />
 		</label>
-		<label class="grid">
+		<label class="grid" for="canvas">
 			<span>Please get the signature:</span>
-			<canvas style="background-color:gray;"></canvas>
+			<canvas style="background-color:gray;" id="canvas"></canvas>
 		</label>
 		<label class="grid">
 			<span>Text Area Tranlated to English:</span>

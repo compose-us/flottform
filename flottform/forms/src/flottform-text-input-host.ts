@@ -1,11 +1,5 @@
 import { FlottformChannelHost } from './flottform-channel-host';
-import {
-	BaseInputHost,
-	BaseListeners,
-	DEFAULT_WEBRTC_CONFIG,
-	Logger,
-	POLL_TIME_IN_MS
-} from './internal';
+import { BaseInputHost, BaseListeners, Logger, POLL_TIME_IN_MS } from './internal';
 
 type Listeners = BaseListeners & {
 	done: [data: string];
@@ -13,8 +7,6 @@ type Listeners = BaseListeners & {
 	receive: [];
 	'webrtc:waiting-for-data': [];
 };
-// @ts-ignore: Unused variable
-const noop = () => {};
 
 export class FlottformTextInputHost extends BaseInputHost<Listeners> {
 	private channel: FlottformChannelHost | null = null;
@@ -35,13 +27,11 @@ export class FlottformTextInputHost extends BaseInputHost<Listeners> {
 	constructor({
 		flottformApi,
 		createClientUrl,
-		rtcConfiguration = DEFAULT_WEBRTC_CONFIG,
 		pollTimeForIceInMs = POLL_TIME_IN_MS,
 		logger = console
 	}: {
 		flottformApi: string | URL;
 		createClientUrl: (params: { endpointId: string }) => Promise<string>;
-		rtcConfiguration?: RTCConfiguration;
 		pollTimeForIceInMs?: number;
 		logger?: Logger;
 	}) {
@@ -49,7 +39,6 @@ export class FlottformTextInputHost extends BaseInputHost<Listeners> {
 		this.channel = new FlottformChannelHost({
 			flottformApi,
 			createClientUrl,
-			rtcConfiguration,
 			pollTimeForIceInMs,
 			logger
 		});
@@ -100,15 +89,14 @@ export class FlottformTextInputHost extends BaseInputHost<Listeners> {
 		return this.qrCode;
 	};
 
-	private handleIncomingData = (e: MessageEvent<any>) => {
+	private handleIncomingData = (e: MessageEvent) => {
 		this.emit('receive');
 		// We suppose that the data received is small enough to be all included in 1 message
 		this.emit('done', e.data);
 	};
 
 	private registerListeners = () => {
-		// @ts-ignore: Unused variable
-		this.channel?.on('new', ({ channel }) => {
+		this.channel?.on('new', () => {
 			this.emit('new');
 		});
 		this.channel?.on('waiting-for-client', (event) => {
