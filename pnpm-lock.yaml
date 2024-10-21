@@ -137,6 +137,9 @@ importers:
       typedoc:
         specifier: ^0.26.10
         version: 0.26.10(typescript@5.6.2)
+      typedoc-material-theme:
+        specifier: ^1.1.0
+        version: 1.1.0(typedoc@0.26.10)
       vite:
         specifier: ^5.4.8
         version: 5.4.8
@@ -821,6 +824,10 @@ packages:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
+    dev: true
+
+  /@material/material-color-utilities@0.2.7:
+    resolution: {integrity: sha512-0FCeqG6WvK4/Cc06F/xXMd/pv4FeisI0c1tUpBbfhA2n9Y8eZEv4Karjbmf2ZqQCPUWMrGp8A571tCjizxoTiQ==}
     dev: true
 
   /@microsoft/api-extractor-model@7.29.6:
@@ -5186,6 +5193,16 @@ packages:
   /type-fest@4.26.1:
     resolution: {integrity: sha512-yOGpmOAL7CkKe/91I5O3gPICmJNLJ1G4zFYVAsRHg7M64biSnPtRj0WNQt++bRkjYOqjWXrhnUw1utzmVErAdg==}
     engines: {node: '>=16'}
+    dev: true
+
+  /typedoc-material-theme@1.1.0(typedoc@0.26.10):
+    resolution: {integrity: sha512-LLWGVb8w+i+QGnsu/a0JKjcuzndFQt/UeGVOQz0HFFGGocROEHv5QYudIACrj+phL2LDwH05tJx0Ob3pYYH2UA==}
+    engines: {node: '>=18.0.0', npm: '>=8.6.0'}
+    peerDependencies:
+      typedoc: ^0.25.13 || ^0.26.3
+    dependencies:
+      '@material/material-color-utilities': 0.2.7
+      typedoc: 0.26.10(typescript@5.6.2)
     dev: true
 
   /typedoc@0.26.10(typescript@5.6.2):

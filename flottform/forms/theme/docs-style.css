@@ -1,0 +1,27 @@
+/* Dark Theme (manual) */
+:root[data-theme='dark'] {
+	--color-background: #1a2238 !important;
+	--md-sys-color-surface: #273c75 !important;
+}
+
+/* Light Theme (manual) */
+:root[data-theme='light'] {
+	--color-background: #bbdefb !important;
+	--md-sys-color-surface: #e3f2fd !important;
+}
+
+/* OS Preference: Dark */
+@media (prefers-color-scheme: dark) {
+	:root {
+		--color-background: #1a2238 !important;
+		--md-sys-color-surface: #273c75 !important;
+	}
+}
+
+/* OS Preference: Light */
+@media (prefers-color-scheme: light) {
+	:root {
+		--color-background: #bbdefb !important;
+		--md-sys-color-surface: #e3f2fd !important;
+	}
+}

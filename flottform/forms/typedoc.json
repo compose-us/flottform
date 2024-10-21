@@ -13,5 +13,7 @@
 	"includeVersion": true,
 	"excludePrivate": true,
 	"excludeProtected": true,
-	"excludeInternal": true
+	"excludeInternal": true,
+	"plugin": ["typedoc-material-theme"],
+	"customCss": "./theme/docs-style.css"
 }
