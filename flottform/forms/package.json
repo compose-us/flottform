@@ -39,15 +39,19 @@
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
 		"test": "pnpm run test:unit",
-		"test:unit": "vitest"
+		"test:unit": "vitest",
+		"docs": "typedoc --options typedoc.json"
 	},
 	"devDependencies": {
 		"@eslint/eslintrc": "^3.1.0",
 		"@eslint/js": "^9.12.0",
+		"@fontsource/roboto": "^5.1.0",
 		"@types/qrcode": "^1.5.5",
 		"@vitest/browser": "^2.1.2",
 		"globals": "^15.10.0",
 		"qrcode": "^1.5.4",
+		"typedoc": "^0.26.10",
+		"typedoc-material-theme": "^1.1.0",
 		"vite": "^5.4.8",
 		"vite-plugin-dts": "^4.2.3",
 		"vitest": "^2.1.2",

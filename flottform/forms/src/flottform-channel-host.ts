@@ -8,7 +8,26 @@ import {
 	DEFAULT_WEBRTC_CONFIG,
 	setIncludes
 } from './internal';
-
+/**
+ * A class used to represent one peer (called client) to establish a WebRTC connection with another peer (called host).
+ * It handles ICE candidate gathering and sending/receiving data.
+ * The connection is initiated only when `start` method is called.
+ *
+ * This class emits various events throughout the connection lifecycle such as `connected`, `disconnected`, and `error`, allowing you to respond to the connection state changes.
+ *
+ * @fires new - Emitted when the host is created and ready to accept clients.
+ * @fires waiting-for-client - Emitted when waiting for a client to connect.
+ * @fires waiting-for-data - Emitted when the host is ready to receive data.
+ * @fires waiting-for-ice - Emitted when ICE candidates are being gathered.
+ * @fires receiving-data - Emitted when the host is receiving data from the client.
+ * @fires file-received - Emitted when a complete file has been received.
+ * @fires done - Emitted when the transfer is complete.
+ * @fires error - Emitted when an error occurs during connection or data transfer.
+ * @fires connected - Emitted when the host successfully connects to a client.
+ * @fires disconnected - Emitted when the connection is closed.
+ *
+ * @extends EventEmitter
+ */
 export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 	private flottformApi: string | URL;
 	private createClientUrl: (params: { endpointId: string }) => Promise<string>;
@@ -22,6 +41,15 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 	private dataChannel: RTCDataChannel | null = null;
 	private pollForIceTimer: NodeJS.Timeout | number | null = null;
 
+	/**
+	 * Creates an instance of FlottformChannelHost
+	 *
+	 * @param {Object} config - The configuration for setting up the channel for the host.
+	 * @param {flottformApi} - The API endpoint for retrieving connection information.
+	 * @param {createClientUrl} - A function that generates the client URL given an endpoint ID.
+	 * @param {pollTimeForIceInMs} - The time interval (in ms) for polling ICE candidates.
+	 * @param {logger} - Optional logger for logging connection events.
+	 */
 	constructor({
 		flottformApi,
 		createClientUrl,
@@ -51,6 +79,9 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		this.logger.info(`State changed to: ${newState}`, details == undefined ? '' : details);
 	};
 
+	/**
+	 * Starts the WebRTC connection process for the host. The connection is not established until this method is called.
+	 */
 	start = async () => {
 		if (this.openPeerConnection) {
 			this.close();
@@ -97,6 +128,11 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		this.setupDataChannelListener();
 	};
 
+	/**
+	 * Closes the WebRTC connection if it is currently established.
+	 *
+	 * @fires disconnected - Emitted when the connection is successfully closed.
+	 */
 	close = () => {
 		if (this.openPeerConnection) {
 			this.openPeerConnection.close();

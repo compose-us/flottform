@@ -1,0 +1,19 @@
+{
+	"entryPoints": [
+		"src/flottform-channel-client.ts",
+		"src/flottform-channel-host.ts",
+		"src/flottform-file-input-client.ts",
+		"src/flottform-file-input-host.ts",
+		"src/flottform-text-input-client.ts",
+		"src/flottform-text-input-host.ts",
+		"src/default-component.ts"
+	],
+	"out": "docs",
+	"tsconfig": "./tsconfig.json",
+	"includeVersion": true,
+	"excludePrivate": true,
+	"excludeProtected": true,
+	"excludeInternal": true,
+	"plugin": ["typedoc-material-theme"],
+	"customCss": "./theme/docs-style.css"
+}

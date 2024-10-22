@@ -14,6 +14,26 @@ type Listeners = BaseListeners & {
 	'webrtc:waiting-for-file': [];
 };
 
+/**
+ * The `FlottformFileInputHost` class uses the `FlottformChannelHost` to manage the WebRTC connection and handle the reception of large files from a peer.
+ *
+ * It listens to various events emitted by `FlottformChannelHost` to implement the file transfer process.
+ *
+ * @fires new - Emitted when the host is created and ready to accept clients.
+ * @fires webrtc:waiting-for-client - Emitted when waiting for a client to connect.
+ * @fires webrtc:waiting-for-ice - Emitted when ICE candidates are being gathered.
+ * @fires webrtc:waiting-for-ice - Emitted when host is ready to receive the file(s).
+ * @fires done - Emitted when the transfer is complete.
+ * @fires error - Emitted when an error occurs during connection or data transfer.
+ * @fires connected - Emitted when the host successfully connects to a client.
+ * @fires disconnected - Emitted when the connection is closed.
+ * @fires receive - Emitted to signal the start of receiving the file(s).
+ * @fires progress - Emitted to signal the progress of receiving the file(s).
+ * @fires endpoint-created - Emitted when the endpoint for a new potential connection is created.
+ *
+ *
+ * @extends EventEmitter
+ */
 export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 	private channel: FlottformChannelHost | null = null;
 	private inputField: HTMLInputElement;
@@ -29,6 +49,17 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 	private link: string = '';
 	private qrCode: string = '';
 
+	/**
+	 * Creates an instance of FlottformFileInputHost.
+	 *
+	 * @param {Object} config - The configuration for setting up the file input host.
+	 * @param {string | URL} - The API URL for retrieving connection information.
+	 * @param {(params: { endpointId: string }) => Promise<string>} - A function to generate the client URL given an endpoint ID.
+	 * @param {HTMLInputElement} - The input field element where files will be added.
+	 * @param {number} [config.pollTimeForIceInMs=POLL_TIME_IN_MS] - The polling time for ICE candidates in milliseconds.
+	 * @param {Logger} [config.logger=console] - Logger for capturing logs and errors.
+	 * @param {Styles} [config.styles] - Optional styles to be applied.
+	 */
 	constructor({
 		flottformApi,
 		createClientUrl,
@@ -40,7 +71,6 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 		createClientUrl: (params: { endpointId: string }) => Promise<string>;
 		inputField: HTMLInputElement;
 		pollTimeForIceInMs?: number;
-		theme?: (myself: FlottformFileInputHost) => void;
 		logger?: Logger;
 	}) {
 		super();
@@ -56,14 +86,25 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 		this.registerListeners();
 	}
 
+	/**
+	 * Starts the WebRTC connection by invoking the `start` method of the underlying `FlottformChannelHost`.
+	 */
 	start = () => {
 		this.channel?.start();
 	};
 
+	/**
+	 * Closes the WebRTC connection by invoking the `close` method of the underlying `FlottformChannelHost`.
+	 */
 	close = () => {
 		this.channel?.close();
 	};
 
+	/**
+	 * Retrieves the connection link (URL) used for establishing a peer connection.
+	 *
+	 * @returns {string} The link for the peer connection.
+	 */
 	getLink = () => {
 		if (this.link === '') {
 			this.logger.error(
@@ -73,6 +114,11 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 		return this.link;
 	};
 
+	/**
+	 * Retrieves the QR code used for establishing a peer connection.
+	 *
+	 * @returns {string} The QR code for the peer connection.
+	 */
 	getQrCode = () => {
 		if (this.qrCode === '') {
 			this.logger.error(

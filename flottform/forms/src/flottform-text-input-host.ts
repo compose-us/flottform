@@ -14,6 +14,15 @@ export class FlottformTextInputHost extends BaseInputHost<Listeners> {
 	private link: string = '';
 	private qrCode: string = '';
 
+	/**
+	 * Creates an instance of FlottformTextInputHost.
+	 *
+	 * @param {Object} config - The configuration for setting up the text input host.
+	 * @param {string | URL} config.flottformApi - The API URL for retrieving connection information.
+	 * @param {Function} config.createClientUrl - A function to create the client URL with an endpoint ID.
+	 * @param {number} [config.pollTimeForIceInMs=POLL_TIME_IN_MS] - The polling time for ICE candidates in milliseconds.
+	 * @param {Logger} [config.logger=console] - Logger for capturing logs and errors.
+	 */
 	constructor({
 		flottformApi,
 		createClientUrl,
@@ -37,14 +46,25 @@ export class FlottformTextInputHost extends BaseInputHost<Listeners> {
 		this.registerListeners();
 	}
 
+	/**
+	 * Starts the WebRTC connection by invoking the `start` method of the underlying `FlottformChannelHost`.
+	 */
 	start = () => {
 		this.channel?.start();
 	};
 
+	/**
+	 * Closes the WebRTC connection by invoking the `close` method of the underlying `FlottformChannelHost`.
+	 */
 	close = () => {
 		this.channel?.close();
 	};
 
+	/**
+	 * Retrieves the link (URL) for the client to connect to the WebRTC host.
+	 *
+	 * @returns {string} The link for the client to connect. If the link is unavailable, an error is logged.
+	 */
 	getLink = () => {
 		if (this.link === '') {
 			this.logger.error(
@@ -54,6 +74,11 @@ export class FlottformTextInputHost extends BaseInputHost<Listeners> {
 		return this.link;
 	};
 
+	/**
+	 * Retrieves the QR code data for the client to scan and connect to the WebRTC host.
+	 *
+	 * @returns {string} The QR code data for client connection. If the QR code is unavailable, an error is logged.
+	 */
 	getQrCode = () => {
 		if (this.qrCode === '') {
 			this.logger.error(
