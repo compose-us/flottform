@@ -1,0 +1,13 @@
+{
+	"manifest_version": 3,
+	"name": "Flottform",
+	"description": "Flottform Short description",
+	"version": "1.0",
+	"action": {
+		"default_icon": "flottform.png",
+		"default_popup": "index.html",
+		"default_title": "Will be shown as a Tooltip when you hover over the extension icon"
+	},
+	"host_permissions": ["https://*/*"],
+	"permissions": ["tabs", "scripting", "storage"]
+}

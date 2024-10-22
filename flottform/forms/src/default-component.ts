@@ -312,7 +312,7 @@ const handleTextInputStates = ({
 		statusInformation.appendChild(refreshChannelButton);
 		flottformItem.replaceChildren(statusInformation);
 		if (inputField) {
-			inputField.value = message;
+			inputField.setAttribute('value', message);
 		}
 	});
 };
