@@ -1,13 +1,21 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+:root {
+	--font-sans: 'Roboto', 'Space Grotesk', sans-serif !important;
+}
+
 /* Dark Theme (manual) */
 :root[data-theme='dark'] {
 	--color-background: #1a2238 !important;
 	--md-sys-color-surface: #273c75 !important;
+	--color-text: white !important;
 }
 
 /* Light Theme (manual) */
 :root[data-theme='light'] {
-	--color-background: #bbdefb !important;
-	--md-sys-color-surface: #e3f2fd !important;
+	--color-background: #e1e1e1 !important;
+	--md-sys-color-surface: #fafafa !important;
+	--color-text: black !important;
 }
 
 /* OS Preference: Dark */
@@ -15,13 +23,15 @@
 	:root {
 		--color-background: #1a2238 !important;
 		--md-sys-color-surface: #273c75 !important;
+		--color-text: white !important;
 	}
 }
 
 /* OS Preference: Light */
 @media (prefers-color-scheme: light) {
 	:root {
-		--color-background: #bbdefb !important;
-		--md-sys-color-surface: #e3f2fd !important;
+		--color-background: #e1e1e1 !important;
+		--md-sys-color-surface: #fafafa !important;
+		--color-text: black !important;
 	}
 }
