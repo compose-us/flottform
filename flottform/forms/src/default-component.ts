@@ -313,6 +313,8 @@ const handleTextInputStates = ({
 		flottformItem.replaceChildren(statusInformation);
 		if (inputField) {
 			inputField.setAttribute('value', message);
+			const event = new Event('change');
+			inputField.dispatchEvent(event);
 		}
 	});
 };
