@@ -1,7 +1,13 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 
-	let inputFields: Array<{ id: string; type: string; element?: HTMLInputElement }> = [];
+	type TrackedInputFields = Array<{
+		id: string;
+		type: string;
+		connectionState?: { event: string; data?: any };
+	}>;
+
+	let inputFields: TrackedInputFields = [];
 
 	const removeSavedInputs = () => {
 		// It'll remove all the data stored inside `chrome.storage.local`
@@ -9,31 +15,34 @@
 		inputFields = [];
 	};
 
+	const updateSavedInputs = (updatedInputFields: TrackedInputFields) => {
+		// Update the UI and the local storage
+		chrome.storage.local.set({ inputFields: updatedInputFields });
+		inputFields = updatedInputFields;
+		console.log('updatedInputFields = ', updatedInputFields);
+	};
+
 	const getInputFromPages = async () => {
 		let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 		const injectionResult = await chrome.scripting.executeScript({
 			target: { tabId: tab.id! },
 			func: async () => {
-				const textInputFields = Array.from(document.querySelectorAll('input[type="text"]')).map(
-					(input) => {
-						return { id: input.id, type: 'text' };
-					}
-				);
-				console.log('[WEBPAGE CONTEXT]: Extracted inputs=', textInputFields);
+				const textInputFields: TrackedInputFields = Array.from(
+					document.querySelectorAll('input[type="text"]')
+				).map((input) => {
+					return { id: input.id, type: 'text' };
+				});
 				// Save the input fields to the chrome storage
 				chrome.storage.local.set({ inputFields: textInputFields });
 				return textInputFields;
 			}
 		});
 		const potentialResult = injectionResult[0].result;
-		console.log('potentialResult= ', potentialResult);
 		if (!potentialResult) {
 			console.log('didnt work');
 			return;
 		}
-		const inputs: Array<{ id: string; type: string; element?: HTMLInputElement }> = potentialResult;
-		inputFields = inputs;
-		console.log('[POPUP CONTEXT]: Received inputs=', inputs);
+		inputFields = potentialResult;
 	};
 
 	const startFlottformProcess = async (textInputId: string) => {
@@ -68,43 +77,43 @@
 				flottformTextInputHost.on(
 					'endpoint-created',
 					({ link, qrCode }: { link: string; qrCode: string }) => {
-						console.log(`[WEBPAGE CONTEXT]: event-'endpoint-created', data=${link}, ${qrCode}`);
 						chrome.runtime.sendMessage({
 							action: 'event',
 							eventType: 'endpoint-created',
-							data: { link, qrCode }
+							data: { link, qrCode },
+							inputId: textInputId
 						});
 					}
 				);
 
 				flottformTextInputHost.on('connected', () => {
-					console.log(`[WEBPAGE CONTEXT]: event-'connected', data= NO DATA WITH THIS EVENT`);
 					chrome.runtime.sendMessage({
 						action: 'event',
-						eventType: 'connected'
+						eventType: 'connected',
+						inputId: textInputId
 					});
 				});
 
 				flottformTextInputHost.on('error', (error: Error) => {
-					console.log(`[WEBPAGE CONTEXT]: event-'error', data= ${error}`);
 					chrome.runtime.sendMessage({
 						action: 'event',
 						eventType: 'error',
-						data: { message: error.message }
+						data: { message: error.message },
+						inputId: textInputId
 					});
 				});
 
 				flottformTextInputHost.on('done', (message: string) => {
-					console.log(`[WEBPAGE CONTEXT]: event-'done', data= ${message}`);
 					chrome.runtime.sendMessage({
 						action: 'event',
-						eventType: 'done'
+						eventType: 'done',
+						inputId: textInputId
 					});
 					const targetedTextField: HTMLInputElement | null = document.querySelector(
 						`input#${textInputId}`
 					);
 					if (!targetedTextField) {
-						console.log(
+						console.warn(
 							`Flottform Can't assign the received message (${message}) to the targeted Text input field`
 						);
 						return;
@@ -117,16 +126,14 @@
 		});
 	};
 
-	const handleFlottformEvent = (event: string, data: any) => {
-		if (event === 'endpoint-created') {
-			console.log(`Event [${event}] - data [${JSON.stringify(data)}]`);
-		} else if (event === 'connected') {
-			console.log(`Event [${event}] - data [${JSON.stringify(data)}]`);
-		} else if (event === 'error') {
-			console.log(`Event [${event}] - data [${JSON.stringify(data)}]`);
-		} else if (event === 'done') {
-			console.log(`Event [${event}] - data [${JSON.stringify(data)}]`);
-		}
+	const handleFlottformEvent = (event: string, data: any, id: string) => {
+		const updatedInputFields: TrackedInputFields = inputFields.map((inputField) => {
+			if (inputField.id === id) {
+				return { ...inputField, connectionState: { event, data } };
+			}
+			return inputField;
+		});
+		updateSavedInputs(updatedInputFields);
 	};
 
 	onMount(() => {
@@ -134,7 +141,7 @@
 			// Listen to messages from the content script
 			chrome.runtime.onMessage.addListener((message) => {
 				if (message.action === 'event') {
-					handleFlottformEvent(message.eventType, message.data);
+					handleFlottformEvent(message.eventType, message.data, message.inputId);
 				}
 			});
 		} else {
