@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { createDefaultFlottformComponent, FlottformTextInputHost } from '@flottform/forms';
 	import { onMount } from 'svelte';
 
 	let inputFields: Array<{ id: string; type: string; element?: HTMLInputElement }> = [];
@@ -40,6 +39,12 @@
 	const startFlottformProcess = async (textInputId: string) => {
 		let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
+		// Inject the bundled file into the page context
+		await chrome.scripting.executeScript({
+			target: { tabId: tab.id! },
+			files: ['/scripts/content-script.js']
+		});
+
 		chrome.scripting.executeScript({
 			target: { tabId: tab.id! },
 			args: [textInputId],
@@ -48,25 +53,29 @@
 				console.log(`Flottform will work on TextInput with id=${textInputId}`);
 				const api = 'https://192.168.0.167:5177/flottform';
 
+				const { FlottformTextInputHost } = window.FlottForm;
+
 				// Instantiate the FlottformTextInputHost with the provided inputId
 				let flottformTextInputHost = new FlottformTextInputHost({
-					createClientUrl: async ({ endpointId }) =>
+					createClientUrl: async ({ endpointId }: { endpointId: string }) =>
 						`https://192.168.0.167:5175/browser-extension/${endpointId}/#${encodeURIComponent(api)}`,
 					flottformApi: api
 				});
 
-				console.log('FlottformTextInputHost instance: ', flottformTextInputHost);
 				flottformTextInputHost.start();
 
 				// Listen to events from FlottformTextInputHost and send them to the popup
-				flottformTextInputHost.on('endpoint-created', ({ link, qrCode }) => {
-					console.log(`[WEBPAGE CONTEXT]: event-'endpoint-created', data=${link}, ${qrCode}`);
-					chrome.runtime.sendMessage({
-						action: 'event',
-						eventType: 'endpoint-created',
-						data: { link, qrCode }
-					});
-				});
+				flottformTextInputHost.on(
+					'endpoint-created',
+					({ link, qrCode }: { link: string; qrCode: string }) => {
+						console.log(`[WEBPAGE CONTEXT]: event-'endpoint-created', data=${link}, ${qrCode}`);
+						chrome.runtime.sendMessage({
+							action: 'event',
+							eventType: 'endpoint-created',
+							data: { link, qrCode }
+						});
+					}
+				);
 
 				flottformTextInputHost.on('connected', () => {
 					console.log(`[WEBPAGE CONTEXT]: event-'connected', data= NO DATA WITH THIS EVENT`);
@@ -76,7 +85,7 @@
 					});
 				});
 
-				flottformTextInputHost.on('error', (error) => {
+				flottformTextInputHost.on('error', (error: Error) => {
 					console.log(`[WEBPAGE CONTEXT]: event-'error', data= ${error}`);
 					chrome.runtime.sendMessage({
 						action: 'event',
@@ -87,6 +96,10 @@
 
 				flottformTextInputHost.on('done', (message: string) => {
 					console.log(`[WEBPAGE CONTEXT]: event-'done', data= ${message}`);
+					chrome.runtime.sendMessage({
+						action: 'event',
+						eventType: 'done'
+					});
 					const targetedTextField: HTMLInputElement | null = document.querySelector(
 						`input#${textInputId}`
 					);
@@ -100,8 +113,6 @@
 					// Channel will be closed since we won't receive data anymore.
 					flottformTextInputHost.close();
 				});
-
-				//sendResponse({ status: 'started' });
 			}
 		});
 	};
@@ -113,10 +124,11 @@
 			console.log(`Event [${event}] - data [${JSON.stringify(data)}]`);
 		} else if (event === 'error') {
 			console.log(`Event [${event}] - data [${JSON.stringify(data)}]`);
+		} else if (event === 'done') {
+			console.log(`Event [${event}] - data [${JSON.stringify(data)}]`);
 		}
 	};
 
-	// On Mount, check if data exists in storage
 	onMount(() => {
 		if (chrome) {
 			// Listen to messages from the content script
@@ -129,6 +141,7 @@
 			console.warn('Chrome API is not available in this context!!');
 		}
 
+		// On Mount, check if data exists in storage
 		chrome.storage.local.get(['inputFields'], (result) => {
 			if (result.inputFields) {
 				inputFields = result.inputFields;

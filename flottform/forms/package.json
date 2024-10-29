@@ -35,6 +35,7 @@
 	],
 	"scripts": {
 		"build": "vite build",
+		"build:content": "vite build --config vite.config.content.ts",
 		"preview": "vite preview",
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
