@@ -4,7 +4,7 @@
 	type TrackedInputFields = Array<{
 		id: string;
 		type: string;
-		connectionState?: { event: string; data?: any };
+		connectionState: { event: string; data?: any };
 	}>;
 
 	let inputFields: TrackedInputFields = [];
@@ -30,7 +30,7 @@
 				const textInputFields: TrackedInputFields = Array.from(
 					document.querySelectorAll('input[type="text"]')
 				).map((input) => {
-					return { id: input.id, type: 'text' };
+					return { id: input.id, type: 'text', connectionState: { event: 'new' } };
 				});
 				// Save the input fields to the chrome storage
 				chrome.storage.local.set({ inputFields: textInputFields });
@@ -168,10 +168,29 @@
 >
 
 {#each inputFields as input (input.id)}
-	<div>
-		<h4>{input.id}</h4>
-		<button onclick={() => startFlottformProcess(input.id)}>Start - id={input.id}</button>
-	</div>
+	{#if input.connectionState.event === 'new'}
+		<div>
+			<h4>{input.id}</h4>
+			<button onclick={() => startFlottformProcess(input.id)}>Start - id={input.id}</button>
+		</div>
+	{:else if input.connectionState.event === 'endpoint-created'}
+		<div>
+			<img src={input.connectionState.data.qrCode} alt="qrCode" />
+			<input type="text" value={input.connectionState.data.link} />
+		</div>
+	{:else if input.connectionState.event === 'connected'}
+		<div>
+			<p>Connected!</p>
+		</div>
+	{:else if input.connectionState.event === 'done'}
+		<div>
+			<p>Received & Attached the message from the other device!</p>
+		</div>
+	{:else if input.connectionState.event === 'done'}
+		<div>
+			<p style="color: red;">ERROR: {JSON.stringify(input.connectionState.data)}</p>
+		</div>
+	{/if}
 {/each}
 
 <style>
@@ -181,5 +200,8 @@
 		border: 1px solid black;
 		border-radius: 0.25rem;
 		background-color: rgb(166, 166, 166);
+	}
+	img {
+		height: 150px;
 	}
 </style>
