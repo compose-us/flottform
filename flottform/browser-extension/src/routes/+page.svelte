@@ -186,7 +186,7 @@
 		<div>
 			<p>Received & Attached the message from the other device!</p>
 		</div>
-	{:else if input.connectionState.event === 'done'}
+	{:else if input.connectionState.event === 'error'}
 		<div>
 			<p style="color: red;">ERROR: {JSON.stringify(input.connectionState.data)}</p>
 		</div>
