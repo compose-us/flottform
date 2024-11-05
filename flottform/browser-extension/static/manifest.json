@@ -9,5 +9,5 @@
 		"default_title": "Will be shown as a Tooltip when you hover over the extension icon"
 	},
 	"host_permissions": ["https://*/*"],
-	"permissions": ["tabs", "scripting", "storage"]
+	"permissions": ["tabs", "activeTab", "scripting", "storage"]
 }

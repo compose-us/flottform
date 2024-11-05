@@ -8,58 +8,92 @@
 	}>;
 
 	let inputFields: TrackedInputFields = [];
+	let currentTabId: number | undefined;
 
 	const removeSavedInputs = () => {
 		// It'll remove all the data stored inside `chrome.storage.local`
-		chrome.storage.local.set({ inputFields: [] });
+		chrome.storage.local.set({ [`inputFields-${currentTabId}`]: [] });
 		inputFields = [];
 	};
 
-	const updateSavedInputs = (updatedInputFields: TrackedInputFields) => {
-		// Update the UI and the local storage
-		chrome.storage.local.set({ inputFields: updatedInputFields });
-		inputFields = updatedInputFields;
-		console.log('updatedInputFields = ', updatedInputFields);
-	};
-
 	const getInputFromPages = async () => {
-		let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 		const injectionResult = await chrome.scripting.executeScript({
-			target: { tabId: tab.id! },
-			func: async () => {
+			target: { tabId: currentTabId! },
+			args: [currentTabId],
+			func: async (currentTabId) => {
 				const textInputFields: TrackedInputFields = Array.from(
 					document.querySelectorAll('input[type="text"]')
 				).map((input) => {
 					return { id: input.id, type: 'text', connectionState: { event: 'new' } };
 				});
 				// Save the input fields to the chrome storage
-				chrome.storage.local.set({ inputFields: textInputFields });
+				chrome.storage.local.set({ [`inputFields-${currentTabId}`]: textInputFields });
 				return textInputFields;
 			}
 		});
+
 		const potentialResult = injectionResult[0].result;
 		if (!potentialResult) {
-			console.log('didnt work');
+			console.error('Injected Code is did not work properly !');
 			return;
 		}
 		inputFields = potentialResult;
 	};
 
-	const startFlottformProcess = async (textInputId: string) => {
-		let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+	const getCurrentTabId = async () => {
+		if (currentTabId === undefined) {
+			const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+			currentTabId = tab.id!;
+		}
+		return currentTabId;
+	};
 
+	const startFlottformProcess = async (textInputId: string) => {
 		// Inject the bundled file into the page context
 		await chrome.scripting.executeScript({
-			target: { tabId: tab.id! },
+			target: { tabId: currentTabId! },
 			files: ['/scripts/content-script.js']
 		});
 
+		// Wait for the current tab Id to be available!
+		const tabId = await getCurrentTabId();
+		//console.log(`**** Starting the process for the TAB-${tabId} ****`);
+
 		chrome.scripting.executeScript({
-			target: { tabId: tab.id! },
-			args: [textInputId],
-			func: async (textInputId) => {
+			target: { tabId: currentTabId! },
+			args: [textInputId, tabId],
+			func: async (textInputId: string, tabId: number) => {
+				function handleFlottformEvent(event: string, data: any, id: string, currentTabId: number) {
+					// Get the latest updated version of the array inputFields instead of passing it as a parameter to `chrome.scripting.executeScript`!
+					chrome.storage.local.get([`inputFields-${tabId}`], (result) => {
+						if (result[`inputFields-${tabId}`]) {
+							const latestVersionOfInputFields: TrackedInputFields = result[`inputFields-${tabId}`];
+							const updatedInputFields = latestVersionOfInputFields.map((inputField) => {
+								if (inputField.id === id) {
+									//console.warn('Updating only the value of this inputField with ID= ', id);
+									return { ...inputField, connectionState: { event, data } };
+								}
+								return inputField;
+							});
+							//console.warn(`updatedInputFields =${JSON.stringify(updatedInputFields)}, id=${id}`);
+
+							updateSavedInputs(updatedInputFields, currentTabId);
+						}
+					});
+				}
+
+				function updateSavedInputs(updatedInputFields: TrackedInputFields, currentTabId: number) {
+					// Update the UI and the local storage
+					chrome.storage.local.set({ [`inputFields-${currentTabId}`]: updatedInputFields }, () => {
+						/* console.warn(
+							`Saved ${JSON.stringify(updatedInputFields)} to chrome storage from page context!!!!!!!!!!!!`
+						); */
+					});
+					//inputFields = updatedInputFields;
+				}
+
 				// Query the doc with the ID: textInputId in order to find the input field where you'll paste the text.
-				console.log(`Flottform will work on TextInput with id=${textInputId}`);
+				//console.log(`****Flottform will work on TextInput with id=${textInputId}*****`);
 				const api = 'https://192.168.0.167:5177/flottform';
 
 				const { FlottformTextInputHost } = window.FlottForm;
@@ -72,43 +106,33 @@
 				});
 
 				flottformTextInputHost.start();
-
-				// Listen to events from FlottformTextInputHost and send them to the popup
+				// Listen to events from FlottformTextInputHost and send them to the popup after updating TrackedInputFields array and saving it using chrome.storage.local
 				flottformTextInputHost.on(
 					'endpoint-created',
 					({ link, qrCode }: { link: string; qrCode: string }) => {
-						chrome.runtime.sendMessage({
-							action: 'event',
-							eventType: 'endpoint-created',
-							data: { link, qrCode },
-							inputId: textInputId
-						});
+						//console.log(`*****Inside "endpoint-created" event, link=${link}*****`);
+						chrome.runtime.sendMessage({ action: 'update-available' });
+						handleFlottformEvent('endpoint-created', { link, qrCode }, textInputId, tabId);
 					}
 				);
 
 				flottformTextInputHost.on('connected', () => {
-					chrome.runtime.sendMessage({
-						action: 'event',
-						eventType: 'connected',
-						inputId: textInputId
-					});
+					//console.log('****Inside "connected" event*****');
+					chrome.runtime.sendMessage({ action: 'update-available' });
+					handleFlottformEvent('connected', undefined, textInputId, tabId);
 				});
 
 				flottformTextInputHost.on('error', (error: Error) => {
-					chrome.runtime.sendMessage({
-						action: 'event',
-						eventType: 'error',
-						data: { message: error.message },
-						inputId: textInputId
-					});
+					//console.log('****Inside "error" event*****');
+					chrome.runtime.sendMessage({ action: 'update-available' });
+					handleFlottformEvent('error', { message: error.message }, textInputId, tabId);
 				});
 
 				flottformTextInputHost.on('done', (message: string) => {
-					chrome.runtime.sendMessage({
-						action: 'event',
-						eventType: 'done',
-						inputId: textInputId
-					});
+					//console.log('****Inside "done" event*****');
+					chrome.runtime.sendMessage({ action: 'update-available' });
+					handleFlottformEvent('done', undefined, textInputId, tabId);
+
 					const targetedTextField: HTMLInputElement | null = document.querySelector(
 						`input#${textInputId}`
 					);
@@ -126,22 +150,20 @@
 		});
 	};
 
-	const handleFlottformEvent = (event: string, data: any, id: string) => {
-		const updatedInputFields: TrackedInputFields = inputFields.map((inputField) => {
-			if (inputField.id === id) {
-				return { ...inputField, connectionState: { event, data } };
-			}
-			return inputField;
-		});
-		updateSavedInputs(updatedInputFields);
-	};
+	onMount(async () => {
+		let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+		currentTabId = tab.id;
 
-	onMount(() => {
 		if (chrome) {
-			// Listen to messages from the content script
-			chrome.runtime.onMessage.addListener((message) => {
-				if (message.action === 'event') {
-					handleFlottformEvent(message.eventType, message.data, message.inputId);
+			// Listen to storage changes in chrome.storage.local
+			chrome.storage.onChanged.addListener((changes, namespace) => {
+				//console.log('CHANGES: ', changes);
+				if (namespace === 'local') {
+					const key = `inputFields-${currentTabId}`;
+					if (changes[key]) {
+						console.warn('Detected change in inputFields:', changes[key].newValue);
+						inputFields = changes[key].newValue || [];
+					}
 				}
 			});
 		} else {
@@ -149,9 +171,9 @@
 		}
 
 		// On Mount, check if data exists in storage
-		chrome.storage.local.get(['inputFields'], (result) => {
-			if (result.inputFields) {
-				inputFields = result.inputFields;
+		chrome.storage.local.get([`inputFields-${currentTabId}`], (result) => {
+			if (result[`inputFields-${currentTabId}`]) {
+				inputFields = result[`inputFields-${currentTabId}`];
 			}
 		});
 	});
