@@ -16,19 +16,19 @@
 		inputFields = [];
 	};
 
-	const getInputFromPages = async () => {
+	const extractInputFieldsFromCurrentPage = async () => {
 		const injectionResult = await chrome.scripting.executeScript({
 			target: { tabId: currentTabId! },
 			args: [currentTabId],
 			func: async (currentTabId) => {
-				const textInputFields: TrackedInputFields = Array.from(
-					document.querySelectorAll('input[type="text"]')
+				const inputFields: TrackedInputFields = Array.from(
+					document.querySelectorAll('input[type="text"], input[type="file"]')
 				).map((input) => {
-					return { id: input.id, type: 'text', connectionState: { event: 'new' } };
+					return { id: input.id, type: input.type, connectionState: { event: 'new' } };
 				});
 				// Save the input fields to the chrome storage
-				chrome.storage.local.set({ [`inputFields-${currentTabId}`]: textInputFields });
-				return textInputFields;
+				chrome.storage.local.set({ [`inputFields-${currentTabId}`]: inputFields });
+				return inputFields;
 			}
 		});
 
@@ -180,7 +180,7 @@
 </script>
 
 <button
-	onclick={getInputFromPages}
+	onclick={extractInputFieldsFromCurrentPage}
 	class="p-4 bg-primary-blue/50 text-white font-bold rounded w-full">Get inputs</button
 >
 
