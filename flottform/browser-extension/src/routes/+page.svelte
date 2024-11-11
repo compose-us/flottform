@@ -48,7 +48,7 @@
 		return currentTabId;
 	};
 
-	const startFlottformProcess = async (textInputId: string) => {
+	const startFlottformProcess = async (inputFieldId: string, inputFieldType: string) => {
 		// Inject the bundled file into the page context
 		await chrome.scripting.executeScript({
 			target: { tabId: currentTabId! },
@@ -61,8 +61,8 @@
 
 		chrome.scripting.executeScript({
 			target: { tabId: currentTabId! },
-			args: [textInputId, tabId],
-			func: async (textInputId: string, tabId: number) => {
+			args: [inputFieldId, tabId, inputFieldType],
+			func: async (inputFieldId: string, tabId: number, inputFieldType: string) => {
 				function handleFlottformEvent(event: string, data: any, id: string, currentTabId: number) {
 					// Get the latest updated version of the array inputFields instead of passing it as a parameter to `chrome.scripting.executeScript`!
 					chrome.storage.local.get([`inputFields-${tabId}`], (result) => {
@@ -92,60 +92,83 @@
 					//inputFields = updatedInputFields;
 				}
 
-				// Query the doc with the ID: textInputId in order to find the input field where you'll paste the text.
-				//console.log(`****Flottform will work on TextInput with id=${textInputId}*****`);
-				const api = 'https://192.168.0.167:5177/flottform';
-
-				const { FlottformTextInputHost } = window.FlottForm;
-
-				// Instantiate the FlottformTextInputHost with the provided inputId
-				let flottformTextInputHost = new FlottformTextInputHost({
-					createClientUrl: async ({ endpointId }: { endpointId: string }) =>
-						`https://192.168.0.167:5175/browser-extension/${endpointId}/#${encodeURIComponent(api)}`,
-					flottformApi: api
-				});
-
-				flottformTextInputHost.start();
-				// Listen to events from FlottformTextInputHost and send them to the popup after updating TrackedInputFields array and saving it using chrome.storage.local
-				flottformTextInputHost.on(
-					'endpoint-created',
-					({ link, qrCode }: { link: string; qrCode: string }) => {
-						//console.log(`*****Inside "endpoint-created" event, link=${link}*****`);
-						chrome.runtime.sendMessage({ action: 'update-available' });
-						handleFlottformEvent('endpoint-created', { link, qrCode }, textInputId, tabId);
-					}
-				);
-
-				flottformTextInputHost.on('connected', () => {
-					//console.log('****Inside "connected" event*****');
-					chrome.runtime.sendMessage({ action: 'update-available' });
-					handleFlottformEvent('connected', undefined, textInputId, tabId);
-				});
-
-				flottformTextInputHost.on('error', (error: Error) => {
-					//console.log('****Inside "error" event*****');
-					chrome.runtime.sendMessage({ action: 'update-available' });
-					handleFlottformEvent('error', { message: error.message }, textInputId, tabId);
-				});
-
-				flottformTextInputHost.on('done', (message: string) => {
-					//console.log('****Inside "done" event*****');
-					chrome.runtime.sendMessage({ action: 'update-available' });
-					handleFlottformEvent('done', undefined, textInputId, tabId);
-
-					const targetedTextField: HTMLInputElement | null = document.querySelector(
-						`input#${textInputId}`
+				function registerFlottformTextInputListeners(
+					flottformTextInputHost: any,
+					textInputId: string,
+					currentTabId: number
+				) {
+					// Listen to events from FlottformTextInputHost and send them to the popup after updating TrackedInputFields array and saving it using chrome.storage.local
+					flottformTextInputHost.on(
+						'endpoint-created',
+						({ link, qrCode }: { link: string; qrCode: string }) => {
+							//console.log(`*****Inside "endpoint-created" event, link=${link}*****`);
+							chrome.runtime.sendMessage({ action: 'update-available' });
+							handleFlottformEvent('endpoint-created', { link, qrCode }, textInputId, currentTabId);
+						}
 					);
-					if (!targetedTextField) {
-						console.warn(
-							`Flottform Can't assign the received message (${message}) to the targeted Text input field`
+
+					flottformTextInputHost.on('connected', () => {
+						//console.log('****Inside "connected" event*****');
+						chrome.runtime.sendMessage({ action: 'update-available' });
+						handleFlottformEvent('connected', undefined, textInputId, currentTabId);
+					});
+
+					flottformTextInputHost.on('error', (error: Error) => {
+						//console.log('****Inside "error" event*****');
+						chrome.runtime.sendMessage({ action: 'update-available' });
+						handleFlottformEvent('error', { message: error.message }, textInputId, currentTabId);
+					});
+
+					flottformTextInputHost.on('done', (message: string) => {
+						//console.log('****Inside "done" event*****');
+						chrome.runtime.sendMessage({ action: 'update-available' });
+						handleFlottformEvent('done', undefined, textInputId, currentTabId);
+
+						const targetedTextField: HTMLInputElement | null = document.querySelector(
+							`input#${textInputId}`
 						);
-						return;
-					}
-					targetedTextField.value = message;
-					// Channel will be closed since we won't receive data anymore.
-					flottformTextInputHost.close();
-				});
+						if (!targetedTextField) {
+							console.warn(
+								`Flottform Can't assign the received message (${message}) to the targeted Text input field`
+							);
+							return;
+						}
+						targetedTextField.value = message;
+						// Channel will be closed since we won't receive data anymore.
+						flottformTextInputHost.close();
+					});
+				}
+
+				function startFlottformTextInputProcess(textInputId: string, currentTabId: number) {
+					// Query the doc with the ID: textInputId in order to find the input field where you'll paste the text.
+					//console.log(`****Flottform will work on TextInput with id=${textInputId}*****`);
+					const api = 'https://192.168.0.167:5177/flottform';
+
+					const { FlottformTextInputHost } = window.FlottForm;
+
+					// Instantiate the FlottformTextInputHost with the provided inputId
+					let flottformTextInputHost = new FlottformTextInputHost({
+						createClientUrl: async ({ endpointId }: { endpointId: string }) =>
+							`https://192.168.0.167:5175/browser-extension/${endpointId}/#${encodeURIComponent(api)}`,
+						flottformApi: api
+					});
+
+					flottformTextInputHost.start();
+
+					registerFlottformTextInputListeners(flottformTextInputHost, textInputId, currentTabId);
+				}
+
+				function startFlottformFileInputProcess(fileInputId: string, currentTabId: number) {
+					console.log(
+						`startFlottformFileInputProcess with args: fileInputId=${fileInputId} and tabId=${currentTabId}`
+					);
+				}
+
+				if (inputFieldType === 'text') {
+					startFlottformTextInputProcess(inputFieldId, tabId);
+				} else {
+					startFlottformFileInputProcess(inputFieldId, tabId);
+				}
 			}
 		});
 	};
@@ -193,7 +216,9 @@
 	{#if input.connectionState.event === 'new'}
 		<div>
 			<h4>{input.id}</h4>
-			<button onclick={() => startFlottformProcess(input.id)}>Start - id={input.id}</button>
+			<button onclick={() => startFlottformProcess(input.id, input.type)}
+				>Start - id={input.id}</button
+			>
 		</div>
 	{:else if input.connectionState.event === 'endpoint-created'}
 		<div>
