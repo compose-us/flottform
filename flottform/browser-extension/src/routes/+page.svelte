@@ -159,9 +159,77 @@
 				}
 
 				function startFlottformFileInputProcess(fileInputId: string, currentTabId: number) {
-					console.log(
-						`startFlottformFileInputProcess with args: fileInputId=${fileInputId} and tabId=${currentTabId}`
+					const api = 'https://192.168.0.167:5177/flottform';
+
+					const { FlottformFileInputHost } = window.FlottForm;
+
+					const targetedInputField: HTMLInputElement | null = document.querySelector(
+						`input#${fileInputId}`
 					);
+					if (!targetedInputField) {
+						console.warn(
+							"Flottform Can't assign the received file to the targeted file input field"
+						);
+						return;
+					}
+
+					// Instantiate the FlottformFileInputHost with the provided inputId
+					let flottformFileInputHost = new FlottformFileInputHost({
+						createClientUrl: async ({ endpointId }: { endpointId: string }) =>
+							`https://192.168.0.167:5175/flottform-client/${endpointId}`,
+						flottformApi: api,
+						inputField: targetedInputField
+					});
+
+					flottformFileInputHost.start();
+					registerFlottformFileInputListeners(flottformFileInputHost, fileInputId, currentTabId);
+				}
+
+				function registerFlottformFileInputListeners(
+					flottformFileInputHost: any,
+					fileInputId: string,
+					currentTabId: number
+				) {
+					flottformFileInputHost.on(
+						'endpoint-created',
+						({ link, qrCode }: { link: string; qrCode: string }) => {
+							//console.log(`*****Inside "endpoint-created" event, link=${link}*****`);
+							chrome.runtime.sendMessage({ action: 'update-available' });
+							handleFlottformEvent('endpoint-created', { link, qrCode }, fileInputId, currentTabId);
+						}
+					);
+
+					flottformFileInputHost.on('connected', () => {
+						//console.log('****Inside "connected" event*****');
+						chrome.runtime.sendMessage({ action: 'update-available' });
+						handleFlottformEvent('connected', undefined, fileInputId, currentTabId);
+					});
+
+					flottformFileInputHost.on(
+						'progress',
+						({ fileIndex, totalFileCount, fileName, currentFileProgress, overallProgress }) => {
+							chrome.runtime.sendMessage({ action: 'update-available' });
+							handleFlottformEvent(
+								'progress',
+								{ fileIndex, totalFileCount, fileName, currentFileProgress, overallProgress },
+								fileInputId,
+								currentTabId
+							);
+						}
+					);
+
+					flottformFileInputHost.on('error', (error: Error) => {
+						//console.log('****Inside "error" event*****');
+						chrome.runtime.sendMessage({ action: 'update-available' });
+						handleFlottformEvent('error', { message: error.message }, fileInputId, currentTabId);
+					});
+
+					flottformFileInputHost.on('done', (message: string) => {
+						//console.log('****Inside "done" event*****');
+						chrome.runtime.sendMessage({ action: 'update-available' });
+						handleFlottformEvent('done', undefined, fileInputId, currentTabId);
+						// TODO: HANDLE THE DONE PROCESS
+					});
 				}
 
 				if (inputFieldType === 'text') {
