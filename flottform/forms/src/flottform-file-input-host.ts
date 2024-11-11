@@ -141,11 +141,6 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 			return;
 		}
 
-		if (!this.inputField.multiple) {
-			this.logger.warn('Input field does not accept multiple files. Setting multiple to true.');
-			this.inputField.multiple = true;
-		}
-
 		const dt = new DataTransfer();
 
 		// Add existing files from the input field to the DataTransfer object to avoid loosing them.
@@ -153,6 +148,13 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 			for (const file of Array.from(this.inputField.files)) {
 				dt.items.add(file);
 			}
+		}
+
+		if (!this.inputField.multiple) {
+			this.logger.warn(
+				"The host's input field only supports one file. Incoming files from the client will overwrite any existing file, and only the last file received will remain attached."
+			);
+			dt.items.clear();
 		}
 
 		const fileName = this.filesMetaData[fileIndex]?.name ?? 'no-name';
