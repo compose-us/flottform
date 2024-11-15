@@ -2,6 +2,7 @@
 	"name": "@flottform/demo",
 	"version": "0.0.1",
 	"private": true,
+	"license": "SEE LICENSE IN LICENSE.md",
 	"description": "Flottform demo implementation",
 	"author": "compose.us GmbH",
 	"keywords": [

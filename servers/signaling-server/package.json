@@ -2,6 +2,7 @@
 	"name": "@flottform/signaling-server",
 	"version": "0.0.1",
 	"private": true,
+	"license": "SEE LICENSE IN LICENSE.md",
 	"description": "Flottform standalone signaling server as node service",
 	"author": "compose.us GmbH",
 	"keywords": [
