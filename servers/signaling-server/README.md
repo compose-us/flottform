@@ -1,38 +1,29 @@
-# create-svelte
+# Flottform's Signaling Server
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/main/packages/create-svelte).
+## Overview
 
-## Creating a project
+The Signaling Server module is an integral part of the WebRTC connection process. It facilitates the initial data exchange (such as ICE candidates and session descriptions) between peers before establishing a peer-to-peer connection. This implementation uses long polling for data exchange and is built using SvelteKit.
 
-If you're seeing this, you've probably already done this step. Congrats!
+## Features
 
-```bash
-# create a new project in the current directory
-npm create svelte@latest
+- Handles ICE candidate exchange between client and host.
 
-# create a new project in my-app
-npm create svelte@latest my-app
-```
+- Supports creating new connection entries for peers.
 
-## Developing
+- Provides STUN/TURN server credentials for facilitating NAT traversal.
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+## Usage
 
-```bash
-npm run dev
+- **Creating a session**: Send a POST request to `flottform/create` to initialize a session for a new connection.
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+- **Adding ICE candidates**: Send PUT requests to `flottform/[endpoint]/client` and `/flottform/[endpoint]/host` to add ice candidates for both the client and the host.
 
-## Building
+- **Retrieving ICE server credentials**: Send a GET request to `flottform/ice-server-credentials` to obtain the necessary STUN/TURN server information.
 
-To create a production version of your app:
+## License
 
-```bash
-npm run build
-```
+This project is licensed under `compose.us Non-Commercial License (CUNCL)`.
 
-You can preview the production build with `npm run preview`.
+## Contact
 
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+For any inquiries, please contact sales@flottform.io.

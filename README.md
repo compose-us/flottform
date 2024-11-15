@@ -1,61 +1,51 @@
-# flottform
+# Flottform Project Overview
 
-A better UX for file uploads #build-in-public
+**Flottform** is a library designed to facilitate peer-to-peer (P2P) connections using WebRTC technology. It simplifies the process of establishing data channels between peers, enabling file, data, and text exchanges. The library also offers a default UI for rapid development and fires multiple event for developers who wish to create tailored experiences.
+
+## Key Features
+
+- **WebRTC Integration**: Simplifies the establishment of P2P connections by handling signaling, ICE candidate exchange, and peer management.
+- **Default UI Component**: Provides a ready-to-use accordion-style interface for rapid integration.
+- **Event-Driven Architecture**: Emits events for different connection states (e.g., `new`, `endpoint-created`, `connected`, `disconnected`, `error`) to enable UI customization.
+- **Modular Structure**: Supports file and text transfer through specialized classes.
+- **Cross-Device Compatibility**: Ensures reliable P2P connections across various devices and platforms.
+
+## Module Overview
+
+### 1. **Signaling Server Module**
+
+Handles the initial data exchange necessary for WebRTC connection setup. This module supports routes for adding ICE candidates, session descriptions, and returning server credentials for establishing connections.
+
+### 2. **Forms Module**
+
+Contains the primary classes for managing WebRTC connections:
+
+- **FlottformChannelHost** & **FlottformChannelClient**: Core classes for connection management and event emission.
+- **FlottformFileInputHost** & **FlottformFileInputClient**: Specialized classes for file transfer, using `FlottformChannelHost` and `FlottformChannelClient` as properties.
+- **FlottformTextInputHost** & **FlottformTextInputClient**: Specialized classes for text transfer, using `FlottformTextInputHost` and `FlottformTextInputClient` as properties.
+
+### 3. **Demo Module**
+
+Showcases the various features and capabilities of the **Flottform** library through real-world scenarios. Demonstrates connection setup, file, and text sharing in diverse use cases, making it easier for developers to understand and adapt the library.
+
+### 4. **Where Are You At Module**
+
+A practical implementation of **Flottform**, enabling users to share and access location data easily. This module emphasizes the library’s ability to create responsive, user-friendly applications for real-time data sharing.
+
+## Customization
+
+Developers can override the default UI by listening to events emitted by the `FlottformTextInputHost`, `FlottformTextInputClient`, `FlottformFileInputHost`, `FlottformFileInputClient` and updating the UI based on these events.
+
+## Use Cases
+
+- **File Sharing Applications**: Securely send and receive files between users.
+- **Real-Time Collaboration Tools**: Share text and images instantly with peers.
+- **Location-Based Services**: Access your friend's location with one click.
 
 ## License
 
-Please check the [compose.us Non-Commercial License (CUNCL)](./LICENSE.md) document for the complete license.
+This project is licensed under `compose.us Non-Commercial License (CUNCL)`.
 
-In simple terms, you're allowed to use Flottform in a non-commercial setting, but if you want to use it in a project, product or service that you sell or receive money for, you have to purchase a proper license from compose.us.
+## Contact
 
-## Prototype solution
-
-We are about to explore ideas how we can solve the issue we described in detail about [UX challenges in web forms if you have a file on another device](https://flottform.io/updates/2023-10-23-defining-our-mission-improve-web-form-file-ploads).
-
-## Update Instructions for Remote Server Deployment
-
-These are the necessary steps to update the code on the remote server to the latest version.
-
-1. Connect to the remote server:
-
-```sh
-ssh <email@remote.server>
-```
-
-2. Navigate to the Target Repository:
-
-```sh
-cd /path/to/your/repository/in/remote/server
-```
-
-3. Check the Current Branch Used for Production:
-
-```sh
-git status
-```
-
-Ensure you are on the correct branch used for production. If not, switch to the appropriate branch:
-
-```sh
-git checkout <production-branch>
-```
-
-4. Fetch all of the new changes:
-
-```sh
-git fetch --all
-```
-
-5. [Optional] Update the Environment Variables:
-
-If there are changes required in the environment variables, update the .env file accordingly.
-
-```sh
-nano .env
-```
-
-6. Stop & re-run the containers:
-
-```sh
-docker compose down && git pull && docker compose build && docker compose up -d && docker volume prune —-filter all=1 —-force && docker compose logs -f
-```
+For questions or support, please reach out to sales@flottform.io.
