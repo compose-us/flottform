@@ -6,7 +6,7 @@
 </script>
 
 <div class="max-w-screen-lg mx-auto p-8 box-border grid grid-cols-1 gap-8">
-	<h1>Das Hochladen ist abgeschlossen!</h1>
+	<h1>Der Beleg wurde versendet!</h1>
 
 	{#if form?.success}
 		<p>Hochladen abgeschlossen ✅</p>

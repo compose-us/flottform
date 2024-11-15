@@ -270,7 +270,9 @@
 						bind:this={fileInput}
 						onchange={() => (hasFile = !!fileInput.files?.length)}
 					/>
-					<p class="italic text-xs">Klicken Sie zum Hochladen oder ziehen Sie es per Drag & Drop</p>
+					<p class="italic text-xs">
+						Klicken Sie zum Hochladen oder ziehen Sie es per Drag & Drop hier her
+					</p>
 				</div>
 				<div class="flex flex-col gap-2">
 					<p>Sie können auch ein anderes Gerät verwenden, um Ihren Beleg hochzuladen:</p>
