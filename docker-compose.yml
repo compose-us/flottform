@@ -11,7 +11,7 @@ volumes:
   demo-modules:
   forms-modules:
   server-modules:
-  server-standalone-modules:
+  signaling-server-modules:
   where-are-you-at-modules:
 
 services:
@@ -59,17 +59,17 @@ services:
     networks:
       - 'web'
 
-  server-standalone:
+  signaling-server:
     build:
       args:
         NODE_VERSION: '${NODE_VERSION}'
       context: .
       dockerfile: ./Dockerfile
       target: runner
-    container_name: flottform-server-standalone
+    container_name: flottform-signaling-server
     working_dir: '/app'
     entrypoint: './docker-entrypoint.sh'
-    command: 'node flottform/server-standalone/build'
+    command: 'node servers/signaling-server/build'
     restart: always
     environment:
       - 'PROTOCOL_HEADER=x-forwarded-proto'
@@ -80,23 +80,23 @@ services:
       - 'PUBLIC_IS_ONLINE_DEMO=true'
     volumes:
       - 'app-modules:/app/node_modules'
-      - 'demo-modules:/app/flottform/demo/node_modules'
+      - 'demo-modules:/app/servers/demo/node_modules'
       - 'forms-modules:/app/flottform/forms/node_modules'
       - 'server-modules:/app/flottform/server/node_modules'
-      - 'server-standalone-modules:/app/flottform/server-standalone/node_modules'
-      - 'where-are-you-at-modules:/app/flottform/where-are-you-at/node_modules'
+      - 'signaling-server-modules:/app/servers/signaling-server/node_modules'
+      - 'where-are-you-at-modules:/app/servers/where-are-you-at/node_modules'
       - 'node-cache:/root/.cache'
       - 'pnpm-cache:/root/.npm'
       - 'pnpm-store:/app/.pnpm-store'
     labels:
       - 'traefik.enable=true'
       - 'traefik.docker.network=web'
-      - 'traefik.http.services.flottform-server-standalone.loadbalancer.server.port=3000'
-      - 'traefik.http.routers.flottform-server-standalone.priority=100'
-      - 'traefik.http.routers.flottform-server-standalone.rule=Host(`${HOST}`) && PathPrefix(`/flottform/`)'
-      - 'traefik.http.routers.flottform-server-standalone.service=flottform-server-standalone'
-      - 'traefik.http.routers.flottform-server-standalone.entrypoints=websecure'
-      - 'traefik.http.routers.flottform-server-standalone.tls.certresolver=leresolver'
+      - 'traefik.http.services.flottform-signaling-server.loadbalancer.server.port=3000'
+      - 'traefik.http.routers.flottform-signaling-server.priority=100'
+      - 'traefik.http.routers.flottform-signaling-server.rule=Host(`${HOST}`) && PathPrefix(`/flottform/`)'
+      - 'traefik.http.routers.flottform-signaling-server.service=flottform-signaling-server'
+      - 'traefik.http.routers.flottform-signaling-server.entrypoints=websecure'
+      - 'traefik.http.routers.flottform-signaling-server.tls.certresolver=leresolver'
     networks:
       - 'web'
 
@@ -110,7 +110,7 @@ services:
     container_name: flottform-demo
     working_dir: '/app'
     entrypoint: './docker-entrypoint.sh'
-    command: 'node flottform/demo/build'
+    command: 'node servers/demo/build'
     restart: always
     environment:
       - 'BODY_SIZE_LIMIT=33554432'
@@ -118,15 +118,15 @@ services:
       - 'HOST_HEADER=x-forwarded-host'
       - 'PUBLIC_FLOTTFORM_SERVER_BASE=https://${HOST}/flottform'
       - 'PUBLIC_IS_ONLINE_DEMO=true'
-      - 'UPLOAD_FOLDER=/app/flottform/demo/static/uploads'
+      - 'UPLOAD_FOLDER=/app/servers/demo/static/uploads'
     volumes:
       - 'app-modules:/app/node_modules'
-      - 'demo-modules:/app/flottform/demo/node_modules'
+      - 'demo-modules:/app/servers/demo/node_modules'
       - 'forms-modules:/app/flottform/forms/node_modules'
       - 'server-modules:/app/flottform/server/node_modules'
-      - 'server-standalone-modules:/app/flottform/server-standalone/node_modules'
-      - 'where-are-you-at-modules:/app/flottform/where-are-you-at/node_modules'
-      - 'uploads:/app/flottform/demo/static/uploads'
+      - 'signaling-server-modules:/app/servers/signaling-server/node_modules'
+      - 'where-are-you-at-modules:/app/servers/where-are-you-at/node_modules'
+      - 'uploads:/app/servers/demo/static/uploads'
       - 'node-cache:/root/.cache'
       - 'pnpm-cache:/root/.npm'
       - 'pnpm-store:/app/.pnpm-store'
@@ -152,7 +152,7 @@ services:
     container_name: where-are-you-at
     working_dir: '/app'
     entrypoint: './docker-entrypoint.sh'
-    command: 'node flottform/where-are-you-at/build'
+    command: 'node servers/where-are-you-at/build'
     restart: always
     environment:
       - 'BODY_SIZE_LIMIT=33554432'
@@ -162,11 +162,11 @@ services:
       - 'PUBLIC_IS_ONLINE_DEMO=true'
     volumes:
       - 'app-modules:/app/node_modules'
-      - 'demo-modules:/app/flottform/demo/node_modules'
+      - 'demo-modules:/app/servers/demo/node_modules'
       - 'forms-modules:/app/flottform/forms/node_modules'
       - 'server-modules:/app/flottform/server/node_modules'
-      - 'server-standalone-modules:/app/flottform/server-standalone/node_modules'
-      - 'where-are-you-at-modules:/app/flottform/where-are-you-at/node_modules'
+      - 'signaling-server-modules:/app/servers/signaling-server/node_modules'
+      - 'where-are-you-at-modules:/app/servers/where-are-you-at/node_modules'
       - 'node-cache:/root/.cache'
       - 'pnpm-cache:/root/.npm'
       - 'pnpm-store:/app/.pnpm-store'
