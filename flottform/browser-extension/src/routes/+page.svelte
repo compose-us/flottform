@@ -102,26 +102,23 @@
 						'endpoint-created',
 						({ link, qrCode }: { link: string; qrCode: string }) => {
 							//console.log(`*****Inside "endpoint-created" event, link=${link}*****`);
-							chrome.runtime.sendMessage({ action: 'update-available' });
 							handleFlottformEvent('endpoint-created', { link, qrCode }, textInputId, currentTabId);
 						}
 					);
 
 					flottformTextInputHost.on('connected', () => {
 						//console.log('****Inside "connected" event*****');
-						chrome.runtime.sendMessage({ action: 'update-available' });
 						handleFlottformEvent('connected', undefined, textInputId, currentTabId);
 					});
 
 					flottformTextInputHost.on('error', (error: Error) => {
 						//console.log('****Inside "error" event*****');
-						chrome.runtime.sendMessage({ action: 'update-available' });
 						handleFlottformEvent('error', { message: error.message }, textInputId, currentTabId);
 					});
 
 					flottformTextInputHost.on('done', (message: string) => {
 						//console.log('****Inside "done" event*****');
-						chrome.runtime.sendMessage({ action: 'update-available' });
+
 						handleFlottformEvent('done', undefined, textInputId, currentTabId);
 
 						const targetedTextField: HTMLInputElement | null = document.querySelector(
@@ -142,14 +139,14 @@
 				function startFlottformTextInputProcess(textInputId: string, currentTabId: number) {
 					// Query the doc with the ID: textInputId in order to find the input field where you'll paste the text.
 					//console.log(`****Flottform will work on TextInput with id=${textInputId}*****`);
-					const api = 'https://192.168.0.167:5177/flottform';
+					const api = 'https://100.85.250.183:5177/flottform';
 
 					const { FlottformTextInputHost } = window.FlottForm;
 
 					// Instantiate the FlottformTextInputHost with the provided inputId
 					let flottformTextInputHost = new FlottformTextInputHost({
 						createClientUrl: async ({ endpointId }: { endpointId: string }) =>
-							`https://192.168.0.167:5175/browser-extension/${endpointId}/#${encodeURIComponent(api)}`,
+							`https://100.85.250.183:5175/browser-extension/${endpointId}/#${encodeURIComponent(api)}`,
 						flottformApi: api
 					});
 
@@ -159,7 +156,7 @@
 				}
 
 				function startFlottformFileInputProcess(fileInputId: string, currentTabId: number) {
-					const api = 'https://192.168.0.167:5177/flottform';
+					const api = 'https://100.85.250.183:5177/flottform';
 
 					const { FlottformFileInputHost } = window.FlottForm;
 
@@ -176,7 +173,7 @@
 					// Instantiate the FlottformFileInputHost with the provided inputId
 					let flottformFileInputHost = new FlottformFileInputHost({
 						createClientUrl: async ({ endpointId }: { endpointId: string }) =>
-							`https://192.168.0.167:5175/flottform-client/${endpointId}`,
+							`https://100.85.250.183:5175/flottform-client/${endpointId}`,
 						flottformApi: api,
 						inputField: targetedInputField
 					});
@@ -194,21 +191,18 @@
 						'endpoint-created',
 						({ link, qrCode }: { link: string; qrCode: string }) => {
 							//console.log(`*****Inside "endpoint-created" event, link=${link}*****`);
-							chrome.runtime.sendMessage({ action: 'update-available' });
 							handleFlottformEvent('endpoint-created', { link, qrCode }, fileInputId, currentTabId);
 						}
 					);
 
 					flottformFileInputHost.on('connected', () => {
 						//console.log('****Inside "connected" event*****');
-						chrome.runtime.sendMessage({ action: 'update-available' });
 						handleFlottformEvent('connected', undefined, fileInputId, currentTabId);
 					});
 
 					flottformFileInputHost.on(
 						'progress',
 						({ fileIndex, totalFileCount, fileName, currentFileProgress, overallProgress }) => {
-							chrome.runtime.sendMessage({ action: 'update-available' });
 							handleFlottformEvent(
 								'progress',
 								{ fileIndex, totalFileCount, fileName, currentFileProgress, overallProgress },
@@ -220,13 +214,11 @@
 
 					flottformFileInputHost.on('error', (error: Error) => {
 						//console.log('****Inside "error" event*****');
-						chrome.runtime.sendMessage({ action: 'update-available' });
 						handleFlottformEvent('error', { message: error.message }, fileInputId, currentTabId);
 					});
 
 					flottformFileInputHost.on('done', (message: string) => {
 						//console.log('****Inside "done" event*****');
-						chrome.runtime.sendMessage({ action: 'update-available' });
 						handleFlottformEvent('done', undefined, fileInputId, currentTabId);
 						// TODO: HANDLE THE DONE PROCESS
 					});
