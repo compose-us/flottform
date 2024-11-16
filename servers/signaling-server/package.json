@@ -1,13 +1,14 @@
 {
-	"name": "@flottform/server-standalone",
+	"name": "@flottform/signaling-server",
 	"version": "0.0.1",
 	"private": true,
-	"description": "Flottform standalone server as node service",
+	"description": "Flottform standalone signaling server as node service",
 	"author": "compose.us GmbH",
 	"keywords": [
 		"flottform",
 		"forms",
 		"server",
+		"signaling",
 		"webrtc"
 	],
 	"scripts": {
