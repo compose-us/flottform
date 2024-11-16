@@ -1,12 +1,12 @@
 {
 	"manifest_version": 3,
 	"name": "Flottform",
-	"description": "Flottform Short description",
+	"description": "Connect devices through Flottform",
 	"version": "1.0",
 	"action": {
 		"default_icon": "flottform.png",
 		"default_popup": "index.html",
-		"default_title": "Will be shown as a Tooltip when you hover over the extension icon"
+		"default_title": "Connect a secondary device to the form fields you see on this page."
 	},
 	"host_permissions": ["https://*/*"],
 	"permissions": ["tabs", "activeTab", "scripting", "storage"]
