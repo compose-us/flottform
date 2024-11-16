@@ -2,7 +2,6 @@
 	import { FlottformTextInputClient } from '@flottform/forms';
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
-	import { sdpExchangeServerBase } from '../../../api';
 
 	let currentState = $state<
 		'init' | 'connected' | 'sending' | 'done' | 'error-user-denied' | 'error'
