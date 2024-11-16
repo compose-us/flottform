@@ -72,7 +72,9 @@
 					type="file"
 					bind:this={fileInput}
 				/>
-				<p class="italic text-sm">Klicken Sie zum Hochladen oder ziehen Sie es per Drag & Drop</p>
+				<p class="italic text-sm">
+					Klicken Sie zum Hochladen oder ziehen Sie es per Drag & Drop hier her
+				</p>
 			</div>
 
 			{#if currentState === 'sending'}
@@ -113,8 +115,8 @@
 				<h2 class="animate-bounce">Ouch!</h2>
 				<p>Es ist ein Fehler beim Verbinden mit Flottform aufgetreten! 😬</p>
 				<p>
-					Bitte versuchen Sie es erneut mit einem neuen QR-Code, indem Sie erneut auf die
-					Schaltfläche im Hauptformular klicken.
+					Bitte versuchen Sie es mit einem neuen QR-Code, indem Sie erneut auf die Schaltfläche im
+					Hauptformular klicken.
 				</p>
 			{/if}
 		</div>

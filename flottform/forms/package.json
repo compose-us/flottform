@@ -2,6 +2,7 @@
 	"name": "@flottform/forms",
 	"version": "0.0.1",
 	"private": true,
+	"license": "SEE LICENSE IN LICENSE.md",
 	"description": "Flottform client side SDK",
 	"author": "compose.us GmbH",
 	"type": "module",
