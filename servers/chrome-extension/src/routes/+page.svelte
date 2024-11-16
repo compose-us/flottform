@@ -9,6 +9,10 @@
 
 	let inputFields: TrackedInputFields = [];
 	let currentTabId: number | undefined;
+	let apiToken: string = '';
+	// these could be set through options
+	let flottformSignalingServerUrlBase: string = '';
+	let extensionServerUrlBase: string = '';
 
 	const removeSavedInputs = () => {
 		// It'll remove all the data stored inside `chrome.storage.local`
@@ -22,7 +26,7 @@
 			args: [currentTabId],
 			func: async (currentTabId) => {
 				const inputFields: TrackedInputFields = Array.from(
-					document.querySelectorAll('input[type="text"], input[type="file"]')
+					document.querySelectorAll<HTMLInputElement>('input[type="text"], input[type="file"]')
 				).map((input) => {
 					return { id: input.id, type: input.type, connectionState: { event: 'new' } };
 				});
@@ -61,8 +65,14 @@
 
 		chrome.scripting.executeScript({
 			target: { tabId: currentTabId! },
-			args: [inputFieldId, tabId, inputFieldType],
-			func: async (inputFieldId: string, tabId: number, inputFieldType: string) => {
+			args: [inputFieldId, tabId, inputFieldType, extensionServerUrlBase, apiToken],
+			func: async (
+				inputFieldId: string,
+				tabId: number,
+				inputFieldType: string,
+				extensionServerUrlBase: string,
+				apiToken: string
+			) => {
 				function handleFlottformEvent(event: string, data: any, id: string, currentTabId: number) {
 					// Get the latest updated version of the array inputFields instead of passing it as a parameter to `chrome.scripting.executeScript`!
 					chrome.storage.local.get([`inputFields-${tabId}`], (result) => {
@@ -139,15 +149,18 @@
 				function startFlottformTextInputProcess(textInputId: string, currentTabId: number) {
 					// Query the doc with the ID: textInputId in order to find the input field where you'll paste the text.
 					//console.log(`****Flottform will work on TextInput with id=${textInputId}*****`);
-					const api = 'https://100.85.250.183:5177/flottform';
-
 					const { FlottformTextInputHost } = window.FlottForm;
+
+					const data = {
+						type: 'text',
+						apiToken
+					};
 
 					// Instantiate the FlottformTextInputHost with the provided inputId
 					let flottformTextInputHost = new FlottformTextInputHost({
 						createClientUrl: async ({ endpointId }: { endpointId: string }) =>
-							`https://100.85.250.183:5175/browser-extension/${endpointId}/#${encodeURIComponent(api)}`,
-						flottformApi: api
+							`${extensionServerUrlBase}/${endpointId}/#${encodeURIComponent(JSON.stringify(data))}`,
+						flottformApi: flottformSignalingServerUrlBase
 					});
 
 					flottformTextInputHost.start();
@@ -156,8 +169,6 @@
 				}
 
 				function startFlottformFileInputProcess(fileInputId: string, currentTabId: number) {
-					const api = 'https://100.85.250.183:5177/flottform';
-
 					const { FlottformFileInputHost } = window.FlottForm;
 
 					const targetedInputField: HTMLInputElement | null = document.querySelector(
@@ -170,11 +181,16 @@
 						return;
 					}
 
+					const data = {
+						type: 'file',
+						apiToken
+					};
+
 					// Instantiate the FlottformFileInputHost with the provided inputId
 					let flottformFileInputHost = new FlottformFileInputHost({
 						createClientUrl: async ({ endpointId }: { endpointId: string }) =>
-							`https://100.85.250.183:5175/flottform-client/${endpointId}`,
-						flottformApi: api,
+							`${extensionServerUrlBase}/${endpointId}/#${encodeURIComponent(JSON.stringify(data))}`,
+						flottformApi: flottformSignalingServerUrlBase,
 						inputField: targetedInputField
 					});
 
@@ -234,24 +250,29 @@
 	};
 
 	onMount(async () => {
+		if (!chrome) {
+			console.warn('Chrome API is not available in this context!!');
+			return;
+		}
+
+		apiToken = await chrome.storage.local.get('FLOTTFORM_TOKEN');
+		flottformSignalingServerUrlBase = await chrome.storage.local.get('FLOTTFORM_SIGNALING_SERVER_URL_BASE');
+		extensionServerUrlBase = await chrome.storage.local.get('FLOTTFORM_EXTENSION_CLIENTS_URL_BASE');
+
 		let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 		currentTabId = tab.id;
 
-		if (chrome) {
-			// Listen to storage changes in chrome.storage.local
-			chrome.storage.onChanged.addListener((changes, namespace) => {
-				//console.log('CHANGES: ', changes);
-				if (namespace === 'local') {
-					const key = `inputFields-${currentTabId}`;
-					if (changes[key]) {
-						console.warn('Detected change in inputFields:', changes[key].newValue);
-						inputFields = changes[key].newValue || [];
-					}
+		// Listen to storage changes in chrome.storage.local
+		chrome.storage.onChanged.addListener((changes, namespace) => {
+			//console.log('CHANGES: ', changes);
+			if (namespace === 'local') {
+				const key = `inputFields-${currentTabId}`;
+				if (changes[key]) {
+					console.warn('Detected change in inputFields:', changes[key].newValue);
+					inputFields = changes[key].newValue || [];
 				}
-			});
-		} else {
-			console.warn('Chrome API is not available in this context!!');
-		}
+			}
+		});
 
 		// On Mount, check if data exists in storage
 		chrome.storage.local.get([`inputFields-${currentTabId}`], (result) => {
