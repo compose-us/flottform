@@ -10,7 +10,6 @@
 	let inputFields: TrackedInputFields = [];
 	let currentTabId: number | undefined;
 	let apiToken: string = '';
-	// these could be set through options
 	let flottformSignalingServerUrlBase: string = '';
 	let extensionServerUrlBase: string = '';
 
@@ -255,9 +254,14 @@
 			return;
 		}
 
-		apiToken = await chrome.storage.local.get('FLOTTFORM_TOKEN');
-		flottformSignalingServerUrlBase = await chrome.storage.local.get('FLOTTFORM_SIGNALING_SERVER_URL_BASE');
-		extensionServerUrlBase = await chrome.storage.local.get('FLOTTFORM_EXTENSION_CLIENTS_URL_BASE');
+		const data = await chrome.storage.local.get([
+			'FLOTTFORM_TOKEN',
+			'FLOTTFORM_SIGNALING_SERVER_URL_BASE',
+			'FLOTTFORM_EXTENSION_CLIENTS_URL_BASE'
+		]);
+		apiToken = data.FLOTTFORM_TOKEN;
+		flottformSignalingServerUrlBase = data.FLOTTFORM_SIGNALING_SERVER_URL_BASE;
+		extensionServerUrlBase = data.FLOTTFORM_EXTENSION_CLIENTS_URL_BASE;
 
 		let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 		currentTabId = tab.id;
