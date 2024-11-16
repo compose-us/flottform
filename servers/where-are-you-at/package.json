@@ -2,6 +2,7 @@
 	"name": "@flottform/where-are-you-at",
 	"version": "0.0.1",
 	"private": true,
+	"license": "SEE LICENSE IN LICENSE.md",
 	"scripts": {
 		"dev": "vite dev --port 5176",
 		"build": "vite build",

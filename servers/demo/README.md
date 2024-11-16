@@ -1,38 +1,45 @@
-# create-svelte
+# Demo Module - Flottform Integration
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/main/packages/create-svelte).
+The **Demo** module highlights a range of practical applications of the **Flottform** library, which enables peer-to-peer connections through WebRTC.
 
-## Creating a project
+## Overview
 
-If you're seeing this, you've probably already done this step. Congrats!
+**Flottform** enables WebRTC-based peer-to-peer connections, allowing data exchange between two peers. The library provides a default UI component that creates an accordion with input field entries. Each entry includes:
 
-```bash
-# create a new project in the current directory
-npm create svelte@latest
+- The name of the input field.
+- A "Get a Link" button that initiates the connection process.
 
-# create a new project in my-app
-npm create svelte@latest my-app
-```
+Upon clicking the button:
 
-## Developing
+1. A QR code and link are displayed.
+2. The client scans the QR code or opens the link.
+3. A new page opens where the client can upload a file, send an image, or write text.
+4. The data is sent to the other peer and attached to the corresponding input field.
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+## Customization
 
-```bash
-npm run dev
+Users who prefer a customized UI can listen to events fired by the library's classes and modify the UI accordingly.
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+## Features
 
-## Building
+- **Peer-to-Peer Connection**: Establishes a secure WebRTC connection between peers.
+- **Data Exchange**: Supports file, image, and text sharing.
+- **Default UI**: Accordion with input field entries and connection initiation buttons.
+- **Customizable Events**: Allows custom UI integration by listening to library events.
 
-To create a production version of your app:
+## Usage
 
-```bash
-npm run build
-```
+The **Demo** module tests:
 
-You can preview the production build with `npm run preview`.
+- File sharing between peers.
+- Text communication.
 
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+This comprehensive demo ensures users can explore all potential use cases supported by the **Flottform** library.
+
+## License
+
+This project is licensed under `compose.us Non-Commercial License (CUNCL)`.
+
+## Contact
+
+For more information, please reach out at sales@flottform.io.
