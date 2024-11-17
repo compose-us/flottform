@@ -1,5 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import {
+		defaultTokenValue,
+		defaultSignalingServerUrlBase,
+		defaultExtensionClientUrlBase
+	} from '$lib/options';
 
 	type TrackedInputFields = Array<{
 		id: string;
@@ -7,12 +12,13 @@
 		connectionState: { event: string; data?: any };
 	}>;
 
-	let inputFields: TrackedInputFields = [];
+	let inputFields: TrackedInputFields = $state([]);
 	let currentTabId: number | undefined;
 	let apiToken: string = '';
-	let flottformSignalingServerUrlBase: string = '';
-	let extensionServerUrlBase: string = '';
+	let signalingServerUrlBase: string = '';
+	let extensionClientUrlBase: string = '';
 
+	// TODO remove all listeners and flottform processes
 	const removeSavedInputs = () => {
 		// It'll remove all the data stored inside `chrome.storage.local`
 		chrome.storage.local.set({ [`inputFields-${currentTabId}`]: [] });
@@ -20,12 +26,15 @@
 	};
 
 	const extractInputFieldsFromCurrentPage = async () => {
+		console.log('Searching for input fields in page');
 		const injectionResult = await chrome.scripting.executeScript({
 			target: { tabId: currentTabId! },
 			args: [currentTabId],
 			func: async (currentTabId) => {
 				const inputFields: TrackedInputFields = Array.from(
-					document.querySelectorAll<HTMLInputElement>('input[type="text"], input[type="file"]')
+					document.querySelectorAll<HTMLInputElement>(
+						'input[type="text"],input[type="file"],input[type="password"]'
+					)
 				).map((input) => {
 					return { id: input.id, type: input.type, connectionState: { event: 'new' } };
 				});
@@ -34,12 +43,15 @@
 				return inputFields;
 			}
 		});
+		console.log(`Found ${injectionResult.length} input fields.`);
 
-		const potentialResult = injectionResult[0].result;
+		const potentialResult = injectionResult[0]?.result;
 		if (!potentialResult) {
 			console.error('Injected Code is did not work properly !');
 			return;
 		}
+
+		console.log('Updating inputFields', potentialResult);
 		inputFields = potentialResult;
 	};
 
@@ -52,26 +64,36 @@
 	};
 
 	const startFlottformProcess = async (inputFieldId: string, inputFieldType: string) => {
-		// Inject the bundled file into the page context
-		await chrome.scripting.executeScript({
-			target: { tabId: currentTabId! },
-			files: ['/scripts/content-script.js']
-		});
-
 		// Wait for the current tab Id to be available!
 		const tabId = await getCurrentTabId();
 		//console.log(`**** Starting the process for the TAB-${tabId} ****`);
 
+		// Inject the bundled flottform script into the page context
+		const flottformModuleFile = chrome.runtime.getURL('scripts/flottform-bundle.js');
 		chrome.scripting.executeScript({
 			target: { tabId: currentTabId! },
-			args: [inputFieldId, tabId, inputFieldType, extensionServerUrlBase, apiToken],
+			args: [
+				flottformModuleFile,
+				inputFieldId,
+				tabId,
+				inputFieldType,
+				apiToken,
+				signalingServerUrlBase,
+				extensionClientUrlBase
+			],
 			func: async (
+				flottformModuleFile: string,
 				inputFieldId: string,
 				tabId: number,
 				inputFieldType: string,
-				extensionServerUrlBase: string,
-				apiToken: string
+				apiToken: string,
+				signalingServerUrlBase: string,
+				extensionClientUrlBase: string
 			) => {
+				const { FlottformTextInputHost, FlottformFileInputHost } = await import(
+					flottformModuleFile
+				);
+
 				function handleFlottformEvent(event: string, data: any, id: string, currentTabId: number) {
 					// Get the latest updated version of the array inputFields instead of passing it as a parameter to `chrome.scripting.executeScript`!
 					chrome.storage.local.get([`inputFields-${tabId}`], (result) => {
@@ -148,8 +170,6 @@
 				function startFlottformTextInputProcess(textInputId: string, currentTabId: number) {
 					// Query the doc with the ID: textInputId in order to find the input field where you'll paste the text.
 					//console.log(`****Flottform will work on TextInput with id=${textInputId}*****`);
-					const { FlottformTextInputHost } = window.FlottForm;
-
 					const data = {
 						type: 'text',
 						apiToken
@@ -158,8 +178,8 @@
 					// Instantiate the FlottformTextInputHost with the provided inputId
 					let flottformTextInputHost = new FlottformTextInputHost({
 						createClientUrl: async ({ endpointId }: { endpointId: string }) =>
-							`${extensionServerUrlBase}/${endpointId}/#${encodeURIComponent(JSON.stringify(data))}`,
-						flottformApi: flottformSignalingServerUrlBase
+							`${extensionClientUrlBase}/${endpointId}/#${encodeURIComponent(JSON.stringify(data))}`,
+						flottformApi: signalingServerUrlBase
 					});
 
 					flottformTextInputHost.start();
@@ -168,11 +188,9 @@
 				}
 
 				function startFlottformFileInputProcess(fileInputId: string, currentTabId: number) {
-					const { FlottformFileInputHost } = window.FlottForm;
-
-					const targetedInputField: HTMLInputElement | null = document.querySelector(
-						`input#${fileInputId}`
-					);
+					const targetedInputField = document.getElementById(
+						fileInputId
+					) as HTMLInputElement | null;
 					if (!targetedInputField) {
 						console.warn(
 							"Flottform Can't assign the received file to the targeted file input field"
@@ -188,8 +206,8 @@
 					// Instantiate the FlottformFileInputHost with the provided inputId
 					let flottformFileInputHost = new FlottformFileInputHost({
 						createClientUrl: async ({ endpointId }: { endpointId: string }) =>
-							`${extensionServerUrlBase}/${endpointId}/#${encodeURIComponent(JSON.stringify(data))}`,
-						flottformApi: flottformSignalingServerUrlBase,
+							`${extensionClientUrlBase}/${endpointId}/#${encodeURIComponent(JSON.stringify(data))}`,
+						flottformApi: signalingServerUrlBase,
 						inputField: targetedInputField
 					});
 
@@ -239,10 +257,10 @@
 					});
 				}
 
-				if (inputFieldType === 'text') {
-					startFlottformTextInputProcess(inputFieldId, tabId);
-				} else {
+				if (inputFieldType === 'file') {
 					startFlottformFileInputProcess(inputFieldId, tabId);
+				} else {
+					startFlottformTextInputProcess(inputFieldId, tabId);
 				}
 			}
 		});
@@ -259,22 +277,27 @@
 			'FLOTTFORM_SIGNALING_SERVER_URL_BASE',
 			'FLOTTFORM_EXTENSION_CLIENTS_URL_BASE'
 		]);
-		apiToken = data.FLOTTFORM_TOKEN;
-		flottformSignalingServerUrlBase = data.FLOTTFORM_SIGNALING_SERVER_URL_BASE;
-		extensionServerUrlBase = data.FLOTTFORM_EXTENSION_CLIENTS_URL_BASE;
+		apiToken = data.FLOTTFORM_TOKEN ?? defaultTokenValue;
+		signalingServerUrlBase =
+			data.FLOTTFORM_SIGNALING_SERVER_URL_BASE ?? defaultSignalingServerUrlBase;
+		extensionClientUrlBase =
+			data.FLOTTFORM_EXTENSION_CLIENTS_URL_BASE ?? defaultExtensionClientUrlBase;
+		console.log({
+			apiToken,
+			signalingServerUrlBase,
+			extensionClientUrlBase
+		});
 
 		let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 		currentTabId = tab.id;
 
 		// Listen to storage changes in chrome.storage.local
-		chrome.storage.onChanged.addListener((changes, namespace) => {
+		chrome.storage.local.onChanged.addListener((changes) => {
 			//console.log('CHANGES: ', changes);
-			if (namespace === 'local') {
-				const key = `inputFields-${currentTabId}`;
-				if (changes[key]) {
-					console.warn('Detected change in inputFields:', changes[key].newValue);
-					inputFields = changes[key].newValue || [];
-				}
+			const key = `inputFields-${currentTabId}`;
+			if (changes[key]) {
+				console.warn('Detected change in inputFields:', changes[key].newValue);
+				inputFields = changes[key].newValue || [];
 			}
 		});
 
@@ -302,7 +325,7 @@
 		<div>
 			<h4>{input.id}</h4>
 			<button onclick={() => startFlottformProcess(input.id, input.type)}
-				>Start - id={input.id}</button
+				>Start - id={input.id} type={input.type}</button
 			>
 		</div>
 	{:else if input.connectionState.event === 'endpoint-created'}

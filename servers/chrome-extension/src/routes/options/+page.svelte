@@ -1,5 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import {
+		defaultTokenValue,
+		defaultSignalingServerUrlBase,
+		defaultExtensionClientUrlBase
+	} from '$lib/options';
 	import type { EventHandler } from 'svelte/elements';
 
 	let tokenValue: string;
@@ -8,7 +13,7 @@
 	let state: 'init' | 'saved' | 'error' = 'init';
 
 	const saveToken: EventHandler<SubmitEvent> = async (e) => {
-        e.preventDefault();
+		e.preventDefault();
 		try {
 			await chrome.storage.local.set({
 				FLOTTFORM_TOKEN: tokenValue,
@@ -32,11 +37,11 @@
 			'FLOTTFORM_SIGNALING_SERVER_URL_BASE',
 			'FLOTTFORM_EXTENSION_CLIENTS_URL_BASE'
 		]);
-		tokenValue = data.FLOTTFORM_TOKEN ?? '';
+		tokenValue = data.FLOTTFORM_TOKEN ?? defaultTokenValue;
 		flottformSignalingServerUrlBase =
-			data.FLOTTFORM_SIGNALING_SERVER_URL_BASE ?? 'https://100.85.250.183:5177/flottform';
+			data.FLOTTFORM_SIGNALING_SERVER_URL_BASE ?? defaultSignalingServerUrlBase;
 		flottformExtensionClientsUrlBase =
-			data.FLOTTFORM_EXTENSION_CLIENTS_URL_BASE ?? 'https://demo.flottform.io/browser-extensions';
+			data.FLOTTFORM_EXTENSION_CLIENTS_URL_BASE ?? defaultExtensionClientUrlBase;
 	});
 </script>
 

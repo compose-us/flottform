@@ -7,9 +7,8 @@ export default defineConfig({
 		outDir: 'dist/content',
 		lib: {
 			entry: resolve(__dirname, 'src/index.ts'),
-			formats: ['iife'],
-			name: 'FlottForm',
-			fileName: () => 'content-script.js'
+			formats: ['es'],
+			fileName: () => 'flottform-bundle.js'
 		},
 		rollupOptions: {
 			// Ensure CSS is included in the bundle
@@ -21,7 +20,7 @@ export default defineConfig({
 		// Don't split CSS into separate files
 		cssCodeSplit: false,
 		// Ensure the bundle is meant for browsers
-		target: 'es2015',
+		target: 'modules',
 		// Generate sourcemaps for debugging
 		sourcemap: true,
 		// Minimize the output
