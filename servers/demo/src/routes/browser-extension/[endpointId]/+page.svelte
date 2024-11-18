@@ -1,66 +1,124 @@
 <script lang="ts">
-	import { FlottformTextInputClient } from '@flottform/forms';
+	import { FlottformFileInputClient, FlottformTextInputClient } from '@flottform/forms';
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
+	import FileInput from '$lib/components/FileInput.svelte';
 
 	let currentState = $state<
-		'init' | 'connected' | 'sending' | 'done' | 'error-user-denied' | 'error'
+		| 'init'
+		| 'connected'
+		| 'sending'
+		| 'done'
+		| 'error-user-denied'
+		| 'error'
+		| 'disconnected'
+		| 'webrtc:connection-impossible'
 	>('init');
-	let textInput: HTMLInputElement;
-	let sendTextToForm = $state<() => void>();
+	let sendToForm = $state<() => void>();
+	let inputField: HTMLInputElement | null = $state(null);
 	let textToSend = $state('');
+	let inputType = $state('');
 
 	onMount(async () => {
+		const hash = JSON.parse(decodeURIComponent($page.url.hash.slice(1)));
 		const options = {
 			endpointId: $page.params.endpointId,
-			flottformApi: decodeURIComponent($page.url.hash.slice(1))
+			flottformApi: hash.flottformApi,
+			token: hash.token,
+			type: hash.type
 		};
 		console.log({ options });
-		const flottformTextInputClient = new FlottformTextInputClient(options);
-		// Start the WebRTC connection process as soon as the page loads.
-		flottformTextInputClient.start();
 
-		// Listen to the events to update the UI appropriately
-		flottformTextInputClient.on('connected', () => {
-			currentState = 'connected';
-		});
-		flottformTextInputClient.on('sending', () => {
-			currentState = 'sending';
-		});
-		flottformTextInputClient.on('done', () => {
-			currentState = 'done';
-		});
-		flottformTextInputClient.on('error', () => {
-			currentState = 'error';
-		});
+		if (hash.type === 'file') {
+			inputType = 'file';
+			const flottformFileInputClient = new FlottformFileInputClient({
+				endpointId: options.endpointId,
+				fileInput: inputField!,
+				flottformApi: options.flottformApi
+			});
 
-		sendTextToForm = () => {
-			currentState = 'sending';
-			try {
-				flottformTextInputClient.sendText(textToSend);
-				console.log(textToSend);
-			} catch (err) {
+			flottformFileInputClient.start();
+
+			flottformFileInputClient.on('webrtc:connection-impossible', () => {
+				currentState = 'webrtc:connection-impossible';
+			});
+
+			flottformFileInputClient.on('connected', () => {
+				currentState = 'connected';
+			});
+			flottformFileInputClient.on('sending', () => {
+				currentState = 'sending';
+			});
+			flottformFileInputClient.on('progress', (p) => {
+				console.log('progress= ', p);
+			});
+			flottformFileInputClient.on('done', () => {
+				currentState = 'done';
+			});
+			flottformFileInputClient.on('disconnected', () => {
+				currentState = 'disconnected';
+			});
+			flottformFileInputClient.on('error', (e) => {
+				console.log('Error:', e);
 				currentState = 'error';
-				console.error('Error getting navigators current position', err);
-			}
-		};
+			});
+
+			sendToForm = flottformFileInputClient.sendFiles;
+		} else {
+			inputType = 'text';
+			const flottformTextInputClient = new FlottformTextInputClient(options);
+			// Start the WebRTC connection process as soon as the page loads.
+			flottformTextInputClient.start();
+
+			// Listen to the events to update the UI appropriately
+			flottformTextInputClient.on('connected', () => {
+				currentState = 'connected';
+			});
+			flottformTextInputClient.on('sending', () => {
+				currentState = 'sending';
+			});
+			flottformTextInputClient.on('done', () => {
+				currentState = 'done';
+			});
+			flottformTextInputClient.on('error', () => {
+				currentState = 'error';
+			});
+
+			sendToForm = () => {
+				currentState = 'sending';
+				try {
+					flottformTextInputClient.sendText(textToSend);
+					console.log(textToSend);
+				} catch (err) {
+					currentState = 'error';
+					console.error('Error getting navigators current position', err);
+				}
+			};
+		}
 	});
 </script>
 
 <div class="max-w-screen-xl mx-auto p-8 box-border grid grid-cols-1 gap-8">
-	<h1>Flottform Browser extension TEXT client</h1>
+	<h1>Flottform Browser extension client</h1>
 
-	<form action="" onsubmit={sendTextToForm}>
+	<form action="" onsubmit={sendToForm}>
 		<div class="flex flex-col gap-4">
-			<label for="flottform">Send your text</label>
-			<input
-				type="text"
-				name="flottform"
-				id="flottform"
-				bind:this={textInput}
-				bind:value={textToSend}
-				class=" rounded p-2 border-primary-blue border-2"
-			/>
+			{#if inputType === 'text'}
+				<label for="flottform">Send your text</label>
+				<input
+					type="text"
+					name="flottform"
+					id="flottform"
+					bind:this={inputField}
+					bind:value={textToSend}
+					class=" rounded p-2 border-primary-blue border-2"
+				/>
+			{:else if inputType === 'file'}
+				<label for="flottform">Send your file</label>
+				<FileInput id="flottform" name="flottform" bind:fileInput={inputField} />
+			{:else}
+				<p>Unsupported type for input field. Cannot send anything!</p>
+			{/if}
 			{#if currentState === 'sending'}
 				<div class="h-24 items-center">
 					<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" class="w-12 spinner-svg">
@@ -80,7 +138,7 @@
 							fill="none"
 						/>
 					</svg>
-					<p>Your text is successfully sent</p>
+					<p>Your {inputType} was sent successfully</p>
 				</div>
 			{:else if currentState === 'connected'}
 				<button

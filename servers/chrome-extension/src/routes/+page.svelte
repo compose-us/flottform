@@ -5,6 +5,7 @@
 		defaultSignalingServerUrlBase,
 		defaultExtensionClientUrlBase
 	} from '$lib/options';
+	import type * as Flottform from '@flottform/forms';
 
 	type TrackedInputFields = Array<{
 		id: string;
@@ -90,9 +91,10 @@
 				signalingServerUrlBase: string,
 				extensionClientUrlBase: string
 			) => {
-				const { FlottformTextInputHost, FlottformFileInputHost } = await import(
+				const fm: typeof Flottform = await import(
 					flottformModuleFile
 				);
+				const { FlottformTextInputHost, FlottformFileInputHost } = fm;
 
 				function handleFlottformEvent(event: string, data: any, id: string, currentTabId: number) {
 					// Get the latest updated version of the array inputFields instead of passing it as a parameter to `chrome.scripting.executeScript`!
@@ -172,7 +174,8 @@
 					//console.log(`****Flottform will work on TextInput with id=${textInputId}*****`);
 					const data = {
 						type: 'text',
-						apiToken
+						token: apiToken,
+						flottformApi: signalingServerUrlBase
 					};
 
 					// Instantiate the FlottformTextInputHost with the provided inputId
@@ -200,7 +203,8 @@
 
 					const data = {
 						type: 'file',
-						apiToken
+						flottformApi: signalingServerUrlBase,
+						token: apiToken
 					};
 
 					// Instantiate the FlottformFileInputHost with the provided inputId
@@ -216,7 +220,7 @@
 				}
 
 				function registerFlottformFileInputListeners(
-					flottformFileInputHost: any,
+					flottformFileInputHost: Flottform.FlottformFileInputHost,
 					fileInputId: string,
 					currentTabId: number
 				) {
@@ -250,7 +254,7 @@
 						handleFlottformEvent('error', { message: error.message }, fileInputId, currentTabId);
 					});
 
-					flottformFileInputHost.on('done', (message: string) => {
+					flottformFileInputHost.on('done', () => {
 						//console.log('****Inside "done" event*****');
 						handleFlottformEvent('done', undefined, fileInputId, currentTabId);
 						// TODO: HANDLE THE DONE PROCESS
