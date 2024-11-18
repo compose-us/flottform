@@ -91,9 +91,7 @@
 				signalingServerUrlBase: string,
 				extensionClientUrlBase: string
 			) => {
-				const fm: typeof Flottform = await import(
-					flottformModuleFile
-				);
+				const fm: typeof Flottform = await import(flottformModuleFile);
 				const { FlottformTextInputHost, FlottformFileInputHost } = fm;
 
 				function handleFlottformEvent(event: string, data: any, id: string, currentTabId: number) {
@@ -169,11 +167,15 @@
 					});
 				}
 
-				function startFlottformTextInputProcess(textInputId: string, currentTabId: number) {
+				function startFlottformTextInputProcess(
+					textInputId: string,
+					currentTabId: number,
+					inputFieldType: string
+				) {
 					// Query the doc with the ID: textInputId in order to find the input field where you'll paste the text.
 					//console.log(`****Flottform will work on TextInput with id=${textInputId}*****`);
 					const data = {
-						type: 'text',
+						type: inputFieldType,
 						token: apiToken,
 						flottformApi: signalingServerUrlBase
 					};
@@ -261,10 +263,10 @@
 					});
 				}
 
-				if (inputFieldType === 'file') {
-					startFlottformFileInputProcess(inputFieldId, tabId);
+				if (inputFieldType === 'text' || inputFieldType === 'password') {
+					startFlottformTextInputProcess(inputFieldId, tabId, inputFieldType);
 				} else {
-					startFlottformTextInputProcess(inputFieldId, tabId);
+					startFlottformFileInputProcess(inputFieldId, tabId);
 				}
 			}
 		});

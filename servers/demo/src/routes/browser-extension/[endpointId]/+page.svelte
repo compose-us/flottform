@@ -110,10 +110,10 @@
 
 	<form action="" onsubmit={sendToForm}>
 		<div class="flex flex-col gap-4">
-			{#if inputType === 'text'}
+			{#if inputType === 'text' || inputType === 'password'}
 				<label for="flottform">Send your text</label>
 				<input
-					type="text"
+					type={inputType}
 					name="flottform"
 					id="flottform"
 					bind:this={inputField}
