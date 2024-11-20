@@ -268,6 +268,19 @@
 				} else {
 					startFlottformFileInputProcess(inputFieldId, tabId);
 				}
+
+	const clearOutdatedTables = async () => {
+		// Wait for the current tab Id to be available!
+		const currentTabId = await getCurrentTabId();
+
+		chrome.scripting.executeScript({
+			target: { tabId: currentTabId! },
+			args: [currentTabId],
+			func: async (currentTabId) => {
+				// We have to find a way to add this listener only once & we have to handle single page applications since beforeunload doesn't work for those SPAs!
+				window.addEventListener('beforeunload', () => {
+					chrome.storage.local.set({ [`inputFields-${currentTabId}`]: [] });
+				});
 			}
 		});
 	};
@@ -313,6 +326,8 @@
 				inputFields = result[`inputFields-${currentTabId}`];
 			}
 		});
+
+		clearOutdatedTables();
 	});
 </script>
 
