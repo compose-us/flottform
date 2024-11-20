@@ -1,11 +1,36 @@
-var _t = Object.defineProperty;
-var zt = (o, n, t) => n in o ? _t(o, n, { enumerable: !0, configurable: !0, writable: !0, value: t }) : o[n] = t;
-var h = (o, n, t) => zt(o, typeof n != "symbol" ? n + "" : n, t);
-var Ht = function() {
+var Ht = Object.defineProperty;
+var xt = (o, e, t) => e in o ? Ht(o, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : o[e] = t;
+var h = (o, e, t) => xt(o, typeof e != "symbol" ? e + "" : e, t);
+const D = class D {
+  constructor() {
+    h(this, "activeConnections");
+    this.activeConnections = /* @__PURE__ */ new Map();
+  }
+  static getInstance() {
+    return D.instance || (D.instance = new D()), D.instance;
+  }
+  addConnection(e, t) {
+    this.activeConnections.set(e, t);
+  }
+  getConnection(e) {
+    return this.activeConnections.get(e);
+  }
+  closeAllConnections() {
+    this.activeConnections.forEach((e) => {
+      e.close();
+    });
+  }
+  removeConnection(e) {
+    this.activeConnections.delete(e);
+  }
+};
+h(D, "instance");
+let gt = D;
+var Ot = function() {
   return typeof Promise == "function" && Promise.prototype && Promise.prototype.then;
-}, Ct = {}, T = {};
-let ct;
-const xt = [
+}, yt = {}, T = {};
+let lt;
+const qt = [
   0,
   // Not used
   26,
@@ -49,35 +74,35 @@ const xt = [
   3532,
   3706
 ];
-T.getSymbolSize = function(n) {
-  if (!n) throw new Error('"version" cannot be null or undefined');
-  if (n < 1 || n > 40) throw new Error('"version" should be in range from 1 to 40');
-  return n * 4 + 17;
+T.getSymbolSize = function(e) {
+  if (!e) throw new Error('"version" cannot be null or undefined');
+  if (e < 1 || e > 40) throw new Error('"version" should be in range from 1 to 40');
+  return e * 4 + 17;
 };
-T.getSymbolTotalCodewords = function(n) {
-  return xt[n];
+T.getSymbolTotalCodewords = function(e) {
+  return qt[e];
 };
 T.getBCHDigit = function(o) {
-  let n = 0;
+  let e = 0;
   for (; o !== 0; )
-    n++, o >>>= 1;
-  return n;
+    e++, o >>>= 1;
+  return e;
 };
-T.setToSJISFunction = function(n) {
-  if (typeof n != "function")
+T.setToSJISFunction = function(e) {
+  if (typeof e != "function")
     throw new Error('"toSJISFunc" is not a valid function.');
-  ct = n;
+  lt = e;
 };
 T.isKanjiModeEnabled = function() {
-  return typeof ct < "u";
+  return typeof lt < "u";
 };
-T.toSJIS = function(n) {
-  return ct(n);
+T.toSJIS = function(e) {
+  return lt(e);
 };
-var V = {};
+var j = {};
 (function(o) {
   o.L = { bit: 1 }, o.M = { bit: 0 }, o.Q = { bit: 3 }, o.H = { bit: 2 };
-  function n(t) {
+  function e(t) {
     if (typeof t != "string")
       throw new Error("Param is not a string");
     switch (t.toLowerCase()) {
@@ -97,68 +122,68 @@ var V = {};
         throw new Error("Unknown EC Level: " + t);
     }
   }
-  o.isValid = function(e) {
-    return e && typeof e.bit < "u" && e.bit >= 0 && e.bit < 4;
-  }, o.from = function(e, i) {
-    if (o.isValid(e))
-      return e;
+  o.isValid = function(n) {
+    return n && typeof n.bit < "u" && n.bit >= 0 && n.bit < 4;
+  }, o.from = function(n, i) {
+    if (o.isValid(n))
+      return n;
     try {
-      return n(e);
+      return e(n);
     } catch {
       return i;
     }
   };
-})(V);
-function wt() {
+})(j);
+function bt() {
   this.buffer = [], this.length = 0;
 }
-wt.prototype = {
+bt.prototype = {
   get: function(o) {
-    const n = Math.floor(o / 8);
-    return (this.buffer[n] >>> 7 - o % 8 & 1) === 1;
+    const e = Math.floor(o / 8);
+    return (this.buffer[e] >>> 7 - o % 8 & 1) === 1;
   },
-  put: function(o, n) {
-    for (let t = 0; t < n; t++)
-      this.putBit((o >>> n - t - 1 & 1) === 1);
+  put: function(o, e) {
+    for (let t = 0; t < e; t++)
+      this.putBit((o >>> e - t - 1 & 1) === 1);
   },
   getLengthInBits: function() {
     return this.length;
   },
   putBit: function(o) {
-    const n = Math.floor(this.length / 8);
-    this.buffer.length <= n && this.buffer.push(0), o && (this.buffer[n] |= 128 >>> this.length % 8), this.length++;
+    const e = Math.floor(this.length / 8);
+    this.buffer.length <= e && this.buffer.push(0), o && (this.buffer[e] |= 128 >>> this.length % 8), this.length++;
   }
 };
-var Ot = wt;
-function H(o) {
+var Jt = bt;
+function x(o) {
   if (!o || o < 1)
     throw new Error("BitMatrix size must be defined and greater than 0");
   this.size = o, this.data = new Uint8Array(o * o), this.reservedBit = new Uint8Array(o * o);
 }
-H.prototype.set = function(o, n, t, e) {
-  const i = o * this.size + n;
-  this.data[i] = t, e && (this.reservedBit[i] = !0);
+x.prototype.set = function(o, e, t, n) {
+  const i = o * this.size + e;
+  this.data[i] = t, n && (this.reservedBit[i] = !0);
 };
-H.prototype.get = function(o, n) {
-  return this.data[o * this.size + n];
+x.prototype.get = function(o, e) {
+  return this.data[o * this.size + e];
 };
-H.prototype.xor = function(o, n, t) {
-  this.data[o * this.size + n] ^= t;
+x.prototype.xor = function(o, e, t) {
+  this.data[o * this.size + e] ^= t;
 };
-H.prototype.isReserved = function(o, n) {
-  return this.reservedBit[o * this.size + n];
+x.prototype.isReserved = function(o, e) {
+  return this.reservedBit[o * this.size + e];
 };
-var qt = H, yt = {};
+var Kt = x, St = {};
 (function(o) {
-  const n = T.getSymbolSize;
-  o.getRowColCoords = function(e) {
-    if (e === 1) return [];
-    const i = Math.floor(e / 7) + 2, r = n(e), s = r === 145 ? 26 : Math.ceil((r - 13) / (2 * i - 2)) * 2, c = [r - 7];
+  const e = T.getSymbolSize;
+  o.getRowColCoords = function(n) {
+    if (n === 1) return [];
+    const i = Math.floor(n / 7) + 2, r = e(n), s = r === 145 ? 26 : Math.ceil((r - 13) / (2 * i - 2)) * 2, c = [r - 7];
     for (let a = 1; a < i - 1; a++)
       c[a] = c[a - 1] - s;
     return c.push(6), c.reverse();
-  }, o.getPositions = function(e) {
-    const i = [], r = o.getRowColCoords(e), s = r.length;
+  }, o.getPositions = function(n) {
+    const i = [], r = o.getRowColCoords(n), s = r.length;
     for (let c = 0; c < s; c++)
       for (let a = 0; a < s; a++)
         c === 0 && a === 0 || // top-left
@@ -166,21 +191,21 @@ var qt = H, yt = {};
         c === s - 1 && a === 0 || i.push([r[c], r[a]]);
     return i;
   };
-})(yt);
-var bt = {};
-const Jt = T.getSymbolSize, dt = 7;
-bt.getPositions = function(n) {
-  const t = Jt(n);
+})(St);
+var Et = {};
+const Gt = T.getSymbolSize, pt = 7;
+Et.getPositions = function(e) {
+  const t = Gt(e);
   return [
     // top-left
     [0, 0],
     // top-right
-    [t - dt, 0],
+    [t - pt, 0],
     // bottom-left
-    [0, t - dt]
+    [0, t - pt]
   ];
 };
-var St = {};
+var It = {};
 (function(o) {
   o.Patterns = {
     PATTERN000: 0,
@@ -192,7 +217,7 @@ var St = {};
     PATTERN110: 6,
     PATTERN111: 7
   };
-  const n = {
+  const e = {
     N1: 3,
     N2: 3,
     N3: 40,
@@ -209,9 +234,9 @@ var St = {};
       c = a = 0, l = u = null;
       for (let f = 0; f < r; f++) {
         let d = i.get(C, f);
-        d === l ? c++ : (c >= 5 && (s += n.N1 + (c - 5)), l = d, c = 1), d = i.get(f, C), d === u ? a++ : (a >= 5 && (s += n.N1 + (a - 5)), u = d, a = 1);
+        d === l ? c++ : (c >= 5 && (s += e.N1 + (c - 5)), l = d, c = 1), d = i.get(f, C), d === u ? a++ : (a >= 5 && (s += e.N1 + (a - 5)), u = d, a = 1);
       }
-      c >= 5 && (s += n.N1 + (c - 5)), a >= 5 && (s += n.N1 + (a - 5));
+      c >= 5 && (s += e.N1 + (c - 5)), a >= 5 && (s += e.N1 + (a - 5));
     }
     return s;
   }, o.getPenaltyN2 = function(i) {
@@ -222,7 +247,7 @@ var St = {};
         const l = i.get(c, a) + i.get(c, a + 1) + i.get(c + 1, a) + i.get(c + 1, a + 1);
         (l === 4 || l === 0) && s++;
       }
-    return s * n.N2;
+    return s * e.N2;
   }, o.getPenaltyN3 = function(i) {
     const r = i.size;
     let s = 0, c = 0, a = 0;
@@ -231,15 +256,15 @@ var St = {};
       for (let u = 0; u < r; u++)
         c = c << 1 & 2047 | i.get(l, u), u >= 10 && (c === 1488 || c === 93) && s++, a = a << 1 & 2047 | i.get(u, l), u >= 10 && (a === 1488 || a === 93) && s++;
     }
-    return s * n.N3;
+    return s * e.N3;
   }, o.getPenaltyN4 = function(i) {
     let r = 0;
     const s = i.data.length;
     for (let a = 0; a < s; a++) r += i.data[a];
-    return Math.abs(Math.ceil(r * 100 / s / 5) - 10) * n.N4;
+    return Math.abs(Math.ceil(r * 100 / s / 5) - 10) * e.N4;
   };
-  function t(e, i, r) {
-    switch (e) {
+  function t(n, i, r) {
+    switch (n) {
       case o.Patterns.PATTERN000:
         return (i + r) % 2 === 0;
       case o.Patterns.PATTERN001:
@@ -257,7 +282,7 @@ var St = {};
       case o.Patterns.PATTERN111:
         return (i * r % 3 + (i + r) % 2) % 2 === 0;
       default:
-        throw new Error("bad maskPattern:" + e);
+        throw new Error("bad maskPattern:" + n);
     }
   }
   o.applyMask = function(i, r) {
@@ -275,9 +300,9 @@ var St = {};
     }
     return c;
   };
-})(St);
-var j = {};
-const N = V, q = [
+})(It);
+var Y = {};
+const M = j, J = [
   // L  M  Q  H
   1,
   1,
@@ -439,7 +464,7 @@ const N = V, q = [
   49,
   68,
   81
-], J = [
+], K = [
   // L  M  Q  H
   7,
   10,
@@ -602,125 +627,125 @@ const N = V, q = [
   2040,
   2430
 ];
-j.getBlocksCount = function(n, t) {
+Y.getBlocksCount = function(e, t) {
   switch (t) {
-    case N.L:
-      return q[(n - 1) * 4 + 0];
-    case N.M:
-      return q[(n - 1) * 4 + 1];
-    case N.Q:
-      return q[(n - 1) * 4 + 2];
-    case N.H:
-      return q[(n - 1) * 4 + 3];
+    case M.L:
+      return J[(e - 1) * 4 + 0];
+    case M.M:
+      return J[(e - 1) * 4 + 1];
+    case M.Q:
+      return J[(e - 1) * 4 + 2];
+    case M.H:
+      return J[(e - 1) * 4 + 3];
     default:
       return;
   }
 };
-j.getTotalCodewordsCount = function(n, t) {
+Y.getTotalCodewordsCount = function(e, t) {
   switch (t) {
-    case N.L:
-      return J[(n - 1) * 4 + 0];
-    case N.M:
-      return J[(n - 1) * 4 + 1];
-    case N.Q:
-      return J[(n - 1) * 4 + 2];
-    case N.H:
-      return J[(n - 1) * 4 + 3];
+    case M.L:
+      return K[(e - 1) * 4 + 0];
+    case M.M:
+      return K[(e - 1) * 4 + 1];
+    case M.Q:
+      return K[(e - 1) * 4 + 2];
+    case M.H:
+      return K[(e - 1) * 4 + 3];
     default:
       return;
   }
 };
-var Et = {}, Y = {};
-const _ = new Uint8Array(512), K = new Uint8Array(256);
+var Ft = {}, Q = {};
+const _ = new Uint8Array(512), G = new Uint8Array(256);
 (function() {
-  let n = 1;
+  let e = 1;
   for (let t = 0; t < 255; t++)
-    _[t] = n, K[n] = t, n <<= 1, n & 256 && (n ^= 285);
+    _[t] = e, G[e] = t, e <<= 1, e & 256 && (e ^= 285);
   for (let t = 255; t < 512; t++)
     _[t] = _[t - 255];
 })();
-Y.log = function(n) {
-  if (n < 1) throw new Error("log(" + n + ")");
-  return K[n];
+Q.log = function(e) {
+  if (e < 1) throw new Error("log(" + e + ")");
+  return G[e];
 };
-Y.exp = function(n) {
-  return _[n];
+Q.exp = function(e) {
+  return _[e];
 };
-Y.mul = function(n, t) {
-  return n === 0 || t === 0 ? 0 : _[K[n] + K[t]];
+Q.mul = function(e, t) {
+  return e === 0 || t === 0 ? 0 : _[G[e] + G[t]];
 };
 (function(o) {
-  const n = Y;
-  o.mul = function(e, i) {
-    const r = new Uint8Array(e.length + i.length - 1);
-    for (let s = 0; s < e.length; s++)
+  const e = Q;
+  o.mul = function(n, i) {
+    const r = new Uint8Array(n.length + i.length - 1);
+    for (let s = 0; s < n.length; s++)
       for (let c = 0; c < i.length; c++)
-        r[s + c] ^= n.mul(e[s], i[c]);
+        r[s + c] ^= e.mul(n[s], i[c]);
     return r;
-  }, o.mod = function(e, i) {
-    let r = new Uint8Array(e);
+  }, o.mod = function(n, i) {
+    let r = new Uint8Array(n);
     for (; r.length - i.length >= 0; ) {
       const s = r[0];
       for (let a = 0; a < i.length; a++)
-        r[a] ^= n.mul(i[a], s);
+        r[a] ^= e.mul(i[a], s);
       let c = 0;
       for (; c < r.length && r[c] === 0; ) c++;
       r = r.slice(c);
     }
     return r;
-  }, o.generateECPolynomial = function(e) {
+  }, o.generateECPolynomial = function(n) {
     let i = new Uint8Array([1]);
-    for (let r = 0; r < e; r++)
-      i = o.mul(i, new Uint8Array([1, n.exp(r)]));
+    for (let r = 0; r < n; r++)
+      i = o.mul(i, new Uint8Array([1, e.exp(r)]));
     return i;
   };
-})(Et);
-const It = Et;
-function lt(o) {
+})(Ft);
+const Tt = Ft;
+function ht(o) {
   this.genPoly = void 0, this.degree = o, this.degree && this.initialize(this.degree);
 }
-lt.prototype.initialize = function(n) {
-  this.degree = n, this.genPoly = It.generateECPolynomial(this.degree);
+ht.prototype.initialize = function(e) {
+  this.degree = e, this.genPoly = Tt.generateECPolynomial(this.degree);
 };
-lt.prototype.encode = function(n) {
+ht.prototype.encode = function(e) {
   if (!this.genPoly)
     throw new Error("Encoder not initialized");
-  const t = new Uint8Array(n.length + this.degree);
-  t.set(n);
-  const e = It.mod(t, this.genPoly), i = this.degree - e.length;
+  const t = new Uint8Array(e.length + this.degree);
+  t.set(e);
+  const n = Tt.mod(t, this.genPoly), i = this.degree - n.length;
   if (i > 0) {
     const r = new Uint8Array(this.degree);
-    return r.set(e, i), r;
+    return r.set(n, i), r;
   }
-  return e;
+  return n;
 };
-var Kt = lt, Ft = {}, v = {}, ht = {};
-ht.isValid = function(n) {
-  return !isNaN(n) && n >= 1 && n <= 40;
+var Vt = ht, At = {}, N = {}, ut = {};
+ut.isValid = function(e) {
+  return !isNaN(e) && e >= 1 && e <= 40;
 };
 var B = {};
-const Tt = "[0-9]+", Gt = "[A-Z $%*+\\-./:]+";
-let z = "(?:[u3000-u303F]|[u3040-u309F]|[u30A0-u30FF]|[uFF00-uFFEF]|[u4E00-u9FAF]|[u2605-u2606]|[u2190-u2195]|u203B|[u2010u2015u2018u2019u2025u2026u201Cu201Du2225u2260]|[u0391-u0451]|[u00A7u00A8u00B1u00B4u00D7u00F7])+";
-z = z.replace(/u/g, "\\u");
-const Vt = "(?:(?![A-Z0-9 $%*+\\-./:]|" + z + `)(?:.|[\r
+const Pt = "[0-9]+", jt = "[A-Z $%*+\\-./:]+";
+let H = "(?:[u3000-u303F]|[u3040-u309F]|[u30A0-u30FF]|[uFF00-uFFEF]|[u4E00-u9FAF]|[u2605-u2606]|[u2190-u2195]|u203B|[u2010u2015u2018u2019u2025u2026u201Cu201Du2225u2260]|[u0391-u0451]|[u00A7u00A8u00B1u00B4u00D7u00F7])+";
+H = H.replace(/u/g, "\\u");
+const Yt = "(?:(?![A-Z0-9 $%*+\\-./:]|" + H + `)(?:.|[\r
 ]))+`;
-B.KANJI = new RegExp(z, "g");
+B.KANJI = new RegExp(H, "g");
 B.BYTE_KANJI = new RegExp("[^A-Z0-9 $%*+\\-./:]+", "g");
-B.BYTE = new RegExp(Vt, "g");
-B.NUMERIC = new RegExp(Tt, "g");
-B.ALPHANUMERIC = new RegExp(Gt, "g");
-const jt = new RegExp("^" + z + "$"), Yt = new RegExp("^" + Tt + "$"), Qt = new RegExp("^[A-Z0-9 $%*+\\-./:]+$");
-B.testKanji = function(n) {
-  return jt.test(n);
+B.BYTE = new RegExp(Yt, "g");
+B.NUMERIC = new RegExp(Pt, "g");
+B.ALPHANUMERIC = new RegExp(jt, "g");
+const Qt = new RegExp("^" + H + "$"), Wt = new RegExp("^" + Pt + "$"), Zt = new RegExp("^[A-Z0-9 $%*+\\-./:]+$");
+B.testKanji = function(e) {
+  return Qt.test(e);
 };
-B.testNumeric = function(n) {
-  return Yt.test(n);
+B.testNumeric = function(e) {
+  return Wt.test(e);
 };
-B.testAlphanumeric = function(n) {
-  return Qt.test(n);
+B.testAlphanumeric = function(e) {
+  return Zt.test(e);
 };
 (function(o) {
-  const n = ht, t = B;
+  const e = ut, t = B;
   o.NUMERIC = {
     id: "Numeric",
     bit: 1,
@@ -741,7 +766,7 @@ B.testAlphanumeric = function(n) {
     bit: -1
   }, o.getCharCountIndicator = function(r, s) {
     if (!r.ccBits) throw new Error("Invalid mode: " + r);
-    if (!n.isValid(s))
+    if (!e.isValid(s))
       throw new Error("Invalid version: " + s);
     return s >= 1 && s < 10 ? r.ccBits[0] : s < 27 ? r.ccBits[1] : r.ccBits[2];
   }, o.getBestModeForData = function(r) {
@@ -752,7 +777,7 @@ B.testAlphanumeric = function(n) {
   }, o.isValid = function(r) {
     return r && r.bit && r.ccBits;
   };
-  function e(i) {
+  function n(i) {
     if (typeof i != "string")
       throw new Error("Param is not a string");
     switch (i.toLowerCase()) {
@@ -772,14 +797,14 @@ B.testAlphanumeric = function(n) {
     if (o.isValid(r))
       return r;
     try {
-      return e(r);
+      return n(r);
     } catch {
       return s;
     }
   };
-})(v);
+})(N);
 (function(o) {
-  const n = T, t = j, e = V, i = v, r = ht, s = 7973, c = n.getBCHDigit(s);
+  const e = T, t = Y, n = j, i = N, r = ut, s = 7973, c = e.getBCHDigit(s);
   function a(f, d, y) {
     for (let w = 1; w <= 40; w++)
       if (d <= o.getCapacity(w, y, f))
@@ -806,7 +831,7 @@ B.testAlphanumeric = function(n) {
     if (!r.isValid(d))
       throw new Error("Invalid QR Code version");
     typeof w > "u" && (w = i.BYTE);
-    const I = n.getSymbolTotalCodewords(d), p = t.getTotalCodewordsCount(d, y), b = (I - p) * 8;
+    const I = e.getSymbolTotalCodewords(d), p = t.getTotalCodewordsCount(d, y), b = (I - p) * 8;
     if (w === i.MIXED) return b;
     const m = b - l(w, d);
     switch (w) {
@@ -822,7 +847,7 @@ B.testAlphanumeric = function(n) {
     }
   }, o.getBestVersionForData = function(d, y) {
     let w;
-    const I = e.from(y, e.M);
+    const I = n.from(y, n.M);
     if (Array.isArray(d)) {
       if (d.length > 1)
         return C(d, I);
@@ -836,43 +861,43 @@ B.testAlphanumeric = function(n) {
     if (!r.isValid(d) || d < 7)
       throw new Error("Invalid QR Code version");
     let y = d << 12;
-    for (; n.getBCHDigit(y) - c >= 0; )
-      y ^= s << n.getBCHDigit(y) - c;
+    for (; e.getBCHDigit(y) - c >= 0; )
+      y ^= s << e.getBCHDigit(y) - c;
     return d << 12 | y;
   };
-})(Ft);
-var At = {};
-const ot = T, Pt = 1335, Wt = 21522, gt = ot.getBCHDigit(Pt);
-At.getEncodedBits = function(n, t) {
-  const e = n.bit << 3 | t;
-  let i = e << 10;
-  for (; ot.getBCHDigit(i) - gt >= 0; )
-    i ^= Pt << ot.getBCHDigit(i) - gt;
-  return (e << 10 | i) ^ Wt;
-};
+})(At);
 var Bt = {};
-const Zt = v;
-function D(o) {
-  this.mode = Zt.NUMERIC, this.data = o.toString();
-}
-D.getBitsLength = function(n) {
-  return 10 * Math.floor(n / 3) + (n % 3 ? n % 3 * 3 + 1 : 0);
+const it = T, Lt = 1335, Xt = 21522, mt = it.getBCHDigit(Lt);
+Bt.getEncodedBits = function(e, t) {
+  const n = e.bit << 3 | t;
+  let i = n << 10;
+  for (; it.getBCHDigit(i) - mt >= 0; )
+    i ^= Lt << it.getBCHDigit(i) - mt;
+  return (n << 10 | i) ^ Xt;
 };
-D.prototype.getLength = function() {
+var vt = {};
+const te = N;
+function k(o) {
+  this.mode = te.NUMERIC, this.data = o.toString();
+}
+k.getBitsLength = function(e) {
+  return 10 * Math.floor(e / 3) + (e % 3 ? e % 3 * 3 + 1 : 0);
+};
+k.prototype.getLength = function() {
   return this.data.length;
 };
-D.prototype.getBitsLength = function() {
-  return D.getBitsLength(this.data.length);
+k.prototype.getBitsLength = function() {
+  return k.getBitsLength(this.data.length);
 };
-D.prototype.write = function(n) {
-  let t, e, i;
+k.prototype.write = function(e) {
+  let t, n, i;
   for (t = 0; t + 3 <= this.data.length; t += 3)
-    e = this.data.substr(t, 3), i = parseInt(e, 10), n.put(i, 10);
+    n = this.data.substr(t, 3), i = parseInt(n, 10), e.put(i, 10);
   const r = this.data.length - t;
-  r > 0 && (e = this.data.substr(t), i = parseInt(e, 10), n.put(i, r * 3 + 1));
+  r > 0 && (n = this.data.substr(t), i = parseInt(n, 10), e.put(i, r * 3 + 1));
 };
-var Xt = D;
-const te = v, Z = [
+var ee = k;
+const ne = N, X = [
   "0",
   "1",
   "2",
@@ -919,33 +944,11 @@ const te = v, Z = [
   "/",
   ":"
 ];
-function k(o) {
-  this.mode = te.ALPHANUMERIC, this.data = o;
-}
-k.getBitsLength = function(n) {
-  return 11 * Math.floor(n / 2) + 6 * (n % 2);
-};
-k.prototype.getLength = function() {
-  return this.data.length;
-};
-k.prototype.getBitsLength = function() {
-  return k.getBitsLength(this.data.length);
-};
-k.prototype.write = function(n) {
-  let t;
-  for (t = 0; t + 2 <= this.data.length; t += 2) {
-    let e = Z.indexOf(this.data[t]) * 45;
-    e += Z.indexOf(this.data[t + 1]), n.put(e, 11);
-  }
-  this.data.length % 2 && n.put(Z.indexOf(this.data[t]), 6);
-};
-var ee = k;
-const ne = v;
 function R(o) {
-  this.mode = ne.BYTE, typeof o == "string" ? this.data = new TextEncoder().encode(o) : this.data = new Uint8Array(o);
+  this.mode = ne.ALPHANUMERIC, this.data = o;
 }
-R.getBitsLength = function(n) {
-  return n * 8;
+R.getBitsLength = function(e) {
+  return 11 * Math.floor(e / 2) + 6 * (e % 2);
 };
 R.prototype.getLength = function() {
   return this.data.length;
@@ -953,17 +956,21 @@ R.prototype.getLength = function() {
 R.prototype.getBitsLength = function() {
   return R.getBitsLength(this.data.length);
 };
-R.prototype.write = function(o) {
-  for (let n = 0, t = this.data.length; n < t; n++)
-    o.put(this.data[n], 8);
+R.prototype.write = function(e) {
+  let t;
+  for (t = 0; t + 2 <= this.data.length; t += 2) {
+    let n = X.indexOf(this.data[t]) * 45;
+    n += X.indexOf(this.data[t + 1]), e.put(n, 11);
+  }
+  this.data.length % 2 && e.put(X.indexOf(this.data[t]), 6);
 };
 var oe = R;
-const ie = v, re = T;
+const ie = N;
 function U(o) {
-  this.mode = ie.KANJI, this.data = o;
+  this.mode = ie.BYTE, typeof o == "string" ? this.data = new TextEncoder().encode(o) : this.data = new Uint8Array(o);
 }
-U.getBitsLength = function(n) {
-  return n * 13;
+U.getBitsLength = function(e) {
+  return e * 8;
 };
 U.prototype.getLength = function() {
   return this.data.length;
@@ -972,48 +979,66 @@ U.prototype.getBitsLength = function() {
   return U.getBitsLength(this.data.length);
 };
 U.prototype.write = function(o) {
-  let n;
-  for (n = 0; n < this.data.length; n++) {
-    let t = re.toSJIS(this.data[n]);
+  for (let e = 0, t = this.data.length; e < t; e++)
+    o.put(this.data[e], 8);
+};
+var re = U;
+const se = N, ae = T;
+function $(o) {
+  this.mode = se.KANJI, this.data = o;
+}
+$.getBitsLength = function(e) {
+  return e * 13;
+};
+$.prototype.getLength = function() {
+  return this.data.length;
+};
+$.prototype.getBitsLength = function() {
+  return $.getBitsLength(this.data.length);
+};
+$.prototype.write = function(o) {
+  let e;
+  for (e = 0; e < this.data.length; e++) {
+    let t = ae.toSJIS(this.data[e]);
     if (t >= 33088 && t <= 40956)
       t -= 33088;
     else if (t >= 57408 && t <= 60351)
       t -= 49472;
     else
       throw new Error(
-        "Invalid SJIS character: " + this.data[n] + `
+        "Invalid SJIS character: " + this.data[e] + `
 Make sure your charset is UTF-8`
       );
     t = (t >>> 8 & 255) * 192 + (t & 255), o.put(t, 13);
   }
 };
-var se = U, Lt = { exports: {} };
+var ce = $, Mt = { exports: {} };
 (function(o) {
-  var n = {
-    single_source_shortest_paths: function(t, e, i) {
+  var e = {
+    single_source_shortest_paths: function(t, n, i) {
       var r = {}, s = {};
-      s[e] = 0;
-      var c = n.PriorityQueue.make();
-      c.push(e, 0);
+      s[n] = 0;
+      var c = e.PriorityQueue.make();
+      c.push(n, 0);
       for (var a, l, u, C, f, d, y, w, I; !c.empty(); ) {
         a = c.pop(), l = a.value, C = a.cost, f = t[l] || {};
         for (u in f)
           f.hasOwnProperty(u) && (d = f[u], y = C + d, w = s[u], I = typeof s[u] > "u", (I || w > y) && (s[u] = y, c.push(u, y), r[u] = l));
       }
       if (typeof i < "u" && typeof s[i] > "u") {
-        var p = ["Could not find a path from ", e, " to ", i, "."].join("");
+        var p = ["Could not find a path from ", n, " to ", i, "."].join("");
         throw new Error(p);
       }
       return r;
     },
-    extract_shortest_path_from_predecessor_list: function(t, e) {
-      for (var i = [], r = e; r; )
+    extract_shortest_path_from_predecessor_list: function(t, n) {
+      for (var i = [], r = n; r; )
         i.push(r), t[r], r = t[r];
       return i.reverse(), i;
     },
-    find_path: function(t, e, i) {
-      var r = n.single_source_shortest_paths(t, e, i);
-      return n.extract_shortest_path_from_predecessor_list(
+    find_path: function(t, n, i) {
+      var r = e.single_source_shortest_paths(t, n, i);
+      return e.extract_shortest_path_from_predecessor_list(
         r,
         i
       );
@@ -1023,21 +1048,21 @@ var se = U, Lt = { exports: {} };
      */
     PriorityQueue: {
       make: function(t) {
-        var e = n.PriorityQueue, i = {}, r;
+        var n = e.PriorityQueue, i = {}, r;
         t = t || {};
-        for (r in e)
-          e.hasOwnProperty(r) && (i[r] = e[r]);
-        return i.queue = [], i.sorter = t.sorter || e.default_sorter, i;
+        for (r in n)
+          n.hasOwnProperty(r) && (i[r] = n[r]);
+        return i.queue = [], i.sorter = t.sorter || n.default_sorter, i;
       },
-      default_sorter: function(t, e) {
-        return t.cost - e.cost;
+      default_sorter: function(t, n) {
+        return t.cost - n.cost;
       },
       /**
        * Add a new item to the queue and ensure the highest priority element
        * is at the front of the queue.
        */
-      push: function(t, e) {
-        var i = { value: t, cost: e };
+      push: function(t, n) {
+        var i = { value: t, cost: n };
         this.queue.push(i), this.queue.sort(this.sorter);
       },
       /**
@@ -1051,11 +1076,11 @@ var se = U, Lt = { exports: {} };
       }
     }
   };
-  o.exports = n;
-})(Lt);
-var ae = Lt.exports;
+  o.exports = e;
+})(Mt);
+var le = Mt.exports;
 (function(o) {
-  const n = v, t = Xt, e = ee, i = oe, r = se, s = B, c = T, a = ae;
+  const e = N, t = ee, n = oe, i = re, r = ce, s = B, c = T, a = le;
   function l(p) {
     return unescape(encodeURIComponent(p)).length;
   }
@@ -1072,9 +1097,9 @@ var ae = Lt.exports;
     return g;
   }
   function C(p) {
-    const b = u(s.NUMERIC, n.NUMERIC, p), m = u(s.ALPHANUMERIC, n.ALPHANUMERIC, p);
+    const b = u(s.NUMERIC, e.NUMERIC, p), m = u(s.ALPHANUMERIC, e.ALPHANUMERIC, p);
     let g, S;
-    return c.isKanjiModeEnabled() ? (g = u(s.BYTE, n.BYTE, p), S = u(s.KANJI, n.KANJI, p)) : (g = u(s.BYTE_KANJI, n.BYTE, p), S = []), b.concat(m, g, S).sort(function(F, A) {
+    return c.isKanjiModeEnabled() ? (g = u(s.BYTE, e.BYTE, p), S = u(s.KANJI, e.KANJI, p)) : (g = u(s.BYTE_KANJI, e.BYTE, p), S = []), b.concat(m, g, S).sort(function(F, A) {
       return F.index - A.index;
     }).map(function(F) {
       return {
@@ -1086,13 +1111,13 @@ var ae = Lt.exports;
   }
   function f(p, b) {
     switch (b) {
-      case n.NUMERIC:
+      case e.NUMERIC:
         return t.getBitsLength(p);
-      case n.ALPHANUMERIC:
-        return e.getBitsLength(p);
-      case n.KANJI:
+      case e.ALPHANUMERIC:
+        return n.getBitsLength(p);
+      case e.KANJI:
         return r.getBitsLength(p);
-      case n.BYTE:
+      case e.BYTE:
         return i.getBitsLength(p);
     }
   }
@@ -1107,28 +1132,28 @@ var ae = Lt.exports;
     for (let m = 0; m < p.length; m++) {
       const g = p[m];
       switch (g.mode) {
-        case n.NUMERIC:
+        case e.NUMERIC:
           b.push([
             g,
-            { data: g.data, mode: n.ALPHANUMERIC, length: g.length },
-            { data: g.data, mode: n.BYTE, length: g.length }
+            { data: g.data, mode: e.ALPHANUMERIC, length: g.length },
+            { data: g.data, mode: e.BYTE, length: g.length }
           ]);
           break;
-        case n.ALPHANUMERIC:
+        case e.ALPHANUMERIC:
           b.push([
             g,
-            { data: g.data, mode: n.BYTE, length: g.length }
+            { data: g.data, mode: e.BYTE, length: g.length }
           ]);
           break;
-        case n.KANJI:
+        case e.KANJI:
           b.push([
             g,
-            { data: g.data, mode: n.BYTE, length: l(g.data) }
+            { data: g.data, mode: e.BYTE, length: l(g.data) }
           ]);
           break;
-        case n.BYTE:
+        case e.BYTE:
           b.push([
-            { data: g.data, mode: n.BYTE, length: l(g.data) }
+            { data: g.data, mode: e.BYTE, length: l(g.data) }
           ]);
       }
     }
@@ -1139,12 +1164,12 @@ var ae = Lt.exports;
     let S = ["start"];
     for (let E = 0; E < p.length; E++) {
       const F = p[E], A = [];
-      for (let M = 0; M < F.length; M++) {
-        const P = F[M], $ = "" + E + M;
-        A.push($), m[$] = { node: P, lastCount: 0 }, g[$] = {};
-        for (let W = 0; W < S.length; W++) {
-          const L = S[W];
-          m[L] && m[L].node.mode === P.mode ? (g[L][$] = f(m[L].lastCount + P.length, P.mode) - f(m[L].lastCount, P.mode), m[L].lastCount += P.length) : (m[L] && (m[L].lastCount = P.length), g[L][$] = f(P.length, P.mode) + 4 + n.getCharCountIndicator(P.mode, b));
+      for (let v = 0; v < F.length; v++) {
+        const P = F[v], z = "" + E + v;
+        A.push(z), m[z] = { node: P, lastCount: 0 }, g[z] = {};
+        for (let Z = 0; Z < S.length; Z++) {
+          const L = S[Z];
+          m[L] && m[L].node.mode === P.mode ? (g[L][z] = f(m[L].lastCount + P.length, P.mode) - f(m[L].lastCount, P.mode), m[L].lastCount += P.length) : (m[L] && (m[L].lastCount = P.length), g[L][z] = f(P.length, P.mode) + 4 + e.getCharCountIndicator(P.mode, b));
         }
       }
       S = A;
@@ -1155,18 +1180,18 @@ var ae = Lt.exports;
   }
   function I(p, b) {
     let m;
-    const g = n.getBestModeForData(p);
-    if (m = n.from(b, g), m !== n.BYTE && m.bit < g.bit)
-      throw new Error('"' + p + '" cannot be encoded with mode ' + n.toString(m) + `.
- Suggested mode is: ` + n.toString(g));
-    switch (m === n.KANJI && !c.isKanjiModeEnabled() && (m = n.BYTE), m) {
-      case n.NUMERIC:
+    const g = e.getBestModeForData(p);
+    if (m = e.from(b, g), m !== e.BYTE && m.bit < g.bit)
+      throw new Error('"' + p + '" cannot be encoded with mode ' + e.toString(m) + `.
+ Suggested mode is: ` + e.toString(g));
+    switch (m === e.KANJI && !c.isKanjiModeEnabled() && (m = e.BYTE), m) {
+      case e.NUMERIC:
         return new t(p);
-      case n.ALPHANUMERIC:
-        return new e(p);
-      case n.KANJI:
+      case e.ALPHANUMERIC:
+        return new n(p);
+      case e.KANJI:
         return new r(p);
-      case n.BYTE:
+      case e.BYTE:
         return new i(p);
     }
   }
@@ -1176,86 +1201,86 @@ var ae = Lt.exports;
     }, []);
   }, o.fromString = function(b, m) {
     const g = C(b, c.isKanjiModeEnabled()), S = y(g), E = w(S, m), F = a.find_path(E.map, "start", "end"), A = [];
-    for (let M = 1; M < F.length - 1; M++)
-      A.push(E.table[F[M]].node);
+    for (let v = 1; v < F.length - 1; v++)
+      A.push(E.table[F[v]].node);
     return o.fromArray(d(A));
   }, o.rawSplit = function(b) {
     return o.fromArray(
       C(b, c.isKanjiModeEnabled())
     );
   };
-})(Bt);
-const Q = T, X = V, ce = Ot, le = qt, he = yt, ue = bt, it = St, rt = j, fe = Kt, G = Ft, de = At, ge = v, tt = Bt;
-function pe(o, n) {
-  const t = o.size, e = ue.getPositions(n);
-  for (let i = 0; i < e.length; i++) {
-    const r = e[i][0], s = e[i][1];
+})(vt);
+const W = T, tt = j, he = Jt, ue = Kt, fe = St, de = Et, rt = It, st = Y, ge = Vt, V = At, pe = Bt, me = N, et = vt;
+function Ce(o, e) {
+  const t = o.size, n = de.getPositions(e);
+  for (let i = 0; i < n.length; i++) {
+    const r = n[i][0], s = n[i][1];
     for (let c = -1; c <= 7; c++)
       if (!(r + c <= -1 || t <= r + c))
         for (let a = -1; a <= 7; a++)
           s + a <= -1 || t <= s + a || (c >= 0 && c <= 6 && (a === 0 || a === 6) || a >= 0 && a <= 6 && (c === 0 || c === 6) || c >= 2 && c <= 4 && a >= 2 && a <= 4 ? o.set(r + c, s + a, !0, !0) : o.set(r + c, s + a, !1, !0));
   }
 }
-function me(o) {
-  const n = o.size;
-  for (let t = 8; t < n - 8; t++) {
-    const e = t % 2 === 0;
-    o.set(t, 6, e, !0), o.set(6, t, e, !0);
+function we(o) {
+  const e = o.size;
+  for (let t = 8; t < e - 8; t++) {
+    const n = t % 2 === 0;
+    o.set(t, 6, n, !0), o.set(6, t, n, !0);
   }
 }
-function Ce(o, n) {
-  const t = he.getPositions(n);
-  for (let e = 0; e < t.length; e++) {
-    const i = t[e][0], r = t[e][1];
+function ye(o, e) {
+  const t = fe.getPositions(e);
+  for (let n = 0; n < t.length; n++) {
+    const i = t[n][0], r = t[n][1];
     for (let s = -2; s <= 2; s++)
       for (let c = -2; c <= 2; c++)
         s === -2 || s === 2 || c === -2 || c === 2 || s === 0 && c === 0 ? o.set(i + s, r + c, !0, !0) : o.set(i + s, r + c, !1, !0);
   }
 }
-function we(o, n) {
-  const t = o.size, e = G.getEncodedBits(n);
+function be(o, e) {
+  const t = o.size, n = V.getEncodedBits(e);
   let i, r, s;
   for (let c = 0; c < 18; c++)
-    i = Math.floor(c / 3), r = c % 3 + t - 8 - 3, s = (e >> c & 1) === 1, o.set(i, r, s, !0), o.set(r, i, s, !0);
+    i = Math.floor(c / 3), r = c % 3 + t - 8 - 3, s = (n >> c & 1) === 1, o.set(i, r, s, !0), o.set(r, i, s, !0);
 }
-function et(o, n, t) {
-  const e = o.size, i = de.getEncodedBits(n, t);
+function nt(o, e, t) {
+  const n = o.size, i = pe.getEncodedBits(e, t);
   let r, s;
   for (r = 0; r < 15; r++)
-    s = (i >> r & 1) === 1, r < 6 ? o.set(r, 8, s, !0) : r < 8 ? o.set(r + 1, 8, s, !0) : o.set(e - 15 + r, 8, s, !0), r < 8 ? o.set(8, e - r - 1, s, !0) : r < 9 ? o.set(8, 15 - r - 1 + 1, s, !0) : o.set(8, 15 - r - 1, s, !0);
-  o.set(e - 8, 8, 1, !0);
+    s = (i >> r & 1) === 1, r < 6 ? o.set(r, 8, s, !0) : r < 8 ? o.set(r + 1, 8, s, !0) : o.set(n - 15 + r, 8, s, !0), r < 8 ? o.set(8, n - r - 1, s, !0) : r < 9 ? o.set(8, 15 - r - 1 + 1, s, !0) : o.set(8, 15 - r - 1, s, !0);
+  o.set(n - 8, 8, 1, !0);
 }
-function ye(o, n) {
+function Se(o, e) {
   const t = o.size;
-  let e = -1, i = t - 1, r = 7, s = 0;
+  let n = -1, i = t - 1, r = 7, s = 0;
   for (let c = t - 1; c > 0; c -= 2)
     for (c === 6 && c--; ; ) {
       for (let a = 0; a < 2; a++)
         if (!o.isReserved(i, c - a)) {
           let l = !1;
-          s < n.length && (l = (n[s] >>> r & 1) === 1), o.set(i, c - a, l), r--, r === -1 && (s++, r = 7);
+          s < e.length && (l = (e[s] >>> r & 1) === 1), o.set(i, c - a, l), r--, r === -1 && (s++, r = 7);
         }
-      if (i += e, i < 0 || t <= i) {
-        i -= e, e = -e;
+      if (i += n, i < 0 || t <= i) {
+        i -= n, n = -n;
         break;
       }
     }
 }
-function be(o, n, t) {
-  const e = new ce();
+function Ee(o, e, t) {
+  const n = new he();
   t.forEach(function(a) {
-    e.put(a.mode.bit, 4), e.put(a.getLength(), ge.getCharCountIndicator(a.mode, o)), a.write(e);
+    n.put(a.mode.bit, 4), n.put(a.getLength(), me.getCharCountIndicator(a.mode, o)), a.write(n);
   });
-  const i = Q.getSymbolTotalCodewords(o), r = rt.getTotalCodewordsCount(o, n), s = (i - r) * 8;
-  for (e.getLengthInBits() + 4 <= s && e.put(0, 4); e.getLengthInBits() % 8 !== 0; )
-    e.putBit(0);
-  const c = (s - e.getLengthInBits()) / 8;
+  const i = W.getSymbolTotalCodewords(o), r = st.getTotalCodewordsCount(o, e), s = (i - r) * 8;
+  for (n.getLengthInBits() + 4 <= s && n.put(0, 4); n.getLengthInBits() % 8 !== 0; )
+    n.putBit(0);
+  const c = (s - n.getLengthInBits()) / 8;
   for (let a = 0; a < c; a++)
-    e.put(a % 2 ? 17 : 236, 8);
-  return Se(e, o, n);
+    n.put(a % 2 ? 17 : 236, 8);
+  return Ie(n, o, e);
 }
-function Se(o, n, t) {
-  const e = Q.getSymbolTotalCodewords(n), i = rt.getTotalCodewordsCount(n, t), r = e - i, s = rt.getBlocksCount(n, t), c = e % s, a = s - c, l = Math.floor(e / s), u = Math.floor(r / s), C = u + 1, f = l - u, d = new fe(f);
+function Ie(o, e, t) {
+  const n = W.getSymbolTotalCodewords(e), i = st.getTotalCodewordsCount(e, t), r = n - i, s = st.getBlocksCount(e, t), c = n % s, a = s - c, l = Math.floor(n / s), u = Math.floor(r / s), C = u + 1, f = l - u, d = new ge(f);
   let y = 0;
   const w = new Array(s), I = new Array(s);
   let p = 0;
@@ -1264,7 +1289,7 @@ function Se(o, n, t) {
     const A = F < a ? u : C;
     w[F] = b.slice(y, y + A), I[F] = d.encode(w[F]), y += A, p = Math.max(p, A);
   }
-  const m = new Uint8Array(e);
+  const m = new Uint8Array(n);
   let g = 0, S, E;
   for (S = 0; S < p; S++)
     for (E = 0; E < s; E++)
@@ -1274,89 +1299,89 @@ function Se(o, n, t) {
       m[g++] = I[E][S];
   return m;
 }
-function Ee(o, n, t, e) {
+function Fe(o, e, t, n) {
   let i;
   if (Array.isArray(o))
-    i = tt.fromArray(o);
+    i = et.fromArray(o);
   else if (typeof o == "string") {
-    let l = n;
+    let l = e;
     if (!l) {
-      const u = tt.rawSplit(o);
-      l = G.getBestVersionForData(u, t);
+      const u = et.rawSplit(o);
+      l = V.getBestVersionForData(u, t);
     }
-    i = tt.fromString(o, l || 40);
+    i = et.fromString(o, l || 40);
   } else
     throw new Error("Invalid data");
-  const r = G.getBestVersionForData(i, t);
+  const r = V.getBestVersionForData(i, t);
   if (!r)
     throw new Error("The amount of data is too big to be stored in a QR Code");
-  if (!n)
-    n = r;
-  else if (n < r)
+  if (!e)
+    e = r;
+  else if (e < r)
     throw new Error(
       `
 The chosen QR Code version cannot contain this amount of data.
 Minimum version required to store current data is: ` + r + `.
 `
     );
-  const s = be(n, t, i), c = Q.getSymbolSize(n), a = new le(c);
-  return pe(a, n), me(a), Ce(a, n), et(a, t, 0), n >= 7 && we(a, n), ye(a, s), isNaN(e) && (e = it.getBestMask(
+  const s = Ee(e, t, i), c = W.getSymbolSize(e), a = new ue(c);
+  return Ce(a, e), we(a), ye(a, e), nt(a, t, 0), e >= 7 && be(a, e), Se(a, s), isNaN(n) && (n = rt.getBestMask(
     a,
-    et.bind(null, a, t)
-  )), it.applyMask(e, a), et(a, t, e), {
+    nt.bind(null, a, t)
+  )), rt.applyMask(n, a), nt(a, t, n), {
     modules: a,
-    version: n,
+    version: e,
     errorCorrectionLevel: t,
-    maskPattern: e,
+    maskPattern: n,
     segments: i
   };
 }
-Ct.create = function(n, t) {
-  if (typeof n > "u" || n === "")
+yt.create = function(e, t) {
+  if (typeof e > "u" || e === "")
     throw new Error("No input text");
-  let e = X.M, i, r;
-  return typeof t < "u" && (e = X.from(t.errorCorrectionLevel, X.M), i = G.from(t.version), r = it.from(t.maskPattern), t.toSJISFunc && Q.setToSJISFunction(t.toSJISFunc)), Ee(n, i, e, r);
+  let n = tt.M, i, r;
+  return typeof t < "u" && (n = tt.from(t.errorCorrectionLevel, tt.M), i = V.from(t.version), r = rt.from(t.maskPattern), t.toSJISFunc && W.setToSJISFunction(t.toSJISFunc)), Fe(e, i, n, r);
 };
-var Mt = {}, ut = {};
+var Nt = {}, ft = {};
 (function(o) {
-  function n(t) {
+  function e(t) {
     if (typeof t == "number" && (t = t.toString()), typeof t != "string")
       throw new Error("Color should be defined as hex string");
-    let e = t.slice().replace("#", "").split("");
-    if (e.length < 3 || e.length === 5 || e.length > 8)
+    let n = t.slice().replace("#", "").split("");
+    if (n.length < 3 || n.length === 5 || n.length > 8)
       throw new Error("Invalid hex color: " + t);
-    (e.length === 3 || e.length === 4) && (e = Array.prototype.concat.apply([], e.map(function(r) {
+    (n.length === 3 || n.length === 4) && (n = Array.prototype.concat.apply([], n.map(function(r) {
       return [r, r];
-    }))), e.length === 6 && e.push("F", "F");
-    const i = parseInt(e.join(""), 16);
+    }))), n.length === 6 && n.push("F", "F");
+    const i = parseInt(n.join(""), 16);
     return {
       r: i >> 24 & 255,
       g: i >> 16 & 255,
       b: i >> 8 & 255,
       a: i & 255,
-      hex: "#" + e.slice(0, 6).join("")
+      hex: "#" + n.slice(0, 6).join("")
     };
   }
-  o.getOptions = function(e) {
-    e || (e = {}), e.color || (e.color = {});
-    const i = typeof e.margin > "u" || e.margin === null || e.margin < 0 ? 4 : e.margin, r = e.width && e.width >= 21 ? e.width : void 0, s = e.scale || 4;
+  o.getOptions = function(n) {
+    n || (n = {}), n.color || (n.color = {});
+    const i = typeof n.margin > "u" || n.margin === null || n.margin < 0 ? 4 : n.margin, r = n.width && n.width >= 21 ? n.width : void 0, s = n.scale || 4;
     return {
       width: r,
       scale: r ? 4 : s,
       margin: i,
       color: {
-        dark: n(e.color.dark || "#000000ff"),
-        light: n(e.color.light || "#ffffffff")
+        dark: e(n.color.dark || "#000000ff"),
+        light: e(n.color.light || "#ffffffff")
       },
-      type: e.type,
-      rendererOpts: e.rendererOpts || {}
+      type: n.type,
+      rendererOpts: n.rendererOpts || {}
     };
-  }, o.getScale = function(e, i) {
-    return i.width && i.width >= e + i.margin * 2 ? i.width / (e + i.margin * 2) : i.scale;
-  }, o.getImageWidth = function(e, i) {
-    const r = o.getScale(e, i);
-    return Math.floor((e + i.margin * 2) * r);
-  }, o.qrToImageData = function(e, i, r) {
+  }, o.getScale = function(n, i) {
+    return i.width && i.width >= n + i.margin * 2 ? i.width / (n + i.margin * 2) : i.scale;
+  }, o.getImageWidth = function(n, i) {
+    const r = o.getScale(n, i);
+    return Math.floor((n + i.margin * 2) * r);
+  }, o.qrToImageData = function(n, i, r) {
     const s = i.modules.size, c = i.modules.data, a = o.getScale(s, r), l = Math.floor((s + r.margin * 2) * a), u = r.margin * a, C = [r.color.light, r.color.dark];
     for (let f = 0; f < l; f++)
       for (let d = 0; d < l; d++) {
@@ -1365,16 +1390,16 @@ var Mt = {}, ut = {};
           const I = Math.floor((f - u) / a), p = Math.floor((d - u) / a);
           w = C[c[I * s + p] ? 1 : 0];
         }
-        e[y++] = w.r, e[y++] = w.g, e[y++] = w.b, e[y] = w.a;
+        n[y++] = w.r, n[y++] = w.g, n[y++] = w.b, n[y] = w.a;
       }
   };
-})(ut);
+})(ft);
 (function(o) {
-  const n = ut;
+  const e = ft;
   function t(i, r, s) {
     i.clearRect(0, 0, r.width, r.height), r.style || (r.style = {}), r.height = s, r.width = s, r.style.height = s + "px", r.style.width = s + "px";
   }
-  function e() {
+  function n() {
     try {
       return document.createElement("canvas");
     } catch {
@@ -1383,116 +1408,116 @@ var Mt = {}, ut = {};
   }
   o.render = function(r, s, c) {
     let a = c, l = s;
-    typeof a > "u" && (!s || !s.getContext) && (a = s, s = void 0), s || (l = e()), a = n.getOptions(a);
-    const u = n.getImageWidth(r.modules.size, a), C = l.getContext("2d"), f = C.createImageData(u, u);
-    return n.qrToImageData(f.data, r, a), t(C, l, u), C.putImageData(f, 0, 0), l;
+    typeof a > "u" && (!s || !s.getContext) && (a = s, s = void 0), s || (l = n()), a = e.getOptions(a);
+    const u = e.getImageWidth(r.modules.size, a), C = l.getContext("2d"), f = C.createImageData(u, u);
+    return e.qrToImageData(f.data, r, a), t(C, l, u), C.putImageData(f, 0, 0), l;
   }, o.renderToDataURL = function(r, s, c) {
     let a = c;
     typeof a > "u" && (!s || !s.getContext) && (a = s, s = void 0), a || (a = {});
     const l = o.render(r, s, a), u = a.type || "image/png", C = a.rendererOpts || {};
     return l.toDataURL(u, C.quality);
   };
-})(Mt);
-var Nt = {};
-const Ie = ut;
-function pt(o, n) {
-  const t = o.a / 255, e = n + '="' + o.hex + '"';
-  return t < 1 ? e + " " + n + '-opacity="' + t.toFixed(2).slice(1) + '"' : e;
+})(Nt);
+var Dt = {};
+const Te = ft;
+function Ct(o, e) {
+  const t = o.a / 255, n = e + '="' + o.hex + '"';
+  return t < 1 ? n + " " + e + '-opacity="' + t.toFixed(2).slice(1) + '"' : n;
 }
-function nt(o, n, t) {
-  let e = o + n;
-  return typeof t < "u" && (e += " " + t), e;
+function ot(o, e, t) {
+  let n = o + e;
+  return typeof t < "u" && (n += " " + t), n;
 }
-function Fe(o, n, t) {
-  let e = "", i = 0, r = !1, s = 0;
+function Ae(o, e, t) {
+  let n = "", i = 0, r = !1, s = 0;
   for (let c = 0; c < o.length; c++) {
-    const a = Math.floor(c % n), l = Math.floor(c / n);
-    !a && !r && (r = !0), o[c] ? (s++, c > 0 && a > 0 && o[c - 1] || (e += r ? nt("M", a + t, 0.5 + l + t) : nt("m", i, 0), i = 0, r = !1), a + 1 < n && o[c + 1] || (e += nt("h", s), s = 0)) : i++;
+    const a = Math.floor(c % e), l = Math.floor(c / e);
+    !a && !r && (r = !0), o[c] ? (s++, c > 0 && a > 0 && o[c - 1] || (n += r ? ot("M", a + t, 0.5 + l + t) : ot("m", i, 0), i = 0, r = !1), a + 1 < e && o[c + 1] || (n += ot("h", s), s = 0)) : i++;
   }
-  return e;
+  return n;
 }
-Nt.render = function(n, t, e) {
-  const i = Ie.getOptions(t), r = n.modules.size, s = n.modules.data, c = r + i.margin * 2, a = i.color.light.a ? "<path " + pt(i.color.light, "fill") + ' d="M0 0h' + c + "v" + c + 'H0z"/>' : "", l = "<path " + pt(i.color.dark, "stroke") + ' d="' + Fe(s, r, i.margin) + '"/>', u = 'viewBox="0 0 ' + c + " " + c + '"', f = '<svg xmlns="http://www.w3.org/2000/svg" ' + (i.width ? 'width="' + i.width + '" height="' + i.width + '" ' : "") + u + ' shape-rendering="crispEdges">' + a + l + `</svg>
+Dt.render = function(e, t, n) {
+  const i = Te.getOptions(t), r = e.modules.size, s = e.modules.data, c = r + i.margin * 2, a = i.color.light.a ? "<path " + Ct(i.color.light, "fill") + ' d="M0 0h' + c + "v" + c + 'H0z"/>' : "", l = "<path " + Ct(i.color.dark, "stroke") + ' d="' + Ae(s, r, i.margin) + '"/>', u = 'viewBox="0 0 ' + c + " " + c + '"', f = '<svg xmlns="http://www.w3.org/2000/svg" ' + (i.width ? 'width="' + i.width + '" height="' + i.width + '" ' : "") + u + ' shape-rendering="crispEdges">' + a + l + `</svg>
 `;
-  return typeof e == "function" && e(null, f), f;
+  return typeof n == "function" && n(null, f), f;
 };
-const Te = Ht, st = Ct, vt = Mt, Ae = Nt;
-function ft(o, n, t, e, i) {
+const Pe = Ot, at = yt, kt = Nt, Be = Dt;
+function dt(o, e, t, n, i) {
   const r = [].slice.call(arguments, 1), s = r.length, c = typeof r[s - 1] == "function";
-  if (!c && !Te())
+  if (!c && !Pe())
     throw new Error("Callback required as last argument");
   if (c) {
     if (s < 2)
       throw new Error("Too few arguments provided");
-    s === 2 ? (i = t, t = n, n = e = void 0) : s === 3 && (n.getContext && typeof i > "u" ? (i = e, e = void 0) : (i = e, e = t, t = n, n = void 0));
+    s === 2 ? (i = t, t = e, e = n = void 0) : s === 3 && (e.getContext && typeof i > "u" ? (i = n, n = void 0) : (i = n, n = t, t = e, e = void 0));
   } else {
     if (s < 1)
       throw new Error("Too few arguments provided");
-    return s === 1 ? (t = n, n = e = void 0) : s === 2 && !n.getContext && (e = t, t = n, n = void 0), new Promise(function(a, l) {
+    return s === 1 ? (t = e, e = n = void 0) : s === 2 && !e.getContext && (n = t, t = e, e = void 0), new Promise(function(a, l) {
       try {
-        const u = st.create(t, e);
-        a(o(u, n, e));
+        const u = at.create(t, n);
+        a(o(u, e, n));
       } catch (u) {
         l(u);
       }
     });
   }
   try {
-    const a = st.create(t, e);
-    i(null, o(a, n, e));
+    const a = at.create(t, n);
+    i(null, o(a, e, n));
   } catch (a) {
     i(a);
   }
 }
-st.create;
-ft.bind(null, vt.render);
-var Pe = ft.bind(null, vt.renderToDataURL);
-ft.bind(null, function(o, n, t) {
-  return Ae.render(o, t);
+at.create;
+dt.bind(null, kt.render);
+var Le = dt.bind(null, kt.renderToDataURL);
+dt.bind(null, function(o, e, t) {
+  return Be.render(o, t);
 });
-const x = 1e3, Dt = {
+const O = 1e3, Rt = {
   iceServers: [
     {
       urls: ["stun:stun1.l.google.com:19302"]
     }
   ]
 };
-function Be() {
+function ve() {
   return crypto.randomUUID();
 }
-async function at(o) {
+async function ct(o) {
   return await (await fetch(o)).json();
 }
-function kt(o, n) {
+function Ut(o, e) {
   for (const t of o)
-    if (JSON.stringify(t) === JSON.stringify(n))
+    if (JSON.stringify(t) === JSON.stringify(e))
       return !0;
   return !1;
 }
-class O {
+class q {
   constructor() {
     h(this, "eventListeners", {});
   }
-  on(n, t) {
-    const e = this.eventListeners[n] ?? /* @__PURE__ */ new Set();
-    e.add(t), this.eventListeners[n] = e;
+  on(e, t) {
+    const n = this.eventListeners[e] ?? /* @__PURE__ */ new Set();
+    n.add(t), this.eventListeners[e] = n;
   }
-  off(n, t) {
-    const e = this.eventListeners[n];
-    e && (e.delete(t), e.size === 0 && delete this.eventListeners[n]);
+  off(e, t) {
+    const n = this.eventListeners[e];
+    n && (n.delete(t), n.size === 0 && delete this.eventListeners[e]);
   }
-  emit(n, ...t) {
-    const e = this.eventListeners[n] ?? /* @__PURE__ */ new Set();
-    for (const i of e)
+  emit(e, ...t) {
+    const n = this.eventListeners[e] ?? /* @__PURE__ */ new Set();
+    for (const i of n)
       i(...t);
   }
 }
-class Rt extends O {
+class $t extends q {
 }
-class Ut extends O {
+class zt extends q {
   constructor({
     flottformApi: t,
-    createClientUrl: e,
+    createClientUrl: n,
     pollTimeForIceInMs: i,
     logger: r
   }) {
@@ -1508,8 +1533,8 @@ class Ut extends O {
     h(this, "dataChannel", null);
     h(this, "pollForIceTimer", null);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    h(this, "changeState", (t, e) => {
-      this.state = t, this.emit(t, e), this.logger.info(`State changed to: ${t}`, e ?? "");
+    h(this, "changeState", (t, n) => {
+      this.state = t, this.emit(t, n), this.logger.info(`State changed to: ${t}`, n ?? "");
     });
     h(this, "start", async () => {
       this.openPeerConnection && this.close();
@@ -1520,21 +1545,21 @@ class Ut extends O {
         this.logger.error(u);
       }
       this.openPeerConnection = new RTCPeerConnection(this.rtcConfiguration), this.dataChannel = this.createDataChannel();
-      const e = await this.openPeerConnection.createOffer();
-      await this.openPeerConnection.setLocalDescription(e);
-      const { endpointId: i, hostKey: r } = await this.createEndpoint(t, e);
+      const n = await this.openPeerConnection.createOffer();
+      await this.openPeerConnection.setLocalDescription(n);
+      const { endpointId: i, hostKey: r } = await this.createEndpoint(t, n);
       this.logger.log("Created endpoint", { endpointId: i, hostKey: r });
       const s = `${t}/${i}`, c = `${t}/${i}/host`, a = /* @__PURE__ */ new Set();
-      await this.putHostInfo(c, r, a, e), this.setUpConnectionStateGathering(s), this.setupHostIceGathering(c, r, a, e), this.setupDataChannelForTransfer();
+      await this.putHostInfo(c, r, a, n), this.setUpConnectionStateGathering(s), this.setupHostIceGathering(c, r, a, n), this.setupDataChannelForTransfer();
       const l = await this.createClientUrl({ endpointId: i });
       this.changeState("waiting-for-client", {
-        qrCode: await Pe(l),
+        qrCode: await Le(l),
         link: l,
         channel: this
       }), this.setupDataChannelListener();
     });
     h(this, "close", () => {
-      this.openPeerConnection && (this.openPeerConnection.close(), this.openPeerConnection = null), this.changeState("disconnected");
+      this.openPeerConnection && (this.openPeerConnection.close(), this.openPeerConnection = null, this.stopPollingForConnection()), this.changeState("disconnected");
     });
     h(this, "setupDataChannelListener", () => {
       if (this.dataChannel == null) {
@@ -1548,7 +1573,7 @@ class Ut extends O {
         this.emit("receiving-data", t);
       };
     });
-    h(this, "setupHostIceGathering", (t, e, i, r) => {
+    h(this, "setupHostIceGathering", (t, n, i, r) => {
       if (this.openPeerConnection === null) {
         this.changeState("error", "openPeerConnection is null. Unable to gather Host ICE candidates");
         return;
@@ -1556,7 +1581,7 @@ class Ut extends O {
       this.openPeerConnection.onicecandidate = async (s) => {
         this.logger.info(
           `onicecandidate - ${this.openPeerConnection.connectionState} - ${s.candidate}`
-        ), s.candidate && (kt(i, s.candidate) || (this.logger.log("host found new ice candidate! Adding it to our list"), i.add(s.candidate), await this.putHostInfo(t, e, i, r)));
+        ), s.candidate && (Ut(i, s.candidate) || (this.logger.log("host found new ice candidate! Adding it to our list"), i.add(s.candidate), await this.putHostInfo(t, n, i, r)));
       }, this.openPeerConnection.onicegatheringstatechange = async (s) => {
         this.logger.info(
           `onicegatheringstatechange - ${this.openPeerConnection.iceGatheringState} - ${s}`
@@ -1575,9 +1600,9 @@ class Ut extends O {
       }
       this.startPollingForConnection(t), this.openPeerConnection.onconnectionstatechange = () => {
         this.logger.info(`onconnectionstatechange - ${this.openPeerConnection.connectionState}`), this.openPeerConnection.connectionState === "connected" && this.stopPollingForConnection(), this.openPeerConnection.connectionState === "disconnected" && this.startPollingForConnection(t), this.openPeerConnection.connectionState === "failed" && (this.stopPollingForConnection(), this.changeState("error", { message: "connection-failed" }));
-      }, this.openPeerConnection.oniceconnectionstatechange = async (e) => {
+      }, this.openPeerConnection.oniceconnectionstatechange = async (n) => {
         this.logger.info(
-          `oniceconnectionstatechange - ${this.openPeerConnection.iceConnectionState} - ${e}`
+          `oniceconnectionstatechange - ${this.openPeerConnection.iceConnectionState} - ${n}`
         ), this.openPeerConnection.iceConnectionState === "failed" && (this.logger.log("Failed to find a possible connection path"), this.changeState("error", { message: "connection-impossible" }));
       };
     });
@@ -1589,24 +1614,24 @@ class Ut extends O {
         this.startPollingForConnection(t);
       }, this.pollTimeForIceInMs);
     });
-    h(this, "createEndpoint", async (t, e) => (await fetch(`${t}/create`, {
+    h(this, "createEndpoint", async (t, n) => (await fetch(`${t}/create`, {
       method: "POST",
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ session: e })
+      body: JSON.stringify({ session: n })
     })).json());
     h(this, "fetchIceServers", async (t) => {
-      const e = await fetch(`${t}/ice-server-credentials`, {
+      const n = await fetch(`${t}/ice-server-credentials`, {
         method: "GET",
         headers: {
           Accept: "application/json"
         }
       });
-      if (!e.ok)
+      if (!n.ok)
         throw new Error("Fetching Error!");
-      const i = await e.json();
+      const i = await n.json();
       if (i.success === !1)
         throw new Error(i.message || "Unknown error occurred");
       return i.iceServers;
@@ -1617,9 +1642,9 @@ class Ut extends O {
         return;
       }
       this.logger.log("polling for client ice candidates", this.openPeerConnection.iceGatheringState);
-      const { clientInfo: e } = await at(t);
-      e && this.state === "waiting-for-client" && (this.logger.log("Found a client that wants to connect!"), this.changeState("waiting-for-ice"), await this.openPeerConnection.setRemoteDescription(e.session));
-      for (const i of (e == null ? void 0 : e.iceCandidates) ?? [])
+      const { clientInfo: n } = await ct(t);
+      n && this.state === "waiting-for-client" && (this.logger.log("Found a client that wants to connect!"), this.changeState("waiting-for-ice"), await this.openPeerConnection.setRemoteDescription(n.session));
+      for (const i of (n == null ? void 0 : n.iceCandidates) ?? [])
         await this.openPeerConnection.addIceCandidate(i);
     });
     h(this, "setupDataChannelForTransfer", () => {
@@ -1642,13 +1667,13 @@ class Ut extends O {
       const t = `data-channel-${this.channelNumber}`;
       return this.openPeerConnection.createDataChannel(t);
     });
-    h(this, "putHostInfo", async (t, e, i, r) => {
+    h(this, "putHostInfo", async (t, n, i, r) => {
       try {
         if (this.logger.log("Updating host info with new list of ice candidates"), !(await fetch(t, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            hostKey: e,
+            hostKey: n,
             iceCandidates: [...i],
             session: r
           })
@@ -1658,17 +1683,17 @@ class Ut extends O {
         this.changeState("error", s);
       }
     });
-    this.flottformApi = t, this.createClientUrl = e, this.rtcConfiguration = Dt, this.pollTimeForIceInMs = i, this.logger = r, Promise.resolve().then(() => {
+    this.flottformApi = t, this.createClientUrl = n, this.rtcConfiguration = Rt, this.pollTimeForIceInMs = i, this.logger = r, Promise.resolve().then(() => {
       this.changeState("new", { channel: this });
     });
   }
 }
-class Le extends Rt {
+class Me extends $t {
   constructor({
     flottformApi: t,
-    createClientUrl: e,
+    createClientUrl: n,
     inputField: i,
-    pollTimeForIceInMs: r = x,
+    pollTimeForIceInMs: r = O,
     logger: s = console
   }) {
     super();
@@ -1696,10 +1721,10 @@ class Le extends Rt {
       "Flottform is currently establishing the connection. qrCode is unavailable for now!"
     ), this.qrCode));
     h(this, "handleIncomingData", (t) => {
-      var e, i, r;
+      var n, i, r;
       if (typeof t.data == "string") {
         const s = JSON.parse(t.data);
-        s.type === "file-transfer-meta" ? (this.filesMetaData = s.filesQueue, this.currentFile = { index: 0, receivedSize: 0, arrayBuffer: [] }, this.filesTotalSize = s.totalSize, this.emit("receive")) : s.type === "transfer-complete" && (this.emit("done"), (e = this.channel) == null || e.close());
+        s.type === "file-transfer-meta" ? (this.filesMetaData = s.filesQueue, this.currentFile = { index: 0, receivedSize: 0, arrayBuffer: [] }, this.filesTotalSize = s.totalSize, this.emit("receive")) : s.type === "transfer-complete" && (this.emit("done"), (n = this.channel) == null || n.close());
       } else if (t.data instanceof ArrayBuffer && this.currentFile) {
         this.currentFile.arrayBuffer.push(t.data), this.currentFile.receivedSize += t.data.byteLength, this.receivedDataSize += t.data.byteLength;
         const s = (i = this.filesMetaData[this.currentFile.index]) == null ? void 0 : i.name, c = (r = this.filesMetaData[this.currentFile.index]) == null ? void 0 : r.size, a = (this.currentFile.receivedSize / c).toFixed(
@@ -1724,23 +1749,23 @@ class Le extends Rt {
         this.logger.warn("No input field provided!!");
         return;
       }
-      const e = new DataTransfer();
+      const n = new DataTransfer();
       if (this.inputField.files)
         for (const u of Array.from(this.inputField.files))
-          e.items.add(u);
+          n.items.add(u);
       this.inputField.multiple || (this.logger.warn(
         "The host's input field only supports one file. Incoming files from the client will overwrite any existing file, and only the last file received will remain attached."
-      ), e.items.clear());
+      ), n.items.clear());
       const i = ((c = this.filesMetaData[t]) == null ? void 0 : c.name) ?? "no-name", r = ((a = this.filesMetaData[t]) == null ? void 0 : a.type) ?? "application/octet-stream", s = new File((l = this.currentFile) == null ? void 0 : l.arrayBuffer, i, {
         type: r
       });
-      e.items.add(s), this.inputField.files = e.files;
+      n.items.add(s), this.inputField.files = n.files;
     });
     h(this, "registerListeners", () => {
-      var t, e, i, r, s, c, a;
+      var t, n, i, r, s, c, a;
       (t = this.channel) == null || t.on("new", () => {
         this.emit("new");
-      }), (e = this.channel) == null || e.on("waiting-for-client", (l) => {
+      }), (n = this.channel) == null || n.on("waiting-for-client", (l) => {
         this.emit("webrtc:waiting-for-client", l);
         const { qrCode: u, link: C } = l;
         this.emit("endpoint-created", { link: C, qrCode: u }), this.link = C, this.qrCode = u;
@@ -1756,20 +1781,20 @@ class Le extends Rt {
         this.emit("error", l);
       });
     });
-    this.channel = new Ut({
+    this.channel = new zt({
       flottformApi: t,
-      createClientUrl: e,
+      createClientUrl: n,
       pollTimeForIceInMs: r,
       logger: s
     }), this.inputField = i, this.logger = s, this.registerListeners();
   }
 }
-class $t extends O {
+class _t extends q {
   // 128KB buffer threshold (maximum of 4 chunks in the buffer waiting to be sent over the network)
   constructor({
     endpointId: t,
-    flottformApi: e,
-    pollTimeForIceInMs: i = x,
+    flottformApi: n,
+    pollTimeForIceInMs: i = O,
     logger: r = console
   }) {
     super();
@@ -1784,8 +1809,8 @@ class $t extends O {
     h(this, "pollForIceTimer", null);
     h(this, "BUFFER_THRESHOLD", 128 * 1024);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    h(this, "changeState", (t, e) => {
-      this.state = t, this.emit(t, e), this.logger.info(`**Client State changed to: ${t}`, e ?? "");
+    h(this, "changeState", (t, n) => {
+      this.state = t, this.emit(t, n), this.logger.info(`**Client State changed to: ${t}`, n ?? "");
     });
     h(this, "start", async () => {
       this.openPeerConnection && this.close();
@@ -1796,21 +1821,21 @@ class $t extends O {
         this.logger.error(l);
       }
       this.openPeerConnection = new RTCPeerConnection(this.rtcConfiguration);
-      const e = Be(), i = /* @__PURE__ */ new Set(), r = `${this.flottformApi}/${this.endpointId}`, s = `${this.flottformApi}/${this.endpointId}/client`;
+      const n = ve(), i = /* @__PURE__ */ new Set(), r = `${this.flottformApi}/${this.endpointId}`, s = `${this.flottformApi}/${this.endpointId}/client`;
       this.changeState("retrieving-info-from-endpoint");
-      const { hostInfo: c } = await at(r);
+      const { hostInfo: c } = await ct(r);
       await this.openPeerConnection.setRemoteDescription(c.session);
       const a = await this.openPeerConnection.createAnswer();
-      await this.openPeerConnection.setLocalDescription(a), this.setUpConnectionStateGathering(r), this.setUpClientIceGathering(s, e, i, a), this.openPeerConnection.ondatachannel = (l) => {
+      await this.openPeerConnection.setLocalDescription(a), this.setUpConnectionStateGathering(r), this.setUpClientIceGathering(s, n, i, a), this.openPeerConnection.ondatachannel = (l) => {
         this.logger.info(`ondatachannel: ${l.channel}`), this.changeState("connected"), this.dataChannel = l.channel, this.dataChannel.bufferedAmountLowThreshold = this.BUFFER_THRESHOLD, this.dataChannel.onbufferedamountlow = () => {
           this.emit("bufferedamountlow");
         }, this.dataChannel.onopen = (u) => {
           this.logger.info(`ondatachannel - onopen: ${u.type}`);
         };
-      }, this.changeState("sending-client-info"), await this.putClientInfo(s, e, i, a), this.changeState("connecting-to-host"), this.startPollingForIceCandidates(r);
+      }, this.changeState("sending-client-info"), await this.putClientInfo(s, n, i, a), this.changeState("connecting-to-host"), this.startPollingForIceCandidates(r);
     });
     h(this, "close", () => {
-      this.openPeerConnection && (this.openPeerConnection.close(), this.openPeerConnection = null), this.changeState("disconnected");
+      this.openPeerConnection && (this.openPeerConnection.close(), this.openPeerConnection = null, this.stopPollingForIceCandidates()), this.changeState("disconnected");
     });
     // sendData = (data: string | Blob | ArrayBuffer | ArrayBufferView) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1825,7 +1850,7 @@ class $t extends O {
       this.dataChannel.send(t);
     });
     h(this, "canSendMoreData", () => this.dataChannel && this.dataChannel.bufferedAmount < this.dataChannel.bufferedAmountLowThreshold);
-    h(this, "setUpClientIceGathering", (t, e, i, r) => {
+    h(this, "setUpClientIceGathering", (t, n, i, r) => {
       if (this.openPeerConnection === null) {
         this.changeState(
           "error",
@@ -1836,7 +1861,7 @@ class $t extends O {
       this.openPeerConnection.onicecandidate = async (s) => {
         this.logger.info(
           `onicecandidate - ${this.openPeerConnection.connectionState} - ${s.candidate}`
-        ), s.candidate && (kt(i, s.candidate) || (this.logger.log("client found new ice candidate! Adding it to our list"), i.add(s.candidate), await this.putClientInfo(t, e, i, r)));
+        ), s.candidate && (Ut(i, s.candidate) || (this.logger.log("client found new ice candidate! Adding it to our list"), i.add(s.candidate), await this.putClientInfo(t, n, i, r)));
       }, this.openPeerConnection.onicegatheringstatechange = async () => {
         this.logger.info(`onicegatheringstatechange - ${this.openPeerConnection.iceGatheringState}`);
       }, this.openPeerConnection.onicecandidateerror = (s) => {
@@ -1871,16 +1896,16 @@ class $t extends O {
         return;
       }
       this.logger.log("polling for host ice candidates", this.openPeerConnection.iceGatheringState);
-      const { hostInfo: e } = await at(t);
-      for (const i of e.iceCandidates)
+      const { hostInfo: n } = await ct(t);
+      for (const i of n.iceCandidates)
         await this.openPeerConnection.addIceCandidate(i);
     });
-    h(this, "putClientInfo", async (t, e, i, r) => {
+    h(this, "putClientInfo", async (t, n, i, r) => {
       if (this.logger.log("Updating client info with new list of ice candidates"), !(await fetch(t, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          clientKey: e,
+          clientKey: n,
           iceCandidates: [...i],
           session: r
         })
@@ -1888,28 +1913,28 @@ class $t extends O {
         throw Error("Could not update client info. Did another peer already connect?");
     });
     h(this, "fetchIceServers", async (t) => {
-      const e = await fetch(`${t}/ice-server-credentials`, {
+      const n = await fetch(`${t}/ice-server-credentials`, {
         method: "GET",
         headers: {
           Accept: "application/json"
         }
       });
-      if (!e.ok)
+      if (!n.ok)
         throw new Error("Fetching Error!");
-      const i = await e.json();
+      const i = await n.json();
       if (i.success === !1)
         throw new Error(i.message || "Unknown error occurred");
       return i.iceServers;
     });
-    this.endpointId = t, this.flottformApi = e, this.rtcConfiguration = Dt, this.pollTimeForIceInMs = i, this.logger = r;
+    this.endpointId = t, this.flottformApi = n, this.rtcConfiguration = Rt, this.pollTimeForIceInMs = i, this.logger = r;
   }
 }
-class Xe extends O {
+class en extends q {
   constructor({
     endpointId: t,
-    fileInput: e,
+    fileInput: n,
     flottformApi: i,
-    pollTimeForIceInMs: r = x,
+    pollTimeForIceInMs: r = O,
     logger: s = console
   }) {
     super();
@@ -1947,15 +1972,15 @@ class Xe extends O {
     });
     h(this, "createArrayBuffers", async (t) => {
       if (!t.files) return null;
-      const e = Array.from(t.files);
-      return await Promise.all(e.map(async (i) => await i.arrayBuffer()));
+      const n = Array.from(t.files);
+      return await Promise.all(n.map(async (i) => await i.arrayBuffer()));
     });
     h(this, "sendFiles", async () => {
       var i;
-      const t = this.createMetaData(this.inputField), e = await this.createArrayBuffers(this.inputField);
-      if (!t || !e)
+      const t = this.createMetaData(this.inputField), n = await this.createArrayBuffers(this.inputField);
+      if (!t || !n)
         throw new Error("Can't find the files that you want to send!");
-      this.filesMetaData = t.filesQueue, this.filesArrayBuffer = e, (i = this.channel) == null || i.sendData(JSON.stringify(t)), this.emit("sending"), this.startSendingFiles();
+      this.filesMetaData = t.filesQueue, this.filesArrayBuffer = n, (i = this.channel) == null || i.sendData(JSON.stringify(t)), this.emit("sending"), this.startSendingFiles();
     });
     h(this, "startSendingFiles", () => {
       this.sendNextChunk();
@@ -1967,10 +1992,10 @@ class Xe extends O {
         this.logger.log("All files are sent"), (s = this.channel) == null || s.sendData(JSON.stringify({ type: "transfer-complete" })), this.allFilesSent = !0, (c = this.channel) == null || c.off("bufferedamountlow", this.startSendingFiles), this.emit("done");
         return;
       }
-      const e = this.filesArrayBuffer[this.currentFileIndex];
-      if (!e)
+      const n = this.filesArrayBuffer[this.currentFileIndex];
+      if (!n)
         throw new Error(`Can't find the ArrayBuffer for the file number ${this.currentFileIndex}`);
-      const i = e.byteLength, r = this.filesMetaData[this.currentFileIndex].name;
+      const i = n.byteLength, r = this.filesMetaData[this.currentFileIndex].name;
       for (; this.currentChunkIndex * this.chunkSize < i; ) {
         if (!((a = this.channel) != null && a.canSendMoreData())) {
           this.logger.log("Buffer is full. Pausing sending chunks!");
@@ -1983,14 +2008,14 @@ class Xe extends O {
           progress: parseFloat(u)
         });
         const C = this.currentChunkIndex * this.chunkSize, f = Math.min((this.currentChunkIndex + 1) * this.chunkSize, i);
-        (l = this.channel) == null || l.sendData(e.slice(C, f)), this.currentChunkIndex++;
+        (l = this.channel) == null || l.sendData(n.slice(C, f)), this.currentChunkIndex++;
       }
       this.currentChunkIndex * this.chunkSize >= i ? (this.logger.log(`File ${r} fully sent. Moving to next file.`), this.currentFileIndex++, this.currentChunkIndex = 0, this.sendNextChunk()) : setTimeout(this.sendNextChunk, 100);
     });
     h(this, "registerListeners", () => {
-      var t, e, i, r, s, c, a, l, u, C;
+      var t, n, i, r, s, c, a, l, u, C;
       (t = this.channel) == null || t.on("init", () => {
-      }), (e = this.channel) == null || e.on("retrieving-info-from-endpoint", () => {
+      }), (n = this.channel) == null || n.on("retrieving-info-from-endpoint", () => {
       }), (i = this.channel) == null || i.on("sending-client-info", () => {
       }), (r = this.channel) == null || r.on("connecting-to-host", () => {
       }), (s = this.channel) == null || s.on("connected", () => {
@@ -2005,19 +2030,19 @@ class Xe extends O {
         this.emit("error", f);
       }), (C = this.channel) == null || C.on("bufferedamountlow", this.startSendingFiles);
     });
-    this.channel = new $t({
+    this.channel = new _t({
       endpointId: t,
       flottformApi: i,
       pollTimeForIceInMs: r,
       logger: s
-    }), this.inputField = e, this.logger = s, this.registerListeners();
+    }), this.inputField = n, this.logger = s, this.registerListeners();
   }
 }
-class tn extends O {
+class nn extends q {
   constructor({
     endpointId: t,
-    flottformApi: e,
-    pollTimeForIceInMs: i = x,
+    flottformApi: n,
+    pollTimeForIceInMs: i = O,
     logger: r = console
   }) {
     super();
@@ -2032,13 +2057,13 @@ class tn extends O {
       (t = this.channel) == null || t.close();
     });
     h(this, "sendText", (t) => {
-      var e;
-      this.emit("sending"), (e = this.channel) == null || e.sendData(t), this.emit("done");
+      var n;
+      this.emit("sending"), (n = this.channel) == null || n.sendData(t), this.emit("done");
     });
     h(this, "registerListeners", () => {
-      var t, e, i, r, s, c, a, l, u;
+      var t, n, i, r, s, c, a, l, u;
       (t = this.channel) == null || t.on("init", () => {
-      }), (e = this.channel) == null || e.on("retrieving-info-from-endpoint", () => {
+      }), (n = this.channel) == null || n.on("retrieving-info-from-endpoint", () => {
       }), (i = this.channel) == null || i.on("sending-client-info", () => {
       }), (r = this.channel) == null || r.on("connecting-to-host", () => {
       }), (s = this.channel) == null || s.on("connected", () => {
@@ -2053,19 +2078,19 @@ class tn extends O {
         this.emit("error", C);
       });
     });
-    this.channel = new $t({
+    this.channel = new _t({
       endpointId: t,
-      flottformApi: e,
+      flottformApi: n,
       pollTimeForIceInMs: i,
       logger: r
     }), this.logger = r, this.registerListeners();
   }
 }
-class Me extends Rt {
+class Ne extends $t {
   constructor({
     flottformApi: t,
-    createClientUrl: e,
-    pollTimeForIceInMs: i = x,
+    createClientUrl: n,
+    pollTimeForIceInMs: i = O,
     logger: r = console
   }) {
     super();
@@ -2091,10 +2116,10 @@ class Me extends Rt {
       this.emit("receive"), this.emit("done", t.data);
     });
     h(this, "registerListeners", () => {
-      var t, e, i, r, s, c, a;
+      var t, n, i, r, s, c, a;
       (t = this.channel) == null || t.on("new", () => {
         this.emit("new");
-      }), (e = this.channel) == null || e.on("waiting-for-client", (l) => {
+      }), (n = this.channel) == null || n.on("waiting-for-client", (l) => {
         this.emit("webrtc:waiting-for-client", l);
         const { qrCode: u, link: C } = l;
         this.emit("endpoint-created", { link: C, qrCode: u }), this.link = C, this.qrCode = u;
@@ -2110,42 +2135,42 @@ class Me extends Rt {
         this.emit("error", l);
       });
     });
-    this.channel = new Ut({
+    this.channel = new zt({
       flottformApi: t,
-      createClientUrl: e,
+      createClientUrl: n,
       pollTimeForIceInMs: i,
       logger: r
     }), this.logger = r, this.registerListeners();
   }
 }
-const Ne = () => {
+const De = () => {
   const o = document.querySelector(
     ".flottform-elements-container-wrapper"
-  ), n = document.querySelector(".flottform-opener-triangle");
-  o.classList.toggle("flottform-open"), n.classList.toggle("flottform-button-svg-open");
-}, ve = (o, n, t) => {
-  const e = document.createElement("div");
-  e.setAttribute("class", `flottform-root${t ?? ""}`);
-  const i = Ue(o);
-  e.appendChild(i);
-  const r = $e(n);
-  return e.appendChild(r), e;
-}, De = (o, n) => {
+  ), e = document.querySelector(".flottform-opener-triangle");
+  o.classList.toggle("flottform-open"), e.classList.toggle("flottform-button-svg-open");
+}, ke = (o, e, t) => {
+  const n = document.createElement("div");
+  n.setAttribute("class", `flottform-root${t ?? ""}`);
+  const i = ze(o);
+  n.appendChild(i);
+  const r = _e(e);
+  return n.appendChild(r), n;
+}, Re = (o, e) => {
   const t = document.createElement("img");
   t.setAttribute("class", "flottform-qr-code"), t.setAttribute("src", o);
-  const e = document.createElement("div");
-  return e.setAttribute("class", "flottform-link-offer"), e.innerText = n, {
+  const n = document.createElement("div");
+  return n.setAttribute("class", "flottform-link-offer"), n.innerText = e, {
     createChannelQrCode: t,
-    createChannelLinkWithOffer: e
+    createChannelLinkWithOffer: n
   };
-}, en = ({
+}, on = ({
   flottformAnchorElement: o,
-  flottformRootElement: n,
+  flottformRootElement: e,
   additionalComponentClass: t,
-  flottformRootTitle: e,
+  flottformRootTitle: n,
   flottformRootDescription: i
 }) => {
-  const r = n ?? document.querySelector(".flottform-root") ?? ve(e, i, t), s = r.querySelector(".flottform-elements-container"), c = r.querySelector(
+  const r = e ?? document.querySelector(".flottform-root") ?? ke(n, i, t), s = r.querySelector(".flottform-elements-container"), c = r.querySelector(
     ".flottform-elements-container-wrapper"
   );
   return c.appendChild(s), r.appendChild(c), o.appendChild(r), {
@@ -2165,7 +2190,7 @@ const Ne = () => {
       onErrorText: w,
       onSuccessText: I
     }) => {
-      const p = new Le({
+      const p = new Me({
         flottformApi: a,
         createClientUrl: l,
         inputField: u
@@ -2174,14 +2199,14 @@ const Ne = () => {
         statusInformation: m,
         refreshChannelButton: g,
         flottformStateItemsContainer: S
-      } = mt({
+      } = wt({
         flottformBaseInputHost: p,
         additionalItemClasses: f,
         label: d,
         buttonLabel: y,
         onErrorText: w
       }), E = r.querySelector(".flottform-inputs-list");
-      E.appendChild(b), s.appendChild(E), ke({
+      E.appendChild(b), s.appendChild(E), Ue({
         flottformItem: b,
         statusInformation: m,
         refreshChannelButton: g,
@@ -2202,17 +2227,17 @@ const Ne = () => {
       onErrorText: w,
       onSuccessText: I
     }) => {
-      const p = new Me({
+      const p = new Ne({
         flottformApi: a,
         createClientUrl: l
-      }), { flottformItem: b, statusInformation: m, refreshChannelButton: g } = mt({
+      }), { flottformItem: b, statusInformation: m, refreshChannelButton: g } = wt({
         flottformBaseInputHost: p,
         additionalItemClasses: f,
         label: d,
         buttonLabel: y,
         onErrorText: w
       }), S = r.querySelector(".flottform-inputs-list");
-      S.appendChild(b), s.appendChild(S), Re({
+      S.appendChild(b), s.appendChild(S), $e({
         flottformItem: b,
         statusInformation: m,
         refreshChannelButton: g,
@@ -2223,22 +2248,22 @@ const Ne = () => {
       });
     }
   };
-}, mt = ({
+}, wt = ({
   flottformBaseInputHost: o,
-  additionalItemClasses: n,
+  additionalItemClasses: e,
   label: t,
-  buttonLabel: e,
+  buttonLabel: n,
   onErrorText: i
 }) => {
-  const r = _e(n);
-  Je({ label: t, flottformItem: r });
-  const s = ze(), c = xe(e);
+  const r = He(e);
+  Ge({ label: t, flottformItem: r });
+  const s = xe(), c = qe(n);
   c.addEventListener("click", () => o.start());
-  const a = He(c);
+  const a = Oe(c);
   r.appendChild(a);
-  const l = Oe();
+  const l = Je();
   return l.addEventListener("click", () => o.start()), o.on("endpoint-created", ({ link: u, qrCode: C }) => {
-    const { createChannelQrCode: f, createChannelLinkWithOffer: d } = De(C, u), y = Ke();
+    const { createChannelQrCode: f, createChannelLinkWithOffer: d } = Re(C, u), y = Ve();
     a.replaceChildren(f);
     const w = document.createElement("div");
     w.setAttribute("class", "flottform-copy-button-link-wrapper"), w.appendChild(y), w.appendChild(d), a.appendChild(w);
@@ -2247,11 +2272,11 @@ const Ne = () => {
   }), o.on("error", (u) => {
     s.innerHTML = typeof i == "function" ? i(u) : i ?? `🚨 An error occured (${u.message}). Please try again`, c.innerText = "Retry", a.replaceChildren(s), a.appendChild(c);
   }), { flottformItem: r, statusInformation: s, refreshChannelButton: l, flottformStateItemsContainer: a };
-}, ke = ({
+}, Ue = ({
   flottformItem: o,
-  statusInformation: n,
+  statusInformation: e,
   refreshChannelButton: t,
-  flottformStateItemsContainer: e,
+  flottformStateItemsContainer: n,
   flottformFileInputHost: i,
   id: r,
   onSuccessText: s
@@ -2259,66 +2284,66 @@ const Ne = () => {
   r && o.setAttribute("id", r), i.on(
     "progress",
     ({ currentFileProgress: c, overallProgress: a, fileIndex: l, totalFileCount: u, fileName: C }) => {
-      Ge(e), We(
-        e,
+      je(n), Xe(
+        n,
         a,
         l,
         u
       );
-      const f = Ve(e);
-      Ye(
+      const f = Ye(n);
+      We(
         l,
         C,
         c,
         f,
-        e
+        n
       );
     }
   ), i.on("done", () => {
-    n.innerHTML = s ?? "✨ You have succesfully downloaded all your files.", n.appendChild(t), e.replaceChildren(n);
+    e.innerHTML = s ?? "✨ You have succesfully downloaded all your files.", e.appendChild(t), n.replaceChildren(e);
   });
-}, Re = ({
+}, $e = ({
   flottformItem: o,
-  statusInformation: n,
+  statusInformation: e,
   refreshChannelButton: t,
-  flottformTextInputHost: e,
+  flottformTextInputHost: n,
   id: i,
   onSuccessText: r,
   inputField: s
 }) => {
-  i && o.setAttribute("id", i), e.on("done", (c) => {
-    if (n.innerHTML = r ?? "✨ You have succesfully submitted your message", n.appendChild(t), o.replaceChildren(n), s) {
+  i && o.setAttribute("id", i), n.on("done", (c) => {
+    if (e.innerHTML = r ?? "✨ You have succesfully submitted your message", e.appendChild(t), o.replaceChildren(e), s) {
       s.setAttribute("value", c);
       const a = new Event("change");
       s.dispatchEvent(a);
     }
   });
-}, Ue = (o) => {
-  const n = document.createElement("button");
-  return n.setAttribute("type", "button"), n.setAttribute("class", "flottform-root-opener-button"), n.innerHTML = `<span>${o ?? "Fill from Another Device"}</span><svg class="flottform-opener-triangle" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M6.5,8.5l6,7l6-7H6.5z"/></svg>`, n.addEventListener("click", () => Ne()), n;
-}, $e = (o) => {
-  const n = document.createElement("div");
-  n.setAttribute("class", "flottform-elements-container");
+}, ze = (o) => {
+  const e = document.createElement("button");
+  return e.setAttribute("type", "button"), e.setAttribute("class", "flottform-root-opener-button"), e.innerHTML = `<span>${o ?? "Fill from Another Device"}</span><svg class="flottform-opener-triangle" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M6.5,8.5l6,7l6-7H6.5z"/></svg>`, e.addEventListener("click", () => De()), e;
+}, _e = (o) => {
+  const e = document.createElement("div");
+  e.setAttribute("class", "flottform-elements-container");
   const t = document.createElement("div");
   if (t.setAttribute("class", "flottform-elements-container-wrapper"), o !== "") {
     const i = document.createElement("div");
-    i.setAttribute("class", "flottform-root-description"), i.innerText = o ?? "This form is powered by Flottform. Need to add details from another device? Simply click a button below to generate a QR code or link, and easily upload information from your other device.", n.appendChild(i);
+    i.setAttribute("class", "flottform-root-description"), i.innerText = o ?? "This form is powered by Flottform. Need to add details from another device? Simply click a button below to generate a QR code or link, and easily upload information from your other device.", e.appendChild(i);
   }
-  const e = document.createElement("ul");
-  return e.setAttribute("class", "flottform-inputs-list"), n.appendChild(e), t.appendChild(n), t;
-}, _e = (o) => {
-  const n = document.createElement("li");
-  return n.setAttribute("class", `flottform-item${o ?? ""}`), n;
-}, ze = () => {
+  const n = document.createElement("ul");
+  return n.setAttribute("class", "flottform-inputs-list"), e.appendChild(n), t.appendChild(e), t;
+}, He = (o) => {
+  const e = document.createElement("li");
+  return e.setAttribute("class", `flottform-item${o ?? ""}`), e;
+}, xe = () => {
   const o = document.createElement("div");
   return o.setAttribute("class", "flottform-status-information"), o;
-}, He = (o) => {
-  const n = document.createElement("div");
-  return n.setAttribute("class", "flottform-state-items-container"), n.appendChild(o), n;
-}, xe = (o) => {
-  const n = document.createElement("button");
-  return n.setAttribute("type", "button"), n.setAttribute("class", "flottform-button"), n.innerText = o ?? "Get a link", n;
-}, Oe = () => {
+}, Oe = (o) => {
+  const e = document.createElement("div");
+  return e.setAttribute("class", "flottform-state-items-container"), e.appendChild(o), e;
+}, qe = (o) => {
+  const e = document.createElement("button");
+  return e.setAttribute("type", "button"), e.setAttribute("class", "flottform-button"), e.innerText = o ?? "Get a link", e;
+}, Je = () => {
   const o = document.createElement("button");
   return o.setAttribute("type", "button"), o.setAttribute("class", "flottform-refresh-connection-button"), o.setAttribute(
     "title",
@@ -2328,18 +2353,18 @@ const Ne = () => {
     "Click this button to refresh Flottform connection for the input field. Previous connection will be closed"
   ), o.innerHTML = '<svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M13.5 2c-5.288 0-9.649 3.914-10.377 9h-3.123l4 5.917 4-5.917h-2.847c.711-3.972 4.174-7 8.347-7 4.687 0 8.5 3.813 8.5 8.5s-3.813 8.5-8.5 8.5c-3.015 0-5.662-1.583-7.171-3.957l-1.2 1.775c1.916 2.536 4.948 4.182 8.371 4.182 5.797 0 10.5-4.702 10.5-10.5s-4.703-10.5-10.5-10.5z"/></svg>', o;
 };
-let qe = 1;
-const Je = ({
+let Ke = 1;
+const Ge = ({
   label: o,
-  flottformItem: n
+  flottformItem: e
 }) => {
-  const t = document.createElement("p"), e = o ?? `File input ${qe++}`;
-  e && (t.innerHTML = e, n.appendChild(t));
-}, Ke = () => {
+  const t = document.createElement("p"), n = o ?? `File input ${Ke++}`;
+  n && (t.innerHTML = n, e.appendChild(t));
+}, Ve = () => {
   const o = document.createElement("button");
   return o.setAttribute("class", "flottform-copy-to-clipboard"), o.setAttribute("type", "button"), o.setAttribute("title", "Copy Flottform link to clipboard"), o.setAttribute("aria-label", "Copy Flottform link to clipboard"), o.innerText = "📋", o.addEventListener("click", async () => {
-    const n = document.querySelector(".flottform-link-offer").innerText;
-    navigator.clipboard.writeText(n).then(() => {
+    const e = document.querySelector(".flottform-link-offer").innerText;
+    navigator.clipboard.writeText(e).then(() => {
       o.innerText = "✅", setTimeout(() => {
         o.innerText = "📋";
       }, 1e3);
@@ -2349,57 +2374,58 @@ const Je = ({
       }, 1e3);
     });
   }), o;
-}, Ge = (o) => {
+}, je = (o) => {
   o.querySelector(
     ".flottform-status-information"
   ) && (o.innerHTML = "");
-}, Ve = (o) => {
-  let n = o.querySelector("details");
-  if (!n) {
-    n = document.createElement("details");
+}, Ye = (o) => {
+  let e = o.querySelector("details");
+  if (!e) {
+    e = document.createElement("details");
     const t = document.createElement("summary");
-    t.innerText = "Details", n.appendChild(t);
-    const e = document.createElement("div");
-    e.classList.add("details-container"), n.appendChild(e), o.appendChild(n);
+    t.innerText = "Details", e.appendChild(t);
+    const n = document.createElement("div");
+    n.classList.add("details-container"), e.appendChild(n), o.appendChild(e);
   }
-  return n;
-}, je = (o, n) => {
+  return e;
+}, Qe = (o, e) => {
   const t = document.createElement("label");
-  t.setAttribute("id", `flottform-status-bar-${o}`), t.classList.add("flottform-progress-bar-label"), t.innerText = `File ${n} progress:`;
-  const e = document.createElement("progress");
-  return e.setAttribute("id", `flottform-status-bar-${o}`), e.classList.add("flottform-status-bar"), e.setAttribute("max", "100"), e.setAttribute("value", "0"), { currentFileLabel: t, progressBar: e };
-}, Ye = (o, n, t, e, i) => {
+  t.setAttribute("id", `flottform-status-bar-${o}`), t.classList.add("flottform-progress-bar-label"), t.innerText = `File ${e} progress:`;
+  const n = document.createElement("progress");
+  return n.setAttribute("id", `flottform-status-bar-${o}`), n.classList.add("flottform-status-bar"), n.setAttribute("max", "100"), n.setAttribute("value", "0"), { currentFileLabel: t, progressBar: n };
+}, We = (o, e, t, n, i) => {
   let r = i.querySelector(
     `progress#flottform-status-bar-${o}`
   );
   if (!r) {
-    const { currentFileLabel: s, progressBar: c } = je(o, n);
+    const { currentFileLabel: s, progressBar: c } = Qe(o, e);
     r = c;
-    const a = e.querySelector(".details-container");
+    const a = n.querySelector(".details-container");
     a.appendChild(s), a.appendChild(r);
   }
   r.value = t * 100, r.innerText = `${t * 100}%`;
-}, Qe = () => {
+}, Ze = () => {
   const o = document.createElement("label");
   o.setAttribute("id", "flottform-status-bar-overall-progress"), o.classList.add("flottform-progress-bar-label"), o.innerText = "Receiving Files Progress";
-  const n = document.createElement("progress");
-  return n.setAttribute("id", "flottform-status-bar-overall-progress"), n.classList.add("flottform-status-bar"), n.setAttribute("max", "100"), n.setAttribute("value", "0"), { overallFilesLabel: o, progressBar: n };
-}, We = (o, n, t, e) => {
+  const e = document.createElement("progress");
+  return e.setAttribute("id", "flottform-status-bar-overall-progress"), e.classList.add("flottform-status-bar"), e.setAttribute("max", "100"), e.setAttribute("value", "0"), { overallFilesLabel: o, progressBar: e };
+}, Xe = (o, e, t, n) => {
   let i = o.querySelector("progress#flottform-status-bar-overall-progress");
   if (!i) {
-    const { overallFilesLabel: s, progressBar: c } = Qe();
+    const { overallFilesLabel: s, progressBar: c } = Ze();
     i = c, o.appendChild(s), o.appendChild(i);
   }
   const r = o.querySelector(
     "label#flottform-status-bar-overall-progress"
   );
-  i.value = n * 100, i.innerText = `${n * 100}%`, r.innerText = `Receiving file ${t + 1} of ${e}`;
+  i.value = e * 100, i.innerText = `${e * 100}%`, r.innerText = `Receiving file ${t + 1} of ${n}`;
 };
 export {
-  Xe as FlottformFileInputClient,
-  Le as FlottformFileInputHost,
-  tn as FlottformTextInputClient,
-  Me as FlottformTextInputHost,
-  en as createDefaultFlottformComponent
+  gt as ConnectionManager,
+  en as FlottformFileInputClient,
+  Me as FlottformFileInputHost,
+  nn as FlottformTextInputClient,
+  Ne as FlottformTextInputHost,
+  on as createDefaultFlottformComponent
 };
 //# sourceMappingURL=flottform-bundle.js.map
