@@ -11,6 +11,7 @@
 		id: string;
 		type: string;
 		connectionState: { event: string; data?: any };
+		label: string | undefined | null;
 	}>;
 
 	let inputFields: TrackedInputFields = $state([]);
@@ -37,7 +38,24 @@
 						'input[type="text"],input[type="file"],input[type="password"]'
 					)
 				).map((input) => {
-					return { id: input.id, type: input.type, connectionState: { event: 'new' } };
+					let nearestLabel = null;
+					if (input.previousElementSibling?.tagName.toLowerCase() === 'label') {
+						nearestLabel = input.previousElementSibling;
+					} else if (input.nextElementSibling?.tagName.toLowerCase() === 'label') {
+						nearestLabel = input.nextElementSibling;
+					} else {
+						nearestLabel = null;
+					}
+					let label =
+						document.querySelector(`label[for="${input.id}"]`) ??
+						input.closest('label') ??
+						nearestLabel;
+					return {
+						id: input.id,
+						type: input.type,
+						label: (label as HTMLLabelElement)?.innerText,
+						connectionState: { event: 'new' }
+					};
 				});
 				// Save the input fields to the chrome storage
 				chrome.storage.local.set({ [`inputFields-${currentTabId}`]: inputFields });
@@ -91,9 +109,7 @@
 				signalingServerUrlBase: string,
 				extensionClientUrlBase: string
 			) => {
-				const fm: typeof Flottform = await import(
-					flottformModuleFile
-				);
+				const fm: typeof Flottform = await import(flottformModuleFile);
 				const { FlottformTextInputHost, FlottformFileInputHost } = fm;
 
 				function handleFlottformEvent(event: string, data: any, id: string, currentTabId: number) {
@@ -314,53 +330,40 @@
 	});
 </script>
 
-<button
-	onclick={extractInputFieldsFromCurrentPage}
-	class="p-4 bg-primary-blue/50 text-white font-bold rounded w-full">Get inputs</button
->
+<p class="border-b border-slate-300 py-4 px-2 italic text-sm">
+	Need to add details from another device? Simply click a button below to get all inputs from tab
+	and generate a QR code or link, and easily upload information from your other device. <br /> Powered
+	by Flottform.
+</p>
+<div class="grid grid-cols-2 gap-2">
+	<button
+		onclick={extractInputFieldsFromCurrentPage}
+		class="p-2 text-sm bg-slate-200 font-bold rounded">Get inputs</button
+	>
+	<button onclick={removeSavedInputs} class="p-2 text-sm bg-slate-200 font-bold rounded"
+		>Remove saved inputs</button
+	>
+</div>
 
-<button
-	onclick={removeSavedInputs}
-	class="p-4 bg-primary-blue/50 text-white font-bold rounded w-full">Remove saved inputs</button
->
-
-{#each inputFields as input (input.id)}
-	{#if input.connectionState.event === 'new'}
-		<div>
-			<h4>{input.id}</h4>
-			<button onclick={() => startFlottformProcess(input.id, input.type)}
-				>Start - id={input.id} type={input.type}</button
-			>
-		</div>
-	{:else if input.connectionState.event === 'endpoint-created'}
-		<div>
-			<img src={input.connectionState.data.qrCode} alt="qrCode" />
-			<input type="text" value={input.connectionState.data.link} />
-		</div>
-	{:else if input.connectionState.event === 'connected'}
-		<div>
-			<p>Connected!</p>
-		</div>
-	{:else if input.connectionState.event === 'done'}
-		<div>
-			<p>Received & Attached the message from the other device!</p>
-		</div>
-	{:else if input.connectionState.event === 'error'}
-		<div>
-			<p style="color: red;">ERROR: {JSON.stringify(input.connectionState.data)}</p>
-		</div>
-	{/if}
-{/each}
-
-<style>
-	/* basic styling */
-	button {
-		margin: 5px 0;
-		border: 1px solid black;
-		border-radius: 0.25rem;
-		background-color: rgb(166, 166, 166);
-	}
-	img {
-		height: 150px;
-	}
-</style>
+<ul class="p-2 grid grid-cols-1">
+	{#each inputFields as input (input.id)}
+		<li class="flex flex-col gap-2 border-b border-slate-300 py-4">
+			<h2 class="text-lg font-bold">{input.label ?? input.id}</h2>
+			{#if input.connectionState.event === 'new'}
+				<button
+					onclick={() => startFlottformProcess(input.id, input.type)}
+					class="px-3 py-1 rounded bg-slate-100 w-fit">Get a QR code and link</button
+				>
+			{:else if input.connectionState.event === 'endpoint-created'}
+				<img src={input.connectionState.data.qrCode} alt="qrCode" class="w-36" />
+				<input type="text" value={input.connectionState.data.link} class="w-full" />
+			{:else if input.connectionState.event === 'connected'}
+				<p>Connected!</p>
+			{:else if input.connectionState.event === 'done'}
+				<p>Received & Attached the message from the other device!</p>
+			{:else if input.connectionState.event === 'error'}
+				<p class="text-red-600">ERROR: {JSON.stringify(input.connectionState.data)}</p>
+			{/if}
+		</li>
+	{/each}
+</ul>
