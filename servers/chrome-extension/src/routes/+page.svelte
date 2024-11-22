@@ -330,11 +330,6 @@
 	});
 </script>
 
-<p class="border-b border-slate-300 py-4 px-2 italic text-sm">
-	Need to add details from another device? Simply click a button below to get all inputs from tab
-	and generate a QR code or link, and easily upload information from your other device. <br /> Powered
-	by Flottform.
-</p>
 <div class="grid grid-cols-2 gap-2">
 	<button
 		onclick={extractInputFieldsFromCurrentPage}
@@ -367,3 +362,18 @@
 		</li>
 	{/each}
 </ul>
+<p class="text-xs italic p-2">
+	Powered by <a
+		href="https://flottform.io/"
+		target="_blank"
+		rel="external noopener noreferrer"
+		class="font-semibold">Flottform</a
+	>.
+</p>
+<details class="border rounded border-slate-300 py-4 px-2 italic text-sm">
+	<summary>How does it work?</summary>
+	<p class="mt-3">
+		Need to add details from another device? Simply click a button above to get all inputs from tab
+		and generate a QR code or link, and easily upload information from your other device.
+	</p>
+</details>
