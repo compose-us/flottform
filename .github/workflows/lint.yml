@@ -1,0 +1,37 @@
+name: Format and lint packages
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  format:
+    name: Format and lint ${{matrix.package}}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package:
+          - flottform/forms
+          - flottform/server
+          - servers/chrome-extension
+          - servers/demo
+          - servers/signaling-server
+          - servers/where-are-you-at
+    steps:
+      - name: Checkout 🛎
+        uses: actions/checkout@v4.1.1
+      - name: Install dependencies 📦
+        run: |
+          corepack enable
+          pnpm -r install
+
+      - name: Run prettier for ${{ matrix.package }}
+        working-directory: ${{ matrix.package }}
+        run: pnpm run format
+
+      - name: Run linter for ${{ matrix.package }}
+        working-directory: ${{ matrix.package }}
+        run: pnpm run lint
+        
