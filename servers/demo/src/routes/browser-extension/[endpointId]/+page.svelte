@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { FlottformFileInputClient, FlottformTextInputClient } from '@flottform/forms';
 	import { page } from '$app/stores';
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import FileInput from '$lib/components/FileInput.svelte';
 
 	let currentState = $state<
@@ -29,8 +29,16 @@
 		};
 		console.log({ options });
 
+		inputType = options.type;
+		// Wait for the DOM to be fully rendered with the text or file input field.
+		await tick();
+
 		if (hash.type === 'file') {
-			inputType = 'file';
+			if (!inputField) {
+				console.error('Input field is not ready yet.');
+				return;
+			}
+
 			const flottformFileInputClient = new FlottformFileInputClient({
 				endpointId: options.endpointId,
 				fileInput: inputField!,
@@ -65,7 +73,6 @@
 
 			sendToForm = flottformFileInputClient.sendFiles;
 		} else {
-			inputType = 'text';
 			const flottformTextInputClient = new FlottformTextInputClient(options);
 			// Start the WebRTC connection process as soon as the page loads.
 			flottformTextInputClient.start();
@@ -103,10 +110,10 @@
 
 	<form action="" onsubmit={sendToForm}>
 		<div class="flex flex-col gap-4">
-			{#if inputType === 'text'}
+			{#if inputType === 'text' || inputType === 'password'}
 				<label for="flottform">Send your text</label>
 				<input
-					type="text"
+					type={inputType}
 					name="flottform"
 					id="flottform"
 					bind:this={inputField}

@@ -21,10 +21,27 @@
 	let extensionClientUrlBase: string = '';
 
 	// TODO remove all listeners and flottform processes
-	const removeSavedInputs = () => {
+	const removeSavedInputs = async () => {
 		// It'll remove all the data stored inside `chrome.storage.local`
 		chrome.storage.local.set({ [`inputFields-${currentTabId}`]: [] });
 		inputFields = [];
+
+		const flottformModuleFile = chrome.runtime.getURL('scripts/flottform-bundle.js');
+		chrome.scripting.executeScript({
+			target: { tabId: currentTabId! },
+			args: [currentTabId, flottformModuleFile],
+			func: async (currentTabId, flottformModuleFile: string) => {
+				const fm: typeof Flottform = await import(flottformModuleFile);
+				const { ConnectionManager } = fm;
+
+				const connectionManager = ConnectionManager.getInstance();
+				connectionManager.closeAllConnections();
+				console.log(
+					'All connections should be closed Now, connectionManager = ',
+					connectionManager
+				);
+			}
+		});
 	};
 
 	const extractInputFieldsFromCurrentPage = async () => {
@@ -110,7 +127,14 @@
 				extensionClientUrlBase: string
 			) => {
 				const fm: typeof Flottform = await import(flottformModuleFile);
-				const { FlottformTextInputHost, FlottformFileInputHost } = fm;
+				const { FlottformTextInputHost, FlottformFileInputHost, ConnectionManager } = fm;
+				const connectionManager = ConnectionManager.getInstance();
+
+				if (inputFieldType === 'text' || inputFieldType === 'password') {
+					startFlottformTextInputProcess(inputFieldId, tabId, inputFieldType);
+				} else {
+					startFlottformFileInputProcess(inputFieldId, tabId);
+				}
 
 				function handleFlottformEvent(event: string, data: any, id: string, currentTabId: number) {
 					// Get the latest updated version of the array inputFields instead of passing it as a parameter to `chrome.scripting.executeScript`!
@@ -134,9 +158,9 @@
 				function updateSavedInputs(updatedInputFields: TrackedInputFields, currentTabId: number) {
 					// Update the UI and the local storage
 					chrome.storage.local.set({ [`inputFields-${currentTabId}`]: updatedInputFields }, () => {
-						/* console.warn(
+						console.warn(
 							`Saved ${JSON.stringify(updatedInputFields)} to chrome storage from page context!!!!!!!!!!!!`
-						); */
+						);
 					});
 					//inputFields = updatedInputFields;
 				}
@@ -185,11 +209,15 @@
 					});
 				}
 
-				function startFlottformTextInputProcess(textInputId: string, currentTabId: number) {
+				function startFlottformTextInputProcess(
+					textInputId: string,
+					currentTabId: number,
+					inputFieldType: string
+				) {
 					// Query the doc with the ID: textInputId in order to find the input field where you'll paste the text.
 					//console.log(`****Flottform will work on TextInput with id=${textInputId}*****`);
 					const data = {
-						type: 'text',
+						type: inputFieldType,
 						token: apiToken,
 						flottformApi: signalingServerUrlBase
 					};
@@ -202,6 +230,10 @@
 					});
 
 					flottformTextInputHost.start();
+
+					// Track instances of FlottformTextInputHost
+					connectionManager.addConnection(textInputId, flottformTextInputHost);
+					console.log('connectionManager: ', connectionManager);
 
 					registerFlottformTextInputListeners(flottformTextInputHost, textInputId, currentTabId);
 				}
@@ -232,6 +264,11 @@
 					});
 
 					flottformFileInputHost.start();
+
+					// Track instances of FlottformFileInputHost
+					connectionManager.addConnection(fileInputId, flottformFileInputHost);
+					console.log('connectionManager: ', connectionManager);
+
 					registerFlottformFileInputListeners(flottformFileInputHost, fileInputId, currentTabId);
 				}
 
@@ -276,12 +313,22 @@
 						// TODO: HANDLE THE DONE PROCESS
 					});
 				}
+			}
+		});
+	};
 
-				if (inputFieldType === 'file') {
-					startFlottformFileInputProcess(inputFieldId, tabId);
-				} else {
-					startFlottformTextInputProcess(inputFieldId, tabId);
-				}
+	const clearOutdatedTables = async () => {
+		// Wait for the current tab Id to be available!
+		const currentTabId = await getCurrentTabId();
+
+		chrome.scripting.executeScript({
+			target: { tabId: currentTabId! },
+			args: [currentTabId],
+			func: async (currentTabId) => {
+				// We have to find a way to add this listener only once & we have to handle single page applications since beforeunload doesn't work for those SPAs!
+				window.addEventListener('beforeunload', () => {
+					chrome.storage.local.set({ [`inputFields-${currentTabId}`]: [] });
+				});
 			}
 		});
 	};
@@ -327,6 +374,8 @@
 				inputFields = result[`inputFields-${currentTabId}`];
 			}
 		});
+
+		clearOutdatedTables();
 	});
 </script>
 

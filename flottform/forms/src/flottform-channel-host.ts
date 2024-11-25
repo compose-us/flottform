@@ -101,6 +101,7 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		if (this.openPeerConnection) {
 			this.openPeerConnection.close();
 			this.openPeerConnection = null;
+			this.stopPollingForConnection();
 		}
 		this.changeState('disconnected');
 	};

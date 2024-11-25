@@ -118,6 +118,7 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		if (this.openPeerConnection) {
 			this.openPeerConnection.close();
 			this.openPeerConnection = null;
+			this.stopPollingForIceCandidates();
 		}
 		this.changeState('disconnected');
 	};
