@@ -4,7 +4,7 @@
 	import '@flottform/forms/theme/default.css';
 </script>
 
-<div class="w-full h-full">
+<div class="w-full h-auto">
 	<slot />
 </div>
 
