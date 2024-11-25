@@ -330,7 +330,7 @@
 	});
 </script>
 
-<div class="grid grid-cols-2 gap-2">
+<div class="p-2 grid grid-cols-2 gap-2">
 	<button
 		onclick={extractInputFieldsFromCurrentPage}
 		class="p-2 text-sm bg-slate-200 font-bold rounded">Get inputs</button
