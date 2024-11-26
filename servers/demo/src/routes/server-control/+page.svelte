@@ -5,6 +5,7 @@
 
 	let authKey = '';
 	let useTurnServer = false;
+	let allowAllOrigins = false;
 	let message = '';
 
 	const handleSubmit = async (e: Event) => {
@@ -16,13 +17,13 @@
 		}
 
 		try {
-			const response = await fetch(`${sdpExchangeServerBase}/turn-control`, {
+			const response = await fetch(`${sdpExchangeServerBase}/server-control`, {
 				method: 'PUT',
 				headers: {
 					'Content-Type': 'application/json',
 					Authorization: authKey
 				},
-				body: JSON.stringify({ useTurnServer })
+				body: JSON.stringify({ useTurnServer, allowAllOrigins })
 			});
 			const result = await response.json();
 
@@ -71,7 +72,7 @@
 	class="mx-auto my-auto p-12 bg-gray-200 bg-opacity-50 rounded-lg shadow-md"
 >
 	<div>
-		<h2>TURN Server Control</h2>
+		<h2>Server Control</h2>
 
 		<!-- Input field for the authentication key -->
 		<label for="auth-key" class="block mb-2">Authentication Key:</label>
@@ -87,6 +88,10 @@
 		<label for="use-turn-server" class="block mb-2">
 			<input id="use-turn-server" class="mr-2" type="checkbox" bind:checked={useTurnServer} />
 			Use TURN servers (costly)
+		</label>
+		<label for="allow-all-origins" class="block mb-2">
+			<input id="allow-all-origins" class="mr-2" type="checkbox" bind:checked={allowAllOrigins} />
+			Allow all origins (use only in TESTING or DEMO mode, please)
 		</label>
 
 		<button

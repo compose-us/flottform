@@ -1,11 +1,16 @@
 import { json, type RequestHandler, text } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
-import { getUseTurnServer, setUseTurnServer } from './global';
+import {
+	getAllowAllOrigins,
+	getUseTurnServer,
+	setAllowAllOrigins,
+	setUseTurnServer
+} from './global';
 import { corsHeaders } from '$lib/cors-headers';
 
 export const GET: RequestHandler = async ({ request }) => {
 	return json(
-		{ success: true, useTurnServer: getUseTurnServer() },
+		{ success: true, useTurnServer: getUseTurnServer(), allowAllOrigins: getAllowAllOrigins() },
 		{
 			headers: corsHeaders(['GET', 'OPTIONS', 'PUT'], request)
 		}
@@ -39,7 +44,7 @@ export const PUT: RequestHandler = async ({ request }) => {
 		}
 
 		const data = await request.json();
-		const { useTurnServer } = data;
+		const { allowAllOrigins, useTurnServer } = data;
 
 		if (typeof useTurnServer !== 'boolean') {
 			return json(
@@ -50,10 +55,20 @@ export const PUT: RequestHandler = async ({ request }) => {
 			);
 		}
 
+		if (typeof allowAllOrigins !== 'boolean') {
+			return json(
+				{ success: false, message: "Expecting boolean for 'allowAllOrigins' !" },
+				{
+					headers: corsHeaders(['GET', 'OPTIONS', 'PUT'], request)
+				}
+			);
+		}
+
 		setUseTurnServer(useTurnServer === true);
+		setAllowAllOrigins(allowAllOrigins === true);
 
 		return json(
-			{ success: true, useTurnServer: getUseTurnServer() },
+			{ success: true, useTurnServer: getUseTurnServer(), allowAllOrigins: getAllowAllOrigins() },
 			{
 				headers: corsHeaders(['GET', 'OPTIONS', 'PUT'], request)
 			}

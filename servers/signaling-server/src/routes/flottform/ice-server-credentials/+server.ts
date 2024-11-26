@@ -1,6 +1,6 @@
 import { type RequestHandler, json, text } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
-import { getUseTurnServer } from '../turn-control/global';
+import { getUseTurnServer } from '../server-control/global';
 import { corsHeaders } from '$lib/cors-headers';
 
 const iceServersEnv = env.ICE_SERVERS_CONFIGURATION;

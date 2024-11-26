@@ -45,32 +45,53 @@
 	};
 
 	const extractInputFieldsFromCurrentPage = async () => {
+		await removeSavedInputs();
 		console.log('Searching for input fields in page');
 		const injectionResult = await chrome.scripting.executeScript({
 			target: { tabId: currentTabId! },
 			args: [currentTabId],
 			func: async (currentTabId) => {
+				window.___flottform_map ??= new Map<string, HTMLElement>();
 				const inputFields: TrackedInputFields = Array.from(
-					document.querySelectorAll<HTMLInputElement>(
-						'input[type="text"],input[type="file"],input[type="password"]'
+					document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLElement>(
+						'input[type="text"],input[type="file"],input[type="password"],textarea,*[contenteditable="true"]'
 					)
-				).map((input) => {
-					let nearestLabel = null;
-					if (input.previousElementSibling?.tagName.toLowerCase() === 'label') {
-						nearestLabel = input.previousElementSibling;
-					} else if (input.nextElementSibling?.tagName.toLowerCase() === 'label') {
-						nearestLabel = input.nextElementSibling;
+				).map((input, index) => {
+					const ourMap = window.___flottform_map;
+					const inputId = `input-${index}`;
+					ourMap.set(inputId, input);
+					let nearestLabel: HTMLLabelElement | null = input.id
+						? document.querySelector(`label[for="${input.id}"]`)
+						: null;
+					nearestLabel ??= input.closest('label');
+
+					let labelText = nearestLabel?.innerText;
+					if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) {
+						if (!labelText && input.ariaLabel) {
+							labelText = `${input.ariaLabel} (${input.type})`;
+						} else if (!labelText && input.placeholder) {
+							labelText = `${input.placeholder} (${input.type})`;
+						} else if (!labelText && input.name) {
+							labelText = `${input.name} (${input.type})`;
+						} else if (!labelText && input.id) {
+							labelText = `${input.id} (${input.type})`;
+						} else {
+							labelText = `${inputId} (${input.type})`;
+						}
 					} else {
-						nearestLabel = null;
+						if (!labelText && input.ariaLabel) {
+							labelText = `${input.ariaLabel} (contenteditable ${input.tagName})`;
+						} else if (!labelText && input.id) {
+							labelText = `${input.id} (contenteditable ${input.tagName})`;
+						} else {
+							labelText = `${inputId} (contenteditable ${input.tagName})`;
+						}
 					}
-					let label =
-						document.querySelector(`label[for="${input.id}"]`) ??
-						input.closest('label') ??
-						nearestLabel;
+
 					return {
-						id: input.id,
-						type: input.type,
-						label: (label as HTMLLabelElement)?.innerText,
+						id: inputId,
+						type: input instanceof HTMLInputElement && input.type === 'file' ? 'file' : 'text',
+						label: labelText,
 						connectionState: { event: 'new' }
 					};
 				});
@@ -194,16 +215,21 @@
 
 						handleFlottformEvent('done', undefined, textInputId, currentTabId);
 
-						const targetedTextField: HTMLInputElement | null = document.querySelector(
-							`input#${textInputId}`
-						);
+						const ourMap = window.___flottform_map;
+						const targetedTextField: HTMLInputElement | HTMLTextAreaElement | null =
+							ourMap.get(textInputId);
 						if (!targetedTextField) {
 							console.warn(
 								`Flottform Can't assign the received message (${message}) to the targeted Text input field`
 							);
 							return;
 						}
-						targetedTextField.value = message;
+						if (targetedTextField.tagName.toLocaleLowerCase() === 'input') {
+							targetedTextField.value = message;
+						} else {
+							targetedTextField.innerText = message;
+						}
+						targetedTextField.dispatchEvent(new Event('change', { bubbles: true }));
 						// Channel will be closed since we won't receive data anymore.
 						flottformTextInputHost.close();
 					});
@@ -239,9 +265,8 @@
 				}
 
 				function startFlottformFileInputProcess(fileInputId: string, currentTabId: number) {
-					const targetedInputField = document.getElementById(
-						fileInputId
-					) as HTMLInputElement | null;
+					const ourMap = window.___flottform_map;
+					const targetedInputField = ourMap.get(fileInputId);
 					if (!targetedInputField) {
 						console.warn(
 							"Flottform Can't assign the received file to the targeted file input field"
@@ -318,6 +343,9 @@
 						//console.log('****Inside "done" event*****');
 						handleFlottformEvent('done', undefined, fileInputId, currentTabId);
 						// TODO: HANDLE THE DONE PROCESS
+						const ourMap = window.___flottform_map;
+						const targetFileInput: HTMLInputElement = ourMap.get(fileInputId);
+						targetFileInput.dispatchEvent(new Event('change', { bubbles: true }));
 					});
 				}
 			}
@@ -336,6 +364,46 @@
 				window.addEventListener('beforeunload', () => {
 					chrome.storage.local.set({ [`inputFields-${currentTabId}`]: [] });
 				});
+			}
+		});
+	};
+
+	const createHoverStartHighlightInputField = (inputId: string) => () => {
+		chrome.scripting.executeScript({
+			target: { tabId: currentTabId! },
+			args: [inputId],
+			func: (inputId) => {
+				const ourMap = window.___flottform_map;
+				const input: HTMLElement | undefined = ourMap.get(inputId);
+				if (!input) {
+					console.warn('could not find target!', inputId);
+					return;
+				}
+				const styleToAppend = ';outline:25px solid red;';
+				input.setAttribute('style', `${input.getAttribute('style') ?? ''}${styleToAppend}`);
+			}
+		});
+	};
+
+	const createHoverEndHighlightInputField = (inputId: string) => () => {
+		chrome.scripting.executeScript({
+			target: { tabId: currentTabId! },
+			args: [inputId],
+			func: (inputId) => {
+				const ourMap = window.___flottform_map;
+				const input: HTMLElement | undefined = ourMap.get(inputId);
+				if (!input) {
+					console.warn('could not find target!', inputId);
+					return;
+				}
+				const styleToAppend = ';outline:25px solid red;';
+				const currentStyle = input.getAttribute('style');
+				if (currentStyle) {
+					const styleWithoutAppend = currentStyle.endsWith(styleToAppend)
+						? currentStyle.slice(0, -styleToAppend.length)
+						: currentStyle;
+					input.setAttribute('style', styleWithoutAppend);
+				}
 			}
 		});
 	};
@@ -402,7 +470,13 @@
 <ul class="p-2 grid grid-cols-1">
 	{#each inputFields as input (input.id)}
 		<li class="flex flex-col gap-2 border-b border-slate-300 py-4">
-			<h2 class="text-lg font-bold">{input.label ?? input.id}</h2>
+			<h2
+				class="text-lg font-bold"
+				onpointerenter={createHoverStartHighlightInputField(input.id)}
+				onpointerleave={createHoverEndHighlightInputField(input.id)}
+			>
+				{input.label ?? input.id}
+			</h2>
 			{#if input.connectionState.event === 'new'}
 				<button
 					onclick={() => startFlottformProcess(input.id, input.type)}
