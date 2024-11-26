@@ -267,7 +267,7 @@
 
 					// Track instances of FlottformFileInputHost
 					connectionManager.addConnection(fileInputId, flottformFileInputHost);
-					console.log('connectionManager: ', connectionManager);
+					/* console.log('connectionManager: ', connectionManager); */
 
 					registerFlottformFileInputListeners(flottformFileInputHost, fileInputId, currentTabId);
 				}
@@ -293,12 +293,19 @@
 					flottformFileInputHost.on(
 						'progress',
 						({ fileIndex, totalFileCount, fileName, currentFileProgress, overallProgress }) => {
-							handleFlottformEvent(
-								'progress',
-								{ fileIndex, totalFileCount, fileName, currentFileProgress, overallProgress },
-								fileInputId,
-								currentTabId
-							);
+							if (
+								((currentFileProgress * 100) % 10 === 0 && currentFileProgress < 0.85) ||
+								currentFileProgress > 0.85
+							) {
+								console.log(`'currentFileProgress'= ${currentFileProgress}`);
+								// Limit the amount of times we update the progress bar in chrome.storage.local
+								handleFlottformEvent(
+									'progress',
+									{ fileIndex, totalFileCount, fileName, currentFileProgress, overallProgress },
+									fileInputId,
+									currentTabId
+								);
+							}
 						}
 					);
 
@@ -382,9 +389,12 @@
 <div class="p-2 grid grid-cols-2 gap-2">
 	<button
 		onclick={extractInputFieldsFromCurrentPage}
-		class="p-2 text-sm bg-slate-200 font-bold rounded">Get inputs</button
+		class="p-2 text-sm bg-slate-200 hover:bg-slate-300 transition-colors duration-200 font-bold rounded"
+		>Get inputs</button
 	>
-	<button onclick={removeSavedInputs} class="p-2 text-sm bg-slate-200 font-bold rounded"
+	<button
+		onclick={removeSavedInputs}
+		class="p-2 text-sm bg-slate-200 hover:bg-slate-300 transition-colors duration-200 font-bold rounded"
 		>Remove saved inputs</button
 	>
 </div>
@@ -396,15 +406,24 @@
 			{#if input.connectionState.event === 'new'}
 				<button
 					onclick={() => startFlottformProcess(input.id, input.type)}
-					class="px-3 py-1 rounded bg-slate-100 w-fit">Get a QR code and link</button
+					class="px-3 py-1 rounded bg-slate-100 hover:bg-slate-300 transition-colors duration-200 w-fit"
+					>Get a QR code and link</button
 				>
 			{:else if input.connectionState.event === 'endpoint-created'}
 				<img src={input.connectionState.data.qrCode} alt="qrCode" class="w-36" />
 				<input type="text" value={input.connectionState.data.link} class="w-full" />
 			{:else if input.connectionState.event === 'connected'}
 				<p>Connected!</p>
+			{:else if input.connectionState.event === 'progress'}
+				<label for={input.id} class="italic"
+					>Receiving ({input.connectionState.data.fileIndex + 1}/{input.connectionState.data
+						.totalFileCount}) - {input.connectionState.data.fileName}:</label
+				>
+				<progress id={input.id} value={input.connectionState.data.currentFileProgress} max="1">
+					{input.connectionState.data.currentFileProgress}%
+				</progress>
 			{:else if input.connectionState.event === 'done'}
-				<p>Received & Attached the message from the other device!</p>
+				<p>Transfer Complete!</p>
 			{:else if input.connectionState.event === 'error'}
 				<p class="text-red-600">ERROR: {JSON.stringify(input.connectionState.data)}</p>
 			{/if}
@@ -426,3 +445,30 @@
 		and generate a QR code or link, and easily upload information from your other device.
 	</p>
 </details>
+
+<style>
+	progress[value] {
+		--color: linear-gradient(#fff8, #fff0),
+			repeating-linear-gradient(135deg, #0003 0 10px, #0000 0 20px), #31c6f7;
+		--background: lightgrey;
+		-webkit-appearance: none;
+		-moz-appearance: none;
+		appearance: none;
+		border: none;
+		width: 100%;
+		border-radius: 10em;
+		background: var(--background);
+	}
+	progress[value]::-webkit-progress-bar {
+		border-radius: 10em;
+		background: var(--background);
+	}
+	progress[value]::-webkit-progress-value {
+		border-radius: 10em;
+		background: var(--color);
+	}
+	progress[value]::-moz-progress-bar {
+		border-radius: 10em;
+		background: var(--color);
+	}
+</style>
