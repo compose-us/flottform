@@ -21,7 +21,7 @@ services:
     restart: always
     command:
       - '--api=true'
-      - '--api.dashboard=true'
+      - '--api.dashboard=false'
       - '--api.insecure=false'
       # Enabling docker provider
       - '--providers.docker=true'
@@ -72,11 +72,15 @@ services:
     command: 'node servers/signaling-server/build'
     restart: always
     environment:
+      - 'ADDRESS_HEADER=x-real-ip'
       - 'PROTOCOL_HEADER=x-forwarded-proto'
       - 'HOST_HEADER=x-forwarded-host'
+      - 'PORT_HEADER=x-forwarded-port'
       - 'ALLOWED_ORIGINS=https://${HOST},https://where-are-you.at'
       - 'AUTH_KEY=${AUTH_KEY}'
       - 'ICE_SERVERS_CONFIGURATION=${ICE_SERVERS_CONFIGURATION}'
+      - 'ENABLE_RATE_LIMITING=${ENABLE_RATE_LIMITING}'
+      - 'DEBUG_MODE=${DEBUG_MODE}'
       - 'PUBLIC_IS_ONLINE_DEMO=true'
     volumes:
       - 'app-modules:/app/node_modules'
@@ -114,8 +118,10 @@ services:
     restart: always
     environment:
       - 'BODY_SIZE_LIMIT=33554432'
+      - 'ADDRESS_HEADER=x-real-ip'
       - 'PROTOCOL_HEADER=x-forwarded-proto'
       - 'HOST_HEADER=x-forwarded-host'
+      - 'PORT_HEADER=x-forwarded-port'
       - 'PUBLIC_FLOTTFORM_SERVER_BASE=https://${HOST}/flottform'
       - 'PUBLIC_IS_ONLINE_DEMO=true'
       - 'UPLOAD_FOLDER=/app/servers/demo/static/uploads'
@@ -156,8 +162,10 @@ services:
     restart: always
     environment:
       - 'BODY_SIZE_LIMIT=33554432'
+      - 'ADDRESS_HEADER=x-real-ip'
       - 'PROTOCOL_HEADER=x-forwarded-proto'
       - 'HOST_HEADER=x-forwarded-host'
+      - 'PORT_HEADER=x-forwarded-port'
       - 'PUBLIC_FLOTTFORM_SERVER_BASE=https://${HOST}/flottform'
       - 'PUBLIC_IS_ONLINE_DEMO=true'
     volumes:
