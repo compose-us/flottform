@@ -258,7 +258,7 @@
 	>
 		<div class="border rounded-sm border-gray-200 p-3 flex flex-col">
 			<h2 class="mb-4 font-sans">
-				<span class="px-4 py-2 rounded-full bg-yellow-300">1</span> Beleg einrichten
+				<span class="px-4 py-2 rounded-full bg-yellow-300">1</span> Beleg einreichen
 			</h2>
 
 			<div class="flex flex-col gap-4 h-full">
