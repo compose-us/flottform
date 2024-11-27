@@ -19,10 +19,15 @@ export const GET: RequestHandler = async ({ request }) => {
 	}
 
 	if (useTurnServer) {
+		const response = await fetch(
+			`https://compose-us.metered.live/api/v1/turn/credentials?apiKey=${iceServersEnv}`
+		);
+		const iceServers = await response.json();
+
 		// Return the STUN & TURN servers
 		return json(
 			{
-				iceServers: JSON.parse(iceServersEnv)
+				iceServers: iceServers
 			},
 			{
 				status: 200,
