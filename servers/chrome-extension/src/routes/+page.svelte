@@ -224,12 +224,16 @@
 							);
 							return;
 						}
-						if (targetedTextField.tagName.toLocaleLowerCase() === 'input') {
+						if (
+							targetedTextField.tagName.toLocaleLowerCase() === 'input' ||
+							targetedTextField.tagName.toLocaleLowerCase() === 'textarea'
+						) {
 							targetedTextField.value = message;
 						} else {
 							targetedTextField.innerText = message;
 						}
 						targetedTextField.dispatchEvent(new Event('change', { bubbles: true }));
+						targetedTextField.dispatchEvent(new Event('input', { bubbles: true }));
 						// Channel will be closed since we won't receive data anymore.
 						flottformTextInputHost.close();
 					});
@@ -346,6 +350,7 @@
 						const ourMap = window.___flottform_map;
 						const targetFileInput: HTMLInputElement = ourMap.get(fileInputId);
 						targetFileInput.dispatchEvent(new Event('change', { bubbles: true }));
+						targetFileInput.dispatchEvent(new Event('input', { bubbles: true }));
 					});
 				}
 			}
