@@ -13,6 +13,7 @@ type EndpointInfo = {
 		session: RTCSessionDescriptionInit;
 		iceCandidates: RTCIceCandidateInit[];
 	};
+	lastUpdate: number;
 };
 type SafeEndpointInfo = Omit<EndpointInfo, 'hostKey' | 'clientKey'>;
 
@@ -25,8 +26,40 @@ function createRandomEndpointId(): string {
 
 class FlottformDatabase {
 	private map = new Map<EndpointId, EndpointInfo>();
+	private cleanupIntervalId: NodeJS.Timeout | null = null;
+	private cleanupPeriod = 30 * 60 * 1000; // (30 minutes)
+	private entryTTL = 25 * 60 * 1000; // Time-to-Live for each entry (25 minutes)
 
-	constructor() {}
+	constructor() {
+		this.startCleanup();
+	}
+
+	private startCleanup() {
+		this.cleanupIntervalId = setInterval(() => {
+			// Loop over all entries and delete the stale ones.
+			const now = Date.now();
+			for (const [endpointId, endpointInfo] of this.map) {
+				const lastUpdated = endpointInfo.lastUpdate;
+				if (now - lastUpdated > this.entryTTL) {
+					this.map.delete(endpointId);
+					console.log(`Cleaned up stale entry: ${endpointId}`);
+				}
+			}
+		}, this.cleanupPeriod);
+	}
+
+	private stopCleanup() {
+		// Clear the interval to stop cleanup
+		if (this.cleanupIntervalId) {
+			clearInterval(this.cleanupIntervalId);
+			this.cleanupIntervalId = null;
+		}
+	}
+
+	// Stop the cleanup when the database is no longer needed
+	destroy() {
+		this.stopCleanup();
+	}
 
 	async createEndpoint({ session }: { session: RTCSessionDescriptionInit }): Promise<EndpointInfo> {
 		const entry = {
@@ -35,7 +68,8 @@ class FlottformDatabase {
 			hostInfo: {
 				session,
 				iceCandidates: []
-			}
+			},
+			lastUpdate: Date.now()
 		};
 		this.map.set(entry.endpointId, entry);
 		return entry;
@@ -46,6 +80,7 @@ class FlottformDatabase {
 		if (!entry) {
 			throw Error('Endpoint not found');
 		}
+		entry.lastUpdate = Date.now();
 		const { hostKey: _ignore1, clientKey: _ignore2, ...endpoint } = entry;
 
 		return endpoint;
@@ -72,7 +107,8 @@ class FlottformDatabase {
 
 		const newInfo = {
 			...existingSession,
-			hostInfo: { ...existingSession.hostInfo, session, iceCandidates }
+			hostInfo: { ...existingSession.hostInfo, session, iceCandidates },
+			lastUpdate: Date.now()
 		};
 		this.map.set(endpointId, newInfo);
 
@@ -105,7 +141,8 @@ class FlottformDatabase {
 		const newInfo = {
 			...existingSession,
 			clientKey,
-			clientInfo: { session, iceCandidates }
+			clientInfo: { session, iceCandidates },
+			lastUpdate: Date.now()
 		};
 		this.map.set(endpointId, newInfo);
 
