@@ -67,6 +67,7 @@ export class FlottformTextInputHost extends BaseInputHost<Listeners> {
 		this.emit('receive');
 		// We suppose that the data received is small enough to be all included in 1 message
 		this.emit('done', e.data);
+		this.close();
 	};
 
 	private registerListeners = () => {
