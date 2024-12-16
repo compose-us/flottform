@@ -168,7 +168,9 @@ describe('Flottform database', () => {
 						session: answer,
 						iceCandidates: []
 					})
-			).rejects.toThrow(/peerkey/i);
+			).rejects.toThrow(
+				/clientKey is wrong: Another peer is already connected and you cannot change this info without the correct key anymore. If you lost your key, initiate a new Flottform connection./i
+			);
 			const infoAfter = await db.getEndpoint({ endpointId });
 			expect(infoBefore).toStrictEqual(infoAfter);
 		});
