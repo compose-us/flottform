@@ -132,6 +132,7 @@
 	};
 
 	onMount(async () => {
+		const fileInput = document.querySelector('input[type=file]') as HTMLInputElement;
 		const flottformFileInputHost = new FlottformFileInputHost({
 			flottformApi: sdpExchangeServerBase,
 			createClientUrl: createCustomClientUrl
@@ -173,7 +174,6 @@
 		});
 
 		flottformFileInputHost.on('single-file-transferred', (receivedFile) => {
-			const fileInput = document.querySelector('input[type=file]') as HTMLInputElement;
 			const dt = new DataTransfer();
 			dt.items.add(receivedFile);
 			fileInput.files = dt.files;
