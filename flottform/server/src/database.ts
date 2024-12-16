@@ -27,10 +27,12 @@ function createRandomEndpointId(): string {
 class FlottformDatabase {
 	private map = new Map<EndpointId, EndpointInfo>();
 	private cleanupIntervalId: NodeJS.Timeout | null = null;
-	private cleanupPeriod = 30 * 60 * 1000; // (30 minutes)
-	private entryTTL = 25 * 60 * 1000; // Time-to-Live for each entry (25 minutes)
+	private cleanupPeriod;
+	private entryTTL; // Time-to-Live for each entry
 
-	constructor() {
+	constructor(cleanupPeriod = 30 * 60 * 1000, entryTTL = 25 * 60 * 1000) {
+		this.cleanupPeriod = cleanupPeriod;
+		this.entryTTL = entryTTL;
 		this.startCleanup();
 	}
 
