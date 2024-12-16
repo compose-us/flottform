@@ -133,11 +133,9 @@
 
 	onMount(async () => {
 		const fileInput = document.querySelector('input[type=file]') as HTMLInputElement;
-
 		const flottformFileInputHost = new FlottformFileInputHost({
 			flottformApi: sdpExchangeServerBase,
-			createClientUrl: createCustomClientUrl,
-			inputField: fileInput
+			createClientUrl: createCustomClientUrl
 		});
 
 		flottformFileInputHost.on('new', () => {
@@ -173,6 +171,13 @@
 			flottformDialogDescription =
 				'Another device is sending data. Waiting for incoming data transfer to complete';
 			flottformButtonBackgroundColor = 'bg-[#7EA4FF]';
+		});
+
+		flottformFileInputHost.on('single-file-transferred', (receivedFile) => {
+			const dt = new DataTransfer();
+			dt.items.add(receivedFile);
+			fileInput.files = dt.files;
+			console.log(`Received file: ${receivedFile.name} (${receivedFile.size} bytes)`);
 		});
 
 		flottformFileInputHost.on('done', () => {
