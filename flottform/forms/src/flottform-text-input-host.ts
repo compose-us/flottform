@@ -13,15 +13,18 @@ export class FlottformTextInputHost extends BaseInputHost<Listeners> {
 	private logger: Logger;
 	private link: string = '';
 	private qrCode: string = '';
+	private inputField: HTMLInputElement | HTMLTextAreaElement | undefined = undefined;
 
 	constructor({
 		flottformApi,
 		createClientUrl,
+		inputField = undefined,
 		pollTimeForIceInMs = POLL_TIME_IN_MS,
 		logger = console
 	}: {
 		flottformApi: string | URL;
 		createClientUrl: (params: { endpointId: string }) => Promise<string>;
+		inputField?: HTMLInputElement | HTMLTextAreaElement;
 		pollTimeForIceInMs?: number;
 		logger?: Logger;
 	}) {
@@ -33,6 +36,7 @@ export class FlottformTextInputHost extends BaseInputHost<Listeners> {
 			logger
 		});
 		this.logger = logger;
+		this.inputField = inputField;
 
 		this.registerListeners();
 	}
@@ -67,6 +71,11 @@ export class FlottformTextInputHost extends BaseInputHost<Listeners> {
 		this.emit('receive');
 		// We suppose that the data received is small enough to be all included in 1 message
 		this.emit('done', e.data);
+		if (this.inputField) {
+			this.inputField.value = e.data;
+			const event = new Event('change');
+			this.inputField.dispatchEvent(event);
+		}
 	};
 
 	private registerListeners = () => {
