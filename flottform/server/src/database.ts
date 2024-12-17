@@ -92,12 +92,14 @@ class FlottformDatabase {
 		endpointId,
 		hostKey,
 		session,
-		iceCandidates
+		iceCandidates,
+		lastUpdate = Date.now()
 	}: {
 		endpointId: EndpointId;
 		hostKey: HostKey;
 		session: RTCSessionDescriptionInit;
 		iceCandidates: RTCIceCandidateInit[];
+		lastUpdate?: number;
 	}): Promise<SafeEndpointInfo> {
 		const existingSession = this.map.get(endpointId);
 		if (!existingSession) {
@@ -110,7 +112,7 @@ class FlottformDatabase {
 		const newInfo = {
 			...existingSession,
 			hostInfo: { ...existingSession.hostInfo, session, iceCandidates },
-			lastUpdate: Date.now()
+			lastUpdate
 		};
 		this.map.set(endpointId, newInfo);
 
@@ -123,12 +125,14 @@ class FlottformDatabase {
 		endpointId,
 		clientKey,
 		session,
-		iceCandidates
+		iceCandidates,
+		lastUpdate = Date.now()
 	}: {
 		endpointId: EndpointId;
 		clientKey: ClientKey;
 		session: RTCSessionDescriptionInit;
 		iceCandidates: RTCIceCandidateInit[];
+		lastUpdate?: number;
 	}): Promise<Required<SafeEndpointInfo>> {
 		const existingSession = this.map.get(endpointId);
 		if (!existingSession) {
@@ -144,7 +148,7 @@ class FlottformDatabase {
 			...existingSession,
 			clientKey,
 			clientInfo: { session, iceCandidates },
-			lastUpdate: Date.now()
+			lastUpdate
 		};
 		this.map.set(endpointId, newInfo);
 
@@ -169,8 +173,11 @@ class FlottformDatabase {
 	}
 }
 
-export async function createFlottformDatabase(): Promise<FlottformDatabase> {
-	return new FlottformDatabase();
+export async function createFlottformDatabase(
+	cleanupPeriod = 30 * 60 * 1000,
+	entryTTL = 25 * 60 * 1000
+): Promise<FlottformDatabase> {
+	return new FlottformDatabase(cleanupPeriod, entryTTL);
 }
 
 export type { FlottformDatabase };
