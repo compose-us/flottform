@@ -26,9 +26,9 @@ function createRandomEndpointId(): string {
 
 class FlottformDatabase {
 	private map = new Map<EndpointId, EndpointInfo>();
-	private cleanupIntervalId: NodeJS.Timeout | null = null;
-	private cleanupPeriod;
-	private entryTTL; // Time-to-Live for each entry
+	private cleanupTimeoutId: NodeJS.Timeout | null = null;
+	private cleanupPeriod: number;
+	private entryTTL: number; // Time-to-Live for each entry
 
 	constructor(cleanupPeriod = 30 * 60 * 1000, entryTTL = 25 * 60 * 1000) {
 		this.cleanupPeriod = cleanupPeriod;
@@ -37,24 +37,28 @@ class FlottformDatabase {
 	}
 
 	private startCleanup() {
-		this.cleanupIntervalId = setInterval(() => {
-			// Loop over all entries and delete the stale ones.
-			const now = Date.now();
-			for (const [endpointId, endpointInfo] of this.map) {
-				const lastUpdated = endpointInfo.lastUpdate;
-				if (now - lastUpdated > this.entryTTL) {
-					this.map.delete(endpointId);
-					console.log(`Cleaned up stale entry: ${endpointId}`);
-				}
+		this.cleanupTimeoutId = setTimeout(this.cleanupFn.bind(this), this.cleanupPeriod);
+	}
+
+	private cleanupFn() {
+		if (!this.map || this.map.size === 0) return;
+		const now = Date.now();
+		// Loop over all entries and delete the stale ones.
+		for (const [endpointId, endpointInfo] of this.map) {
+			const lastUpdated = endpointInfo.lastUpdate;
+			if (now - lastUpdated > this.entryTTL) {
+				this.map.delete(endpointId);
+				console.log(`Cleaned up stale entry: ${endpointId}`);
 			}
-		}, this.cleanupPeriod);
+		}
+		this.cleanupTimeoutId = setTimeout(this.startCleanup.bind(this), this.cleanupPeriod);
 	}
 
 	private stopCleanup() {
 		// Clear the interval to stop cleanup
-		if (this.cleanupIntervalId) {
-			clearInterval(this.cleanupIntervalId);
-			this.cleanupIntervalId = null;
+		if (this.cleanupTimeoutId) {
+			clearTimeout(this.cleanupTimeoutId);
+			this.cleanupTimeoutId = null;
 		}
 	}
 

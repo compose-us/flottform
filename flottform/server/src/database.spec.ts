@@ -182,7 +182,7 @@ describe('Flottform database', () => {
 		}
 
 		it('Should clean up stale entries after entryTTL', async () => {
-			const db = await createFlottformDatabase(100, 50);
+			const db = await createFlottformDatabase(1000, 500);
 			const conn = new RTCPeerConnection();
 			const offer = await conn.createOffer();
 			const { endpointId } = await db.createEndpoint({ session: offer });
@@ -201,14 +201,14 @@ describe('Flottform database', () => {
 			});
 
 			// Sleep for enough time to trigger the first cleanup
-			await sleep(110);
+			await sleep(1100);
 
 			// The endpoint should be cleaned by now
 			expect(async () => await db.getEndpoint({ endpointId })).rejects.toThrow(/endpoint/i);
 		});
 
 		it("Shouldn't clean up entries before entryTTL is expired", async () => {
-			const db = await createFlottformDatabase(100, 50);
+			const db = await createFlottformDatabase(1000, 500);
 			const conn = new RTCPeerConnection();
 			const offer = await conn.createOffer();
 			const { endpointId } = await db.createEndpoint({ session: offer });
