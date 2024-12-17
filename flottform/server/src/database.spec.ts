@@ -175,4 +175,61 @@ describe('Flottform database', () => {
 			expect(infoBefore).toStrictEqual(infoAfter);
 		});
 	});
+
+	describe('startCleanup()', () => {
+		function sleep(ms: number) {
+			return new Promise((resolve) => setTimeout(resolve, ms));
+		}
+
+		it('Should clean up stale entries after entryTTL', async () => {
+			const db = await createFlottformDatabase(100, 50);
+			const conn = new RTCPeerConnection();
+			const offer = await conn.createOffer();
+			const { endpointId } = await db.createEndpoint({ session: offer });
+
+			const connPeer = new RTCPeerConnection();
+			await connPeer.setRemoteDescription(offer);
+			const answer = await connPeer.createAnswer();
+			const clientKey = 'random-key';
+
+			await db.putClientInfo({
+				endpointId,
+				clientKey,
+				session: answer,
+				iceCandidates: [],
+				lastUpdate: Date.now()
+			});
+
+			// Sleep for enough time to trigger the first cleanup
+			await sleep(110);
+
+			// The endpoint should be cleaned by now
+			expect(async () => await db.getEndpoint({ endpointId })).rejects.toThrow(/endpoint/i);
+		});
+
+		it("Shouldn't clean up entries before entryTTL is expired", async () => {
+			const db = await createFlottformDatabase(100, 50);
+			const conn = new RTCPeerConnection();
+			const offer = await conn.createOffer();
+			const { endpointId } = await db.createEndpoint({ session: offer });
+
+			const connPeer = new RTCPeerConnection();
+			await connPeer.setRemoteDescription(offer);
+			const answer = await connPeer.createAnswer();
+			const clientKey = 'random-key';
+
+			await db.putClientInfo({
+				endpointId,
+				clientKey,
+				session: answer,
+				iceCandidates: [],
+				lastUpdate: Date.now()
+			});
+
+			// The endpoint shouldn't be cleaned by now
+			const retrievedInfo = await db.getEndpoint({ endpointId });
+			expect(retrievedInfo).toBeDefined();
+			expect(retrievedInfo?.hostInfo.session).toStrictEqual(offer);
+		});
+	});
 });
