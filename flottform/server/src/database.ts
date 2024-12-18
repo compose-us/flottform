@@ -33,9 +33,15 @@ class FlottformDatabase {
 	private cleanupPeriod: number;
 	private entryTimeToLive: number;
 
-	constructor(cleanupPeriod = DEFAULT_CLEANUP_PERIOD, entryTTL = DEFAULT_ENTRY_TIME_TO_LIVE_IN_MS) {
+	constructor({
+		cleanupPeriod = DEFAULT_CLEANUP_PERIOD,
+		entryTimeToLive = DEFAULT_ENTRY_TIME_TO_LIVE_IN_MS
+	}: {
+		cleanupPeriod?: number;
+		entryTimeToLive?: number;
+	} = {}) {
 		this.cleanupPeriod = cleanupPeriod;
-		this.entryTimeToLive = entryTTL;
+		this.entryTimeToLive = entryTimeToLive;
 		this.startCleanup();
 	}
 
@@ -51,7 +57,6 @@ class FlottformDatabase {
 				const lastUpdated = endpointInfo.lastUpdate;
 				if (now - lastUpdated > this.entryTimeToLive) {
 					this.map.delete(endpointId);
-					console.log(`Cleaned up stale entry: ${endpointId}`);
 				}
 			}
 		}
@@ -181,11 +186,14 @@ class FlottformDatabase {
 	}
 }
 
-export async function createFlottformDatabase(
+export async function createFlottformDatabase({
 	cleanupPeriod = DEFAULT_CLEANUP_PERIOD,
-	entryTTL = DEFAULT_ENTRY_TIME_TO_LIVE_IN_MS
-): Promise<FlottformDatabase> {
-	return new FlottformDatabase(cleanupPeriod, entryTTL);
+	entryTimeToLive = DEFAULT_ENTRY_TIME_TO_LIVE_IN_MS
+}: {
+	cleanupPeriod?: number;
+	entryTimeToLive?: number;
+} = {}): Promise<FlottformDatabase> {
+	return new FlottformDatabase({ cleanupPeriod, entryTimeToLive });
 }
 
 export type { FlottformDatabase };
