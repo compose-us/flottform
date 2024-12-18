@@ -11,6 +11,9 @@ import {
 
 export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 	private flottformApi: string | URL;
+	private baseApi: string;
+	private endpointId: string = '';
+	private hostKey: string = '';
 	private createClientUrl: (params: { endpointId: string }) => Promise<string>;
 	private rtcConfiguration: RTCConfiguration;
 	private pollTimeForIceInMs: number;
@@ -35,6 +38,11 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 	}) {
 		super();
 		this.flottformApi = flottformApi;
+		this.baseApi = (
+			this.flottformApi instanceof URL ? this.flottformApi : new URL(this.flottformApi)
+		)
+			.toString()
+			.replace(/\/$/, '');
 		this.createClientUrl = createClientUrl;
 		this.rtcConfiguration = DEFAULT_WEBRTC_CONFIG;
 		this.pollTimeForIceInMs = pollTimeForIceInMs;
@@ -55,14 +63,9 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		if (this.openPeerConnection) {
 			this.close();
 		}
-		const baseApi = (
-			this.flottformApi instanceof URL ? this.flottformApi : new URL(this.flottformApi)
-		)
-			.toString()
-			.replace(/\/$/, '');
 
 		try {
-			this.rtcConfiguration.iceServers = await this.fetchIceServers(baseApi);
+			this.rtcConfiguration.iceServers = await this.fetchIceServers(this.baseApi);
 		} catch (error) {
 			// Use the default configuration as a fallback
 			this.logger.error(error);
@@ -74,11 +77,13 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		const session = await this.openPeerConnection.createOffer();
 		await this.openPeerConnection.setLocalDescription(session);
 
-		const { endpointId, hostKey } = await this.createEndpoint(baseApi, session);
+		const { endpointId, hostKey } = await this.createEndpoint(this.baseApi, session);
+		this.hostKey = hostKey;
+		this.endpointId = endpointId;
 		this.logger.log('Created endpoint', { endpointId, hostKey });
 
-		const getEndpointInfoUrl = `${baseApi}/${endpointId}`;
-		const putHostInfoUrl = `${baseApi}/${endpointId}/host`;
+		const getEndpointInfoUrl = `${this.baseApi}/${endpointId}`;
+		const putHostInfoUrl = `${this.baseApi}/${endpointId}/host`;
 
 		const hostIceCandidates = new Set<RTCIceCandidateInit>();
 		await this.putHostInfo(putHostInfoUrl, hostKey, hostIceCandidates, session);
@@ -103,6 +108,8 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 			this.openPeerConnection = null;
 		}
 		this.changeState('disconnected');
+		// Cleanup old entries.
+		this.deleteEndpoint(this.baseApi, this.endpointId, this.hostKey);
 	};
 
 	private setupDataChannelListener = () => {
@@ -218,6 +225,19 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 				'Content-Type': 'application/json'
 			},
 			body: JSON.stringify({ session })
+		});
+
+		return response.json();
+	};
+
+	private deleteEndpoint = async (baseApi: string, endpointId: string, hostKey: string) => {
+		const response = await fetch(`${baseApi}/${endpointId}`, {
+			method: 'DELETE',
+			headers: {
+				Accept: 'application/json',
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({ hostKey })
 		});
 
 		return response.json();

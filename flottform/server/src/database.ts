@@ -13,8 +13,12 @@ type EndpointInfo = {
 		session: RTCSessionDescriptionInit;
 		iceCandidates: RTCIceCandidateInit[];
 	};
+	lastUpdate: number;
 };
 type SafeEndpointInfo = Omit<EndpointInfo, 'hostKey' | 'clientKey'>;
+
+const DEFAULT_CLEANUP_PERIOD = 30 * 60 * 1000;
+const DEFAULT_ENTRY_TIME_TO_LIVE_IN_MS = 25 * 60 * 1000;
 
 function createRandomHostKey(): string {
 	return crypto.randomUUID();
@@ -25,8 +29,52 @@ function createRandomEndpointId(): string {
 
 class FlottformDatabase {
 	private map = new Map<EndpointId, EndpointInfo>();
+	private cleanupTimeoutId: NodeJS.Timeout | null = null;
+	private cleanupPeriod: number;
+	private entryTimeToLive: number;
 
-	constructor() {}
+	constructor({
+		cleanupPeriod = DEFAULT_CLEANUP_PERIOD,
+		entryTimeToLive = DEFAULT_ENTRY_TIME_TO_LIVE_IN_MS
+	}: {
+		cleanupPeriod?: number;
+		entryTimeToLive?: number;
+	} = {}) {
+		this.cleanupPeriod = cleanupPeriod;
+		this.entryTimeToLive = entryTimeToLive;
+		this.startCleanup();
+	}
+
+	private startCleanup() {
+		this.cleanupTimeoutId = setTimeout(this.cleanupFn.bind(this), this.cleanupPeriod);
+	}
+
+	private cleanupFn() {
+		if (this.map && this.map.size !== 0) {
+			const now = Date.now();
+			// Loop over all entries and delete the stale ones.
+			for (const [endpointId, endpointInfo] of this.map) {
+				const lastUpdated = endpointInfo.lastUpdate;
+				if (now - lastUpdated > this.entryTimeToLive) {
+					this.map.delete(endpointId);
+				}
+			}
+		}
+		this.cleanupTimeoutId = setTimeout(this.startCleanup.bind(this), this.cleanupPeriod);
+	}
+
+	private stopCleanup() {
+		// Clear the interval to stop cleanup
+		if (this.cleanupTimeoutId) {
+			clearTimeout(this.cleanupTimeoutId);
+			this.cleanupTimeoutId = null;
+		}
+	}
+
+	// Stop the cleanup when the database is no longer needed
+	destroy() {
+		this.stopCleanup();
+	}
 
 	async createEndpoint({ session }: { session: RTCSessionDescriptionInit }): Promise<EndpointInfo> {
 		const entry = {
@@ -35,7 +83,8 @@ class FlottformDatabase {
 			hostInfo: {
 				session,
 				iceCandidates: []
-			}
+			},
+			lastUpdate: Date.now()
 		};
 		this.map.set(entry.endpointId, entry);
 		return entry;
@@ -46,6 +95,7 @@ class FlottformDatabase {
 		if (!entry) {
 			throw Error('Endpoint not found');
 		}
+		entry.lastUpdate = Date.now();
 		const { hostKey: _ignore1, clientKey: _ignore2, ...endpoint } = entry;
 
 		return endpoint;
@@ -55,12 +105,14 @@ class FlottformDatabase {
 		endpointId,
 		hostKey,
 		session,
-		iceCandidates
+		iceCandidates,
+		lastUpdate = Date.now()
 	}: {
 		endpointId: EndpointId;
 		hostKey: HostKey;
 		session: RTCSessionDescriptionInit;
 		iceCandidates: RTCIceCandidateInit[];
+		lastUpdate?: number;
 	}): Promise<SafeEndpointInfo> {
 		const existingSession = this.map.get(endpointId);
 		if (!existingSession) {
@@ -72,7 +124,8 @@ class FlottformDatabase {
 
 		const newInfo = {
 			...existingSession,
-			hostInfo: { ...existingSession.hostInfo, session, iceCandidates }
+			hostInfo: { ...existingSession.hostInfo, session, iceCandidates },
+			lastUpdate
 		};
 		this.map.set(endpointId, newInfo);
 
@@ -85,12 +138,14 @@ class FlottformDatabase {
 		endpointId,
 		clientKey,
 		session,
-		iceCandidates
+		iceCandidates,
+		lastUpdate = Date.now()
 	}: {
 		endpointId: EndpointId;
 		clientKey: ClientKey;
 		session: RTCSessionDescriptionInit;
 		iceCandidates: RTCIceCandidateInit[];
+		lastUpdate?: number;
 	}): Promise<Required<SafeEndpointInfo>> {
 		const existingSession = this.map.get(endpointId);
 		if (!existingSession) {
@@ -105,7 +160,8 @@ class FlottformDatabase {
 		const newInfo = {
 			...existingSession,
 			clientKey,
-			clientInfo: { session, iceCandidates }
+			clientInfo: { session, iceCandidates },
+			lastUpdate
 		};
 		this.map.set(endpointId, newInfo);
 
@@ -130,8 +186,14 @@ class FlottformDatabase {
 	}
 }
 
-export async function createFlottformDatabase(): Promise<FlottformDatabase> {
-	return new FlottformDatabase();
+export async function createFlottformDatabase({
+	cleanupPeriod = DEFAULT_CLEANUP_PERIOD,
+	entryTimeToLive = DEFAULT_ENTRY_TIME_TO_LIVE_IN_MS
+}: {
+	cleanupPeriod?: number;
+	entryTimeToLive?: number;
+} = {}): Promise<FlottformDatabase> {
+	return new FlottformDatabase({ cleanupPeriod, entryTimeToLive });
 }
 
 export type { FlottformDatabase };

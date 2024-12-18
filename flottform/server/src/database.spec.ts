@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { createFlottformDatabase } from './database';
 
 describe('Flottform database', () => {
@@ -168,9 +168,77 @@ describe('Flottform database', () => {
 						session: answer,
 						iceCandidates: []
 					})
-			).rejects.toThrow(/peerkey/i);
+			).rejects.toThrow(
+				/clientKey is wrong: Another peer is already connected and you cannot change this info without the correct key anymore. If you lost your key, initiate a new Flottform connection./i
+			);
 			const infoAfter = await db.getEndpoint({ endpointId });
 			expect(infoBefore).toStrictEqual(infoAfter);
+		});
+	});
+
+	describe('startCleanup()', () => {
+		beforeEach(() => {
+			vi.useFakeTimers();
+		});
+		afterEach(() => {
+			vi.useRealTimers();
+		});
+
+		it('Should clean up stale entries after entryTTL', async () => {
+			const db = await createFlottformDatabase({
+				cleanupPeriod: 1000,
+				entryTimeToLive: 500
+			});
+			const conn = new RTCPeerConnection();
+			const offer = await conn.createOffer();
+			const { endpointId } = await db.createEndpoint({ session: offer });
+
+			const connPeer = new RTCPeerConnection();
+			await connPeer.setRemoteDescription(offer);
+			const answer = await connPeer.createAnswer();
+			const clientKey = 'random-key';
+
+			await db.putClientInfo({
+				endpointId,
+				clientKey,
+				session: answer,
+				iceCandidates: [],
+				lastUpdate: Date.now()
+			});
+
+			// Sleep for enough time to trigger the first cleanup
+			vi.advanceTimersByTime(1100);
+
+			// The endpoint should be cleaned by now
+			expect(async () => await db.getEndpoint({ endpointId })).rejects.toThrow(/endpoint/i);
+		});
+
+		it("Shouldn't clean up entries before entryTTL is expired", async () => {
+			const db = await createFlottformDatabase({
+				cleanupPeriod: 1000,
+				entryTimeToLive: 500
+			});
+			const conn = new RTCPeerConnection();
+			const offer = await conn.createOffer();
+			const { endpointId } = await db.createEndpoint({ session: offer });
+
+			const connPeer = new RTCPeerConnection();
+			await connPeer.setRemoteDescription(offer);
+			const answer = await connPeer.createAnswer();
+			const clientKey = 'random-key';
+
+			await db.putClientInfo({
+				endpointId,
+				clientKey,
+				session: answer,
+				iceCandidates: [],
+				lastUpdate: Date.now()
+			});
+
+			// The endpoint shouldn't be cleaned by now
+			const retrievedInfo = await db.getEndpoint({ endpointId });
+			expect(retrievedInfo).toBeDefined();
+			expect(retrievedInfo?.hostInfo.session).toStrictEqual(offer);
 		});
 	});
 });
