@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { createFlottformDatabase } from './database';
 
 describe('Flottform database', () => {
@@ -177,9 +177,12 @@ describe('Flottform database', () => {
 	});
 
 	describe('startCleanup()', () => {
-		function sleep(ms: number) {
-			return new Promise((resolve) => setTimeout(resolve, ms));
-		}
+		beforeEach(() => {
+			vi.useFakeTimers();
+		});
+		afterEach(() => {
+			vi.useRealTimers();
+		});
 
 		it('Should clean up stale entries after entryTTL', async () => {
 			const db = await createFlottformDatabase(1000, 500);
@@ -201,7 +204,7 @@ describe('Flottform database', () => {
 			});
 
 			// Sleep for enough time to trigger the first cleanup
-			await sleep(1100);
+			vi.advanceTimersByTime(1100);
 
 			// The endpoint should be cleaned by now
 			expect(async () => await db.getEndpoint({ endpointId })).rejects.toThrow(/endpoint/i);

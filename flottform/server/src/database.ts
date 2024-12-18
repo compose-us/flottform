@@ -17,6 +17,9 @@ type EndpointInfo = {
 };
 type SafeEndpointInfo = Omit<EndpointInfo, 'hostKey' | 'clientKey'>;
 
+const DEFAULT_CLEANUP_PERIOD = 30 * 60 * 1000;
+const DEFAULT_ENTRY_TIME_TO_LIVE_IN_MS = 25 * 60 * 1000;
+
 function createRandomHostKey(): string {
 	return crypto.randomUUID();
 }
@@ -28,11 +31,11 @@ class FlottformDatabase {
 	private map = new Map<EndpointId, EndpointInfo>();
 	private cleanupTimeoutId: NodeJS.Timeout | null = null;
 	private cleanupPeriod: number;
-	private entryTTL: number; // Time-to-Live for each entry
+	private entryTimeToLive: number;
 
-	constructor(cleanupPeriod = 30 * 60 * 1000, entryTTL = 25 * 60 * 1000) {
+	constructor(cleanupPeriod = DEFAULT_CLEANUP_PERIOD, entryTTL = DEFAULT_ENTRY_TIME_TO_LIVE_IN_MS) {
 		this.cleanupPeriod = cleanupPeriod;
-		this.entryTTL = entryTTL;
+		this.entryTimeToLive = entryTTL;
 		this.startCleanup();
 	}
 
@@ -41,14 +44,15 @@ class FlottformDatabase {
 	}
 
 	private cleanupFn() {
-		if (!this.map || this.map.size === 0) return;
-		const now = Date.now();
-		// Loop over all entries and delete the stale ones.
-		for (const [endpointId, endpointInfo] of this.map) {
-			const lastUpdated = endpointInfo.lastUpdate;
-			if (now - lastUpdated > this.entryTTL) {
-				this.map.delete(endpointId);
-				console.log(`Cleaned up stale entry: ${endpointId}`);
+		if (this.map && this.map.size !== 0) {
+			const now = Date.now();
+			// Loop over all entries and delete the stale ones.
+			for (const [endpointId, endpointInfo] of this.map) {
+				const lastUpdated = endpointInfo.lastUpdate;
+				if (now - lastUpdated > this.entryTimeToLive) {
+					this.map.delete(endpointId);
+					console.log(`Cleaned up stale entry: ${endpointId}`);
+				}
 			}
 		}
 		this.cleanupTimeoutId = setTimeout(this.startCleanup.bind(this), this.cleanupPeriod);
@@ -178,8 +182,8 @@ class FlottformDatabase {
 }
 
 export async function createFlottformDatabase(
-	cleanupPeriod = 30 * 60 * 1000,
-	entryTTL = 25 * 60 * 1000
+	cleanupPeriod = DEFAULT_CLEANUP_PERIOD,
+	entryTTL = DEFAULT_ENTRY_TIME_TO_LIVE_IN_MS
 ): Promise<FlottformDatabase> {
 	return new FlottformDatabase(cleanupPeriod, entryTTL);
 }
