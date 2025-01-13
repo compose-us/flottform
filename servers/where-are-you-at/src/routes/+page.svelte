@@ -52,7 +52,7 @@
 		flottformTextInputHost.on('connected', () => {
 			$currentState = 'connected';
 		});
-		flottformTextInputHost.on('done', (message: string) => {
+		flottformTextInputHost.on('text-received', (message: string) => {
 			$currentState = 'done';
 			const coords: Coordinates = JSON.parse(message);
 			$latitude = coords.latitude;
