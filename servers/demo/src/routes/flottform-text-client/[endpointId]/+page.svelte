@@ -5,7 +5,7 @@
 	import { sdpExchangeServerBase } from '../../../api';
 
 	let currentState = $state<
-		'init' | 'connected' | 'sending' | 'done' | 'error-user-denied' | 'error'
+		'init' | 'connected' | 'text-transferred' | 'sending' | 'error-user-denied' | 'error'
 	>('init');
 	let textInput: HTMLInputElement;
 	let sendTextToForm = $state<() => void>();
@@ -23,11 +23,8 @@
 		flottformTextInputClient.on('connected', () => {
 			currentState = 'connected';
 		});
-		flottformTextInputClient.on('sending', () => {
-			currentState = 'sending';
-		});
-		flottformTextInputClient.on('done', () => {
-			currentState = 'done';
+		flottformTextInputClient.on('text-transferred', () => {
+			currentState = 'text-transferred';
 		});
 		flottformTextInputClient.on('error', () => {
 			currentState = 'error';
@@ -67,7 +64,7 @@
 						<circle cx="50" cy="50" r="45" class="spinner" />
 					</svg>
 				</div>
-			{:else if currentState === 'done'}
+			{:else if currentState === 'text-transferred'}
 				<div class="flex gap-6">
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" version="1.1" class="w-12">
 						<path

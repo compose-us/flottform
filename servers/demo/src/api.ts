@@ -21,3 +21,7 @@ export const createExpenseReportClientUrl = async ({ endpointId }: { endpointId:
 export const createDeExpenseReportClientUrl = async ({ endpointId }: { endpointId: string }) => {
 	return `${window.location.origin}${base}/belegeinreichung-client/${endpointId}`;
 };
+
+export const createFlottformMessagingClientUrl = async ({ endpointId }: { endpointId: string }) => {
+	return `${window.location.origin}${base}/flottform-messaging-client/${endpointId}`;
+};

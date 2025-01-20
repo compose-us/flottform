@@ -16,6 +16,8 @@ type Listeners = {
 	'connecting-to-host': [];
 	connected: [];
 	'connection-impossible': [];
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	'receiving-data': [e: any];
 	done: [];
 	disconnected: [];
 	error: [e: string];
@@ -96,15 +98,8 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 			this.logger.info(`ondatachannel: ${e.channel}`);
 			this.changeState('connected');
 			this.dataChannel = e.channel;
-			// Set the maximum amount of data waiting inside the datachannel's buffer
-			this.dataChannel.bufferedAmountLowThreshold = this.BUFFER_THRESHOLD;
-			// Set the listener to listen then emit an event when the buffer has more space available and can be used to send more data
-			this.dataChannel.onbufferedamountlow = () => {
-				this.emit('bufferedamountlow');
-			};
-			this.dataChannel.onopen = (e) => {
-				this.logger.info(`ondatachannel - onopen: ${e.type}`);
-			};
+			this.configureDataChannel();
+			this.setupDataChannelListener();
 		};
 
 		this.changeState('sending-client-info');
@@ -122,11 +117,41 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		this.changeState('disconnected');
 	};
 
-	// sendData = (data: string | Blob | ArrayBuffer | ArrayBufferView) => {
+	private setupDataChannelListener = () => {
+		if (!this.dataChannel) {
+			this.changeState(
+				'error',
+				'dataChannel is not defined. Unable to setup the listeners for the data channel'
+			);
+			return;
+		}
+
+		this.dataChannel.onmessage = (e) => {
+			// Handling the incoming data from the Host depends on the use case.
+			this.emit('receiving-data', e);
+		};
+	};
+
+	private configureDataChannel = () => {
+		if (!this.dataChannel) {
+			this.changeState('error', 'dataChannel is not defined! Unable to configure it!');
+			return;
+		}
+		// Set the maximum amount of data waiting inside the datachannel's buffer
+		this.dataChannel.bufferedAmountLowThreshold = this.BUFFER_THRESHOLD;
+		// Set the listener to listen then emit an event when the buffer has more space available and can be used to send more data
+		this.dataChannel.onbufferedamountlow = () => {
+			this.emit('bufferedamountlow');
+		};
+		this.dataChannel.onopen = (e) => {
+			this.logger.info(`ondatachannel - onopen: ${e.type}`);
+		};
+	};
+
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	sendData = (data: any) => {
-		if (this.dataChannel == null) {
-			this.changeState('error', 'dataChannel is null. Unable to send the file to the Host!');
+		if (!this.dataChannel) {
+			this.changeState('error', 'dataChannel is not defined! Unable to send the file to the Host!');
 			return;
 		} else if (!this.canSendMoreData()) {
 			this.logger.warn('Data channel is full! Cannot send data at the moment');

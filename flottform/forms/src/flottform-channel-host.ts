@@ -21,6 +21,7 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 	private openPeerConnection: RTCPeerConnection | null = null;
 	private dataChannel: RTCDataChannel | null = null;
 	private pollForIceTimer: NodeJS.Timeout | number | null = null;
+	private BUFFER_THRESHOLD = 128 * 1024; // 128KB buffer threshold (maximum of 4 chunks in the buffer waiting to be sent over the network)
 
 	constructor({
 		flottformApi,
@@ -70,6 +71,10 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		this.openPeerConnection = new RTCPeerConnection(this.rtcConfiguration);
 
 		this.dataChannel = this.createDataChannel();
+		if (this.dataChannel) {
+			this.configureDataChannel();
+			this.setupDataChannelListener();
+		}
 
 		const session = await this.openPeerConnection.createOffer();
 		await this.openPeerConnection.setLocalDescription(session);
@@ -118,6 +123,40 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 			// Handling the incoming data from the client depends on the use case.
 			this.emit('receiving-data', e);
 		};
+	};
+
+	private configureDataChannel = () => {
+		if (this.dataChannel == null) {
+			this.changeState('error', 'dataChannel is null. Unable to setup the configure it!');
+			return;
+		}
+		// Set the maximum amount of data waiting inside the datachannel's buffer
+		this.dataChannel.bufferedAmountLowThreshold = this.BUFFER_THRESHOLD;
+		// Set the listener to listen then emit an event when the buffer has more space available and can be used to send more data
+		this.dataChannel.onbufferedamountlow = () => {
+			this.emit('bufferedamountlow');
+		};
+		this.dataChannel.onopen = (e) => {
+			this.logger.info(`ondatachannel - onopen: ${e.type}`);
+		};
+	};
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	sendData = (data: any) => {
+		if (this.dataChannel == null) {
+			this.changeState('error', 'dataChannel is null. Unable to send the data to the Client!');
+			return;
+		} else if (!this.canSendMoreData()) {
+			this.logger.warn('Data channel is full! Cannot send data at the moment');
+			return;
+		}
+		this.dataChannel.send(data);
+	};
+
+	canSendMoreData = () => {
+		return (
+			this.dataChannel &&
+			this.dataChannel.bufferedAmount < this.dataChannel.bufferedAmountLowThreshold
+		);
 	};
 
 	private setupHostIceGathering = (
@@ -279,7 +318,7 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 
 		this.dataChannel.onerror = (e) => {
 			this.logger.log('channel.onerror', e);
-			this.changeState('error', { message: 'file-transfer' });
+			this.changeState('error', { message: e.error.message });
 		};
 	};
 
