@@ -21,7 +21,7 @@
 		flottformTextInputClient.on('connected', () => {
 			currentState = 'connected';
 		});
-		flottformTextInputClient.on('text-transfered', () => {
+		flottformTextInputClient.on('text-transferred', () => {
 			currentState = 'done';
 		});
 		flottformTextInputClient.on('error', () => {

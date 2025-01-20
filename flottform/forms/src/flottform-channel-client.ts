@@ -118,10 +118,10 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 	};
 
 	private setupDataChannelListener = () => {
-		if (this.dataChannel == null) {
+		if (!this.dataChannel) {
 			this.changeState(
 				'error',
-				'dataChannel is null. Unable to setup the listeners for the data channel'
+				'dataChannel is not defined. Unable to setup the listeners for the data channel'
 			);
 			return;
 		}
@@ -133,8 +133,8 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 	};
 
 	private configureDataChannel = () => {
-		if (this.dataChannel == null) {
-			this.changeState('error', 'dataChannel is null. Unable to setup the configure it!');
+		if (!this.dataChannel) {
+			this.changeState('error', 'dataChannel is not defined! Unable to configure it!');
 			return;
 		}
 		// Set the maximum amount of data waiting inside the datachannel's buffer
@@ -148,11 +148,10 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		};
 	};
 
-	// sendData = (data: string | Blob | ArrayBuffer | ArrayBufferView) => {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	sendData = (data: any) => {
-		if (this.dataChannel == null) {
-			this.changeState('error', 'dataChannel is null. Unable to send the file to the Host!');
+		if (!this.dataChannel) {
+			this.changeState('error', 'dataChannel is not defined! Unable to send the file to the Host!');
 			return;
 		} else if (!this.canSendMoreData()) {
 			this.logger.warn('Data channel is full! Cannot send data at the moment');

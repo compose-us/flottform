@@ -2,7 +2,7 @@ import { FlottformChannelHost } from './flottform-channel-host';
 import { BaseInputHost, BaseListeners, Logger, POLL_TIME_IN_MS } from './internal';
 
 type Listeners = BaseListeners & {
-	'text-transfered': [text: string]; // Emitted to signal the transfer of one text TO the Client.
+	'text-transferred': [text: string]; // Emitted to signal the transfer of one text TO the Client.
 	'text-received': [text: string]; // Emitted to signal the reception of one text FROM the Client.
 	'webrtc:waiting-for-text': [];
 	'webrtc:waiting-for-data': [];
@@ -70,7 +70,7 @@ export class FlottformTextInputHost extends BaseInputHost<Listeners> {
 	sendText = (text: string) => {
 		// For now, I didn't handle very large texts since for most use cases the text won't exceed the size of 1 chunk ( 16KB )
 		this.channel?.sendData(text);
-		this.emit('text-transfered', text);
+		this.emit('text-transferred', text);
 	};
 
 	private handleIncomingData = (e: MessageEvent) => {

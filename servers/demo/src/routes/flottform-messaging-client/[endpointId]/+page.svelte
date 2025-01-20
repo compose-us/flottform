@@ -7,6 +7,7 @@
 	let connectionStatus = $state<'init' | 'connected' | 'done' | 'disconnected' | 'error'>('init');
 	let error = $state<string>('');
 	let createWebRtcChannel: () => void;
+	let messagesContainer: HTMLDivElement | null = null;
 	let sendMessage: (text: string) => void;
 	let endConversation: () => void;
 
@@ -20,6 +21,12 @@
 			messageInput = '';
 		}
 	}
+	function scrollToBottomOfMessages() {
+		if (messagesContainer) {
+			messagesContainer.scrollTop = messagesContainer.scrollHeight;
+		}
+	}
+
 	onMount(async () => {
 		const flottformTextInputClient = new FlottformTextInputClient({
 			endpointId: $page.params.endpointId,
@@ -33,9 +40,6 @@
 		flottformTextInputClient.on('connected', () => {
 			connectionStatus = 'connected';
 		});
-		flottformTextInputClient.on('text-transfered', (textTransfered) => {
-			// Nothing for now, just add the message to the list 'messages' which is done by the method 'handleSend'
-		});
 		flottformTextInputClient.on('text-received', (textReceived) => {
 			messages = [...messages, { text: textReceived, sender: 'host' }];
 		});
@@ -46,6 +50,11 @@
 			connectionStatus = 'error';
 			error = e;
 		});
+	});
+	$effect(() => {
+		if (messages.length > 0) {
+			scrollToBottomOfMessages();
+		}
 	});
 </script>
 
@@ -63,7 +72,10 @@
 				</div>
 			{:else if connectionStatus === 'connected'}
 				<div class="flex flex-col rounded-lg border-[#ddd] h-[60vh]">
-					<div class="flex flex-col gap-3 flex-grow overflow-y-auto p-5">
+					<div
+						class="flex flex-col gap-3 flex-grow overflow-y-auto p-5 scroll-smooth"
+						bind:this={messagesContainer}
+					>
 						{#if messages.length === 0}
 							<p class="text-center italic">
 								You're connected to Host! You can start exchanging messages!

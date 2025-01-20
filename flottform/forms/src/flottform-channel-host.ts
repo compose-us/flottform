@@ -72,7 +72,6 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 
 		this.dataChannel = this.createDataChannel();
 		if (this.dataChannel) {
-			//this.dataChannel.bufferedAmountLowThreshold = this.BUFFER_THRESHOLD;
 			this.configureDataChannel();
 			this.setupDataChannelListener();
 		}
