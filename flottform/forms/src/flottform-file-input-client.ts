@@ -2,11 +2,19 @@ import { FlottformChannelClient } from './flottform-channel-client';
 import { EventEmitter, Logger, POLL_TIME_IN_MS } from './internal';
 
 type Listeners = {
+	init: [];
 	connected: [];
 	'webrtc:connection-impossible': [];
-	sending: []; // Emitted to signal the start of sending the file(s)
-	progress: [{ fileIndex: number; fileName: string; progress: number }]; // Emitted to signal the progress of sending the file(s)
-	done: [];
+	'file-sending-progress': [{ fileIndex: number; fileName: string; progress: number }];
+	'single-file-transfered': [{ name: string; type: string; size: number }];
+	'file-receiving-progress': {
+		fileIndex: number;
+		totalFileCount: number;
+		fileName: string;
+		currentFileProgress: number;
+		overallProgress: number;
+	}[];
+	'single-file-received': [file: File];
 	disconnected: [];
 	error: [e: string];
 };
@@ -19,7 +27,8 @@ type MetaData = {
 
 export class FlottformFileInputClient extends EventEmitter<Listeners> {
 	private channel: FlottformChannelClient | null = null;
-	private inputField: HTMLInputElement;
+	private outgoingInputField: HTMLInputElement; // Contains files to send to the other peer.
+	private incomingInputField: HTMLInputElement | null; // Contains files received from the other peer.
 	private chunkSize: number = 16384; // 16 KB chunks
 	private filesMetaData: { name: string; type: string; size: number }[] = [];
 	private filesArrayBuffer: ArrayBuffer[] = [];
@@ -27,16 +36,25 @@ export class FlottformFileInputClient extends EventEmitter<Listeners> {
 	private currentChunkIndex = 0;
 	private allFilesSent = false;
 	private logger: Logger;
+	private filesTotalSize: number = 0;
+	private receivedDataSize: number = 0;
+	private currentFile: {
+		index: number;
+		receivedSize: number;
+		arrayBuffer: ArrayBuffer[];
+	} | null = null;
 
 	constructor({
 		endpointId,
-		fileInput,
+		outgoingInputField,
+		incomingInputField,
 		flottformApi,
 		pollTimeForIceInMs = POLL_TIME_IN_MS,
 		logger = console
 	}: {
 		endpointId: string;
-		fileInput: HTMLInputElement;
+		outgoingInputField: HTMLInputElement;
+		incomingInputField: HTMLInputElement;
 		flottformApi: string;
 		pollTimeForIceInMs?: number;
 		logger?: Logger;
@@ -48,7 +66,8 @@ export class FlottformFileInputClient extends EventEmitter<Listeners> {
 			pollTimeForIceInMs,
 			logger
 		});
-		this.inputField = fileInput;
+		this.outgoingInputField = outgoingInputField;
+		this.incomingInputField = incomingInputField;
 		this.logger = logger;
 		this.registerListeners();
 	}
@@ -86,8 +105,8 @@ export class FlottformFileInputClient extends EventEmitter<Listeners> {
 	};
 
 	sendFiles = async () => {
-		const metaData = this.createMetaData(this.inputField);
-		const filesArrayBuffer = await this.createArrayBuffers(this.inputField);
+		const metaData = this.createMetaData(this.outgoingInputField);
+		const filesArrayBuffer = await this.createArrayBuffers(this.outgoingInputField);
 		if (!metaData || !filesArrayBuffer)
 			throw new Error("Can't find the files that you want to send!");
 
@@ -96,7 +115,6 @@ export class FlottformFileInputClient extends EventEmitter<Listeners> {
 
 		this.channel?.sendData(JSON.stringify(metaData));
 
-		this.emit('sending');
 		this.startSendingFiles();
 	};
 
@@ -107,12 +125,10 @@ export class FlottformFileInputClient extends EventEmitter<Listeners> {
 	private sendNextChunk = async () => {
 		const totalNumberOfFiles = this.filesMetaData.length;
 		if (this.allFilesSent || this.currentFileIndex >= totalNumberOfFiles) {
-			// All files are sent
 			this.logger.log('All files are sent');
-			this.channel?.sendData(JSON.stringify({ type: 'transfer-complete' }));
-			this.allFilesSent = true;
-			this.channel?.off('bufferedamountlow', this.startSendingFiles);
-			this.emit('done');
+			this.channel?.sendData(JSON.stringify({ type: 'files-batch-transfer-complete' }));
+			//this.allFilesSent = true;
+			//this.channel?.off('bufferedamountlow', this.startSendingFiles);
 			return;
 		}
 		const currentFileArrayBuffer = this.filesArrayBuffer[this.currentFileIndex];
@@ -131,7 +147,7 @@ export class FlottformFileInputClient extends EventEmitter<Listeners> {
 			}
 			const progress = ((this.currentChunkIndex * this.chunkSize) / currentFileSize).toFixed(2);
 
-			this.emit('progress', {
+			this.emit('file-sending-progress', {
 				fileIndex: this.currentFileIndex,
 				fileName,
 				progress: parseFloat(progress)
@@ -146,6 +162,8 @@ export class FlottformFileInputClient extends EventEmitter<Listeners> {
 		if (this.currentChunkIndex * this.chunkSize >= currentFileSize) {
 			// File is fully sent move to the next one
 			this.logger.log(`File ${fileName} fully sent. Moving to next file.`);
+			const fileTransferedMetaData = this.filesMetaData[this.currentFileIndex];
+			this.emit('single-file-transfered', fileTransferedMetaData!);
 			this.currentFileIndex++;
 			this.currentChunkIndex = 0;
 			this.sendNextChunk(); // Recursion used to send the chunks of the next file
@@ -155,38 +173,116 @@ export class FlottformFileInputClient extends EventEmitter<Listeners> {
 		}
 	};
 
+	private handleIncomingData = (e: MessageEvent) => {
+		if (typeof e.data === 'string') {
+			// string can be either metadata or end transfer marker.
+			const message = JSON.parse(e.data);
+			if (message.type === 'file-transfer-meta') {
+				// Handle file metadata
+				this.filesMetaData = message.filesQueue;
+				this.currentFile = { index: 0, receivedSize: 0, arrayBuffer: [] };
+				this.filesTotalSize = message.totalSize;
+			} else if (message.type === 'files-batch-transfer-complete') {
+				this.logger.log('Current batch of files received successfully!');
+				//this.channel?.close();
+			}
+		} else if (e.data instanceof ArrayBuffer) {
+			// Handle file chunk
+			if (this.currentFile) {
+				this.currentFile.arrayBuffer.push(e.data);
+				this.currentFile.receivedSize += e.data.byteLength;
+				this.receivedDataSize += e.data.byteLength;
+
+				const currentFileName = this.filesMetaData[this.currentFile.index]?.name as string;
+
+				const currentFileTotalSize = this.filesMetaData[this.currentFile.index]?.size as number;
+
+				const currentFileProgress = (this.currentFile.receivedSize / currentFileTotalSize).toFixed(
+					2
+				);
+				const overallProgress = (this.receivedDataSize / this.filesTotalSize).toFixed(2);
+
+				this.emit('file-receiving-progress', {
+					fileIndex: this.currentFile.index,
+					totalFileCount: this.filesMetaData.length,
+					fileName: currentFileName,
+					currentFileProgress: parseFloat(currentFileProgress),
+					overallProgress: parseFloat(overallProgress)
+				});
+
+				if (this.currentFile.receivedSize === currentFileTotalSize) {
+					// Attach the current file to the given input field
+					this.appendFileToInputField(this.currentFile.index);
+					// Initialize the values of currentFile to receive the next file
+					this.currentFile = {
+						index: this.currentFile.index + 1,
+						receivedSize: 0,
+						arrayBuffer: []
+					};
+				}
+			}
+		}
+	};
+
+	private appendFileToInputField = (fileIndex: number) => {
+		const fileName = this.filesMetaData[fileIndex]?.name ?? 'no-name';
+		const fileType = this.filesMetaData[fileIndex]?.type ?? 'application/octet-stream';
+
+		const receivedFile = new File(this.currentFile?.arrayBuffer as ArrayBuffer[], fileName, {
+			type: fileType
+		});
+		this.emit('single-file-received', receivedFile);
+
+		if (!this.incomingInputField) {
+			this.logger.warn(
+				"No input field provided!! You can listen to the 'single-file-transferred' event to handle the newly received file!"
+			);
+			return;
+		}
+
+		const dt = new DataTransfer();
+
+		// Add existing files from the input field to the DataTransfer object to avoid loosing them.
+		if (this.incomingInputField.files) {
+			for (const file of Array.from(this.incomingInputField.files)) {
+				dt.items.add(file);
+			}
+		}
+
+		if (!this.incomingInputField.multiple) {
+			this.logger.warn(
+				"The Host's input field only supports one file. Incoming files from the Host will overwrite any existing file, and only the last file received will remain attached."
+			);
+			dt.items.clear();
+		}
+
+		dt.items.add(receivedFile);
+		this.incomingInputField.files = dt.files;
+	};
+
 	private registerListeners = () => {
 		this.channel?.on('init', () => {
-			// TODO: Implement Default UI.
+			this.emit('init');
 		});
-		this.channel?.on('retrieving-info-from-endpoint', () => {
-			// TODO: Implement Default UI.
-		});
-		this.channel?.on('sending-client-info', () => {
-			// TODO: Implement Default UI.
-		});
-		this.channel?.on('connecting-to-host', () => {
-			// TODO: Implement Default UI.
-		});
+		this.channel?.on('retrieving-info-from-endpoint', () => {});
+		this.channel?.on('sending-client-info', () => {});
+		this.channel?.on('connecting-to-host', () => {});
 		this.channel?.on('connected', () => {
 			this.emit('connected');
-			// TODO: Implement Default UI.
+		});
+		this.channel?.on('receiving-data', (e) => {
+			//Handle file(s) reception
+			this.handleIncomingData(e);
 		});
 		this.channel?.on('connection-impossible', () => {
 			this.emit('webrtc:connection-impossible');
-			// TODO: Implement Default UI.
 		});
-		this.channel?.on('done', () => {
-			this.emit('done');
-			// TODO: Implement Default UI.
-		});
+		this.channel?.on('done', () => {});
 		this.channel?.on('disconnected', () => {
 			this.emit('disconnected');
-			// TODO: Implement Default UI.
 		});
 		this.channel?.on('error', (e) => {
 			this.emit('error', e);
-			// TODO: Implement Default UI.
 		});
 		this.channel?.on('bufferedamountlow', this.startSendingFiles);
 	};

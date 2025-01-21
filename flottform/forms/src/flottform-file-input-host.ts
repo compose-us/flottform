@@ -2,23 +2,35 @@ import { FlottformChannelHost } from './flottform-channel-host';
 import { BaseInputHost, BaseListeners, Logger, POLL_TIME_IN_MS } from './internal';
 
 type Listeners = BaseListeners & {
-	receive: []; // Emitted to signal the start of receiving the file(s)
-	progress: {
+	'file-receiving-progress': {
 		fileIndex: number;
 		totalFileCount: number;
 		fileName: string;
 		currentFileProgress: number;
 		overallProgress: number;
-	}[]; // Emitted to signal the progress of receiving the file(s)
-	done: [];
+	}[];
+	'single-file-received': [file: File];
+	'file-sending-progress': [{ fileIndex: number; fileName: string; progress: number }];
+	'single-file-transfered': [{ name: string; type: string; size: number }];
 	'webrtc:waiting-for-file': [];
-	'single-file-transferred': [file: File];
+};
+
+type MetaData = {
+	type: 'file-transfer-meta';
+	filesQueue: { name: string; type: string; size: number }[];
+	totalSize: number;
 };
 
 export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 	private channel: FlottformChannelHost | null = null;
-	private inputField?: HTMLInputElement;
+	private incomingInputField: HTMLInputElement;
+	private outgoingInputField: HTMLInputElement; // Contains files to send to the other peer.
 	private logger: Logger;
+	private filesArrayBuffer: ArrayBuffer[] = [];
+	private allFilesSent = false;
+	private currentFileIndex = 0;
+	private currentChunkIndex = 0;
+	private chunkSize: number = 16384; // 16 KB chunks
 	private filesMetaData: { name: string; type: string; size: number }[] = [];
 	private filesTotalSize: number = 0;
 	private receivedDataSize: number = 0;
@@ -33,13 +45,15 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 	constructor({
 		flottformApi,
 		createClientUrl,
-		inputField,
+		incomingInputField,
+		outgoingInputField,
 		pollTimeForIceInMs = POLL_TIME_IN_MS,
 		logger = console
 	}: {
 		flottformApi: string | URL;
 		createClientUrl: (params: { endpointId: string }) => Promise<string>;
-		inputField?: HTMLInputElement;
+		incomingInputField: HTMLInputElement;
+		outgoingInputField: HTMLInputElement;
 		pollTimeForIceInMs?: number;
 		theme?: (myself: FlottformFileInputHost) => void;
 		logger?: Logger;
@@ -51,7 +65,8 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 			pollTimeForIceInMs,
 			logger
 		});
-		this.inputField = inputField;
+		this.incomingInputField = incomingInputField;
+		this.outgoingInputField = outgoingInputField;
 		this.logger = logger;
 
 		this.registerListeners();
@@ -83,6 +98,100 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 		return this.qrCode;
 	};
 
+	private createMetaData = (inputElement: HTMLInputElement): MetaData | null => {
+		if (!inputElement.files) return null;
+
+		// Generate all the metadata necessary to send all of the files
+		const files = Array.from(inputElement.files);
+		const filesQueue = files.map((file) => ({
+			name: file.name,
+			type: file.type, // We're dividing each file into chuncks no matter what the type of the file.
+			size: file.size
+		}));
+		return {
+			type: 'file-transfer-meta',
+			filesQueue,
+			totalSize: filesQueue.reduce((sum, file) => sum + file.size, 0)
+		};
+	};
+
+	private createArrayBuffers = async (inputElement: HTMLInputElement) => {
+		if (!inputElement.files) return null;
+
+		// Generate all the arrayBuffers of the available files
+		const files = Array.from(inputElement.files);
+		return await Promise.all(files.map(async (file) => await file.arrayBuffer()));
+	};
+
+	sendFiles = async () => {
+		const metaData = this.createMetaData(this.outgoingInputField);
+		const filesArrayBuffer = await this.createArrayBuffers(this.outgoingInputField);
+		if (!metaData || !filesArrayBuffer)
+			throw new Error("Can't find the files that you want to send!");
+
+		this.filesMetaData = metaData.filesQueue;
+		this.filesArrayBuffer = filesArrayBuffer;
+
+		this.channel?.sendData(JSON.stringify(metaData));
+
+		this.startSendingFiles();
+	};
+
+	private startSendingFiles = () => {
+		this.sendNextChunk();
+	};
+
+	private sendNextChunk = async () => {
+		const totalNumberOfFiles = this.filesMetaData.length;
+		if (this.allFilesSent || this.currentFileIndex >= totalNumberOfFiles) {
+			this.logger.log('All files are sent');
+			this.channel?.sendData(JSON.stringify({ type: 'files-batch-transfer-complete' }));
+			//this.allFilesSent = true;
+			//this.channel?.off('bufferedamountlow', this.startSendingFiles);
+			return;
+		}
+		const currentFileArrayBuffer = this.filesArrayBuffer[this.currentFileIndex];
+		if (!currentFileArrayBuffer) {
+			throw new Error(`Can't find the ArrayBuffer for the file number ${this.currentFileIndex}`);
+		}
+		const currentFileSize = currentFileArrayBuffer.byteLength;
+		const fileName = this.filesMetaData[this.currentFileIndex]!.name;
+
+		while (this.currentChunkIndex * this.chunkSize < currentFileSize) {
+			// The file still has some chunks left
+			if (!this.channel?.canSendMoreData()) {
+				// Buffer is full. Pause sending the chunks
+				this.logger.log('Buffer is full. Pausing sending chunks!');
+				break;
+			}
+			const progress = ((this.currentChunkIndex * this.chunkSize) / currentFileSize).toFixed(2);
+
+			this.emit('file-sending-progress', {
+				fileIndex: this.currentFileIndex,
+				fileName,
+				progress: parseFloat(progress)
+			});
+
+			const start = this.currentChunkIndex * this.chunkSize;
+			const end = Math.min((this.currentChunkIndex + 1) * this.chunkSize, currentFileSize);
+			this.channel?.sendData(currentFileArrayBuffer.slice(start, end));
+			this.currentChunkIndex++;
+		}
+		// Now either: the buffer is full OR all the chunks of the file have been sent.
+		if (this.currentChunkIndex * this.chunkSize >= currentFileSize) {
+			// File is fully sent move to the next one
+			this.logger.log(`File ${fileName} fully sent. Moving to next file.`);
+			const fileTransferedMetaData = this.filesMetaData[this.currentFileIndex];
+			this.emit('single-file-transfered', fileTransferedMetaData!);
+			this.currentFileIndex++;
+			this.currentChunkIndex = 0;
+			this.sendNextChunk(); // Recursion used to send the chunks of the next file
+		} else {
+			// Paused waiting for buffer space. Will try again shortly.
+			setTimeout(this.sendNextChunk, 100); // Retry after a short delay
+		}
+	};
+
 	private handleIncomingData = (e: MessageEvent) => {
 		if (typeof e.data === 'string') {
 			// string can be either metadata or end transfer marker.
@@ -92,11 +201,9 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 				this.filesMetaData = message.filesQueue;
 				this.currentFile = { index: 0, receivedSize: 0, arrayBuffer: [] };
 				this.filesTotalSize = message.totalSize;
-				// Emit the start of receiving data
-				this.emit('receive');
-			} else if (message.type === 'transfer-complete') {
-				this.emit('done');
-				this.channel?.close();
+			} else if (message.type === 'files-batch-transfer-complete') {
+				this.logger.log('Current batch of files received successfully!');
+				//this.channel?.close();
 			}
 		} else if (e.data instanceof ArrayBuffer) {
 			// Handle file chunk
@@ -114,7 +221,7 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 				);
 				const overallProgress = (this.receivedDataSize / this.filesTotalSize).toFixed(2);
 
-				this.emit('progress', {
+				this.emit('file-receiving-progress', {
 					fileIndex: this.currentFile.index,
 					totalFileCount: this.filesMetaData.length,
 					fileName: currentFileName,
@@ -143,9 +250,9 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 		const receivedFile = new File(this.currentFile?.arrayBuffer as ArrayBuffer[], fileName, {
 			type: fileType
 		});
-		this.emit('single-file-transferred', receivedFile);
+		this.emit('single-file-received', receivedFile);
 
-		if (!this.inputField) {
+		if (!this.incomingInputField) {
 			this.logger.warn(
 				"No input field provided!! You can listen to the 'single-file-transferred' event to handle the newly received file!"
 			);
@@ -155,13 +262,13 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 		const dt = new DataTransfer();
 
 		// Add existing files from the input field to the DataTransfer object to avoid loosing them.
-		if (this.inputField.files) {
-			for (const file of Array.from(this.inputField.files)) {
+		if (this.incomingInputField.files) {
+			for (const file of Array.from(this.incomingInputField.files)) {
 				dt.items.add(file);
 			}
 		}
 
-		if (!this.inputField.multiple) {
+		if (!this.incomingInputField.multiple) {
 			this.logger.warn(
 				"The host's input field only supports one file. Incoming files from the client will overwrite any existing file, and only the last file received will remain attached."
 			);
@@ -169,7 +276,7 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 		}
 
 		dt.items.add(receivedFile);
-		this.inputField.files = dt.files;
+		this.incomingInputField.files = dt.files;
 	};
 
 	private registerListeners = () => {
