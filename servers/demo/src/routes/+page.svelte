@@ -69,5 +69,10 @@
 			title="Flottform Messaging"
 			description="See how you can use Flottform to build a simple messaging application!"
 		/>
+		<DemoLink
+			href="{base}/flottform-file-sharing"
+			title="Flottform File Sharing"
+			description="See how you can use Flottform to exchange files between two peers!"
+		/>
 	</div>
 </section>

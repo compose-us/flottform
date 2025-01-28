@@ -54,6 +54,9 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		this.rtcConfiguration = DEFAULT_WEBRTC_CONFIG;
 		this.pollTimeForIceInMs = pollTimeForIceInMs;
 		this.logger = logger;
+		Promise.resolve().then(() => {
+			this.changeState('init');
+		});
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
