@@ -25,3 +25,11 @@ export const createDeExpenseReportClientUrl = async ({ endpointId }: { endpointI
 export const createFlottformMessagingClientUrl = async ({ endpointId }: { endpointId: string }) => {
 	return `${window.location.origin}${base}/flottform-messaging-client/${endpointId}`;
 };
+
+export const createFlottformFileSharingClientUrl = async ({
+	endpointId
+}: {
+	endpointId: string;
+}) => {
+	return `${window.location.origin}${base}/flottform-file-sharing-client/${endpointId}`;
+};
