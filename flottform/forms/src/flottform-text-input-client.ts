@@ -1,5 +1,5 @@
 import { FlottformChannelClient } from './flottform-channel-client';
-import { EventEmitter, Logger, POLL_TIME_IN_MS } from './internal';
+import { DEFAULT_WEBRTC_CONFIG, EventEmitter, Logger, POLL_TIME_IN_MS } from './internal';
 
 type Listeners = {
 	connected: [];
@@ -17,11 +17,13 @@ export class FlottformTextInputClient extends EventEmitter<Listeners> {
 	constructor({
 		endpointId,
 		flottformApi,
+		rtcConfiguration = DEFAULT_WEBRTC_CONFIG,
 		pollTimeForIceInMs = POLL_TIME_IN_MS,
 		logger = console
 	}: {
 		endpointId: string;
 		flottformApi: string;
+		rtcConfiguration?: RTCConfiguration;
 		pollTimeForIceInMs?: number;
 		logger?: Logger;
 	}) {
@@ -29,6 +31,7 @@ export class FlottformTextInputClient extends EventEmitter<Listeners> {
 		this.channel = new FlottformChannelClient({
 			endpointId,
 			flottformApi,
+			rtcConfiguration,
 			pollTimeForIceInMs,
 			logger
 		});

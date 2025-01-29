@@ -1,6 +1,5 @@
 import {
 	ClientState,
-	DEFAULT_WEBRTC_CONFIG,
 	EventEmitter,
 	Logger,
 	POLL_TIME_IN_MS,
@@ -38,18 +37,20 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 	constructor({
 		endpointId,
 		flottformApi,
+		rtcConfiguration,
 		pollTimeForIceInMs = POLL_TIME_IN_MS,
 		logger = console
 	}: {
 		endpointId: string;
 		flottformApi: string | URL;
+		rtcConfiguration: RTCConfiguration;
 		pollTimeForIceInMs?: number;
 		logger?: Logger;
 	}) {
 		super();
 		this.endpointId = endpointId;
 		this.flottformApi = flottformApi;
-		this.rtcConfiguration = DEFAULT_WEBRTC_CONFIG;
+		this.rtcConfiguration = rtcConfiguration;
 		this.pollTimeForIceInMs = pollTimeForIceInMs;
 		this.logger = logger;
 	}
