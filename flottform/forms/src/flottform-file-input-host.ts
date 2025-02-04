@@ -1,5 +1,11 @@
 import { FlottformChannelHost } from './flottform-channel-host';
-import { BaseInputHost, BaseListeners, Logger, POLL_TIME_IN_MS } from './internal';
+import {
+	BaseInputHost,
+	BaseListeners,
+	DEFAULT_WEBRTC_CONFIG,
+	Logger,
+	POLL_TIME_IN_MS
+} from './internal';
 
 type Listeners = BaseListeners & {
 	receive: []; // Emitted to signal the start of receiving the file(s)
@@ -12,11 +18,12 @@ type Listeners = BaseListeners & {
 	}[]; // Emitted to signal the progress of receiving the file(s)
 	done: [];
 	'webrtc:waiting-for-file': [];
+	'single-file-transferred': [file: File];
 };
 
 export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 	private channel: FlottformChannelHost | null = null;
-	private inputField: HTMLInputElement;
+	private inputField?: HTMLInputElement;
 	private logger: Logger;
 	private filesMetaData: { name: string; type: string; size: number }[] = [];
 	private filesTotalSize: number = 0;
@@ -33,12 +40,14 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 		flottformApi,
 		createClientUrl,
 		inputField,
+		rtcConfiguration = DEFAULT_WEBRTC_CONFIG,
 		pollTimeForIceInMs = POLL_TIME_IN_MS,
 		logger = console
 	}: {
 		flottformApi: string | URL;
 		createClientUrl: (params: { endpointId: string }) => Promise<string>;
-		inputField: HTMLInputElement;
+		inputField?: HTMLInputElement;
+		rtcConfiguration?: RTCConfiguration;
 		pollTimeForIceInMs?: number;
 		theme?: (myself: FlottformFileInputHost) => void;
 		logger?: Logger;
@@ -47,6 +56,7 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 		this.channel = new FlottformChannelHost({
 			flottformApi,
 			createClientUrl,
+			rtcConfiguration,
 			pollTimeForIceInMs,
 			logger
 		});
@@ -136,8 +146,18 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 	};
 
 	private appendFileToInputField = (fileIndex: number) => {
+		const fileName = this.filesMetaData[fileIndex]?.name ?? 'no-name';
+		const fileType = this.filesMetaData[fileIndex]?.type ?? 'application/octet-stream';
+
+		const receivedFile = new File(this.currentFile?.arrayBuffer as ArrayBuffer[], fileName, {
+			type: fileType
+		});
+		this.emit('single-file-transferred', receivedFile);
+
 		if (!this.inputField) {
-			this.logger.warn('No input field provided!!');
+			this.logger.warn(
+				"No input field provided!! You can listen to the 'single-file-transferred' event to handle the newly received file!"
+			);
 			return;
 		}
 
@@ -157,13 +177,7 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 			dt.items.clear();
 		}
 
-		const fileName = this.filesMetaData[fileIndex]?.name ?? 'no-name';
-		const fileType = this.filesMetaData[fileIndex]?.type ?? 'application/octet-stream';
-
-		const fileForForm = new File(this.currentFile?.arrayBuffer as ArrayBuffer[], fileName, {
-			type: fileType
-		});
-		dt.items.add(fileForForm);
+		dt.items.add(receivedFile);
 		this.inputField.files = dt.files;
 	};
 

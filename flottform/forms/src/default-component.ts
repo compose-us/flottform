@@ -158,7 +158,8 @@ export const createDefaultFlottformComponent = ({
 		}) => {
 			const flottformBaseInputHost = new FlottformTextInputHost({
 				flottformApi,
-				createClientUrl
+				createClientUrl,
+				inputField
 			});
 
 			const { flottformItem, statusInformation, refreshChannelButton } = createBaseFlottformItems({
@@ -179,8 +180,7 @@ export const createDefaultFlottformComponent = ({
 				refreshChannelButton,
 				flottformTextInputHost: flottformBaseInputHost,
 				id,
-				onSuccessText,
-				inputField
+				onSuccessText
 			});
 		}
 	};
@@ -293,8 +293,7 @@ const handleTextInputStates = ({
 	refreshChannelButton,
 	flottformTextInputHost,
 	id,
-	onSuccessText,
-	inputField
+	onSuccessText
 }: {
 	flottformItem: HTMLLIElement;
 	statusInformation: HTMLDivElement;
@@ -302,7 +301,6 @@ const handleTextInputStates = ({
 	flottformTextInputHost: FlottformTextInputHost;
 	id?: string;
 	onSuccessText?: string;
-	inputField?: HTMLInputElement | HTMLTextAreaElement;
 }) => {
 	if (id) {
 		flottformItem.setAttribute('id', id);

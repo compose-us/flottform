@@ -5,7 +5,6 @@ import {
 	FlottformState,
 	Logger,
 	retrieveEndpointInfo,
-	DEFAULT_WEBRTC_CONFIG,
 	setIncludes
 } from './internal';
 
@@ -25,18 +24,20 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 	constructor({
 		flottformApi,
 		createClientUrl,
+		rtcConfiguration,
 		pollTimeForIceInMs,
 		logger
 	}: {
 		flottformApi: string | URL;
 		createClientUrl: (params: { endpointId: string }) => Promise<string>;
+		rtcConfiguration: RTCConfiguration;
 		pollTimeForIceInMs: number;
 		logger: Logger;
 	}) {
 		super();
 		this.flottformApi = flottformApi;
 		this.createClientUrl = createClientUrl;
-		this.rtcConfiguration = DEFAULT_WEBRTC_CONFIG;
+		this.rtcConfiguration = rtcConfiguration;
 		this.pollTimeForIceInMs = pollTimeForIceInMs;
 		this.logger = logger;
 		Promise.resolve().then(() => {
