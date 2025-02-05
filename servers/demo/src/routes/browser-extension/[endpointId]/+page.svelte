@@ -24,7 +24,7 @@
 		const options = {
 			endpointId: $page.params.endpointId,
 			flottformApi: hash.flottformApi,
-			token: hash.token,
+			rtcConfiguration: hash.rtcConfiguration,
 			type: hash.type
 		};
 		console.log({ options });
@@ -42,7 +42,8 @@
 			const flottformFileInputClient = new FlottformFileInputClient({
 				endpointId: options.endpointId,
 				fileInput: inputField!,
-				flottformApi: options.flottformApi
+				flottformApi: options.flottformApi,
+				rtcConfiguration: options.rtcConfiguration
 			});
 
 			flottformFileInputClient.start();

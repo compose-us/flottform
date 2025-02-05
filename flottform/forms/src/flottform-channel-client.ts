@@ -72,12 +72,14 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 			.toString()
 			.replace(/\/$/, '');
 
-		try {
+		// For now the fetching can be done outside of these classes and should be passed as an argument.
+		
+		/* try {
 			this.rtcConfiguration.iceServers = await this.fetchIceServers(baseApi);
 		} catch (error) {
 			// Use the default configuration as a fallback
 			this.logger.error(error);
-		}
+		} */
 
 		this.openPeerConnection = new RTCPeerConnection(this.rtcConfiguration);
 		const clientKey = generateSecretKey();

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import {
-		defaultTokenValue,
+		defaultTurnServerMeteredEndpointValue,
 		defaultSignalingServerUrlBase,
 		defaultExtensionClientUrlBase
 	} from '$lib/options';
@@ -16,7 +16,7 @@
 
 	let inputFields: TrackedInputFields = $state([]);
 	let currentTabId: number | undefined;
-	let apiToken: string = '';
+	let rtcConfiguration: RTCConfiguration = {};
 	let signalingServerUrlBase: string = '';
 	let extensionClientUrlBase: string = '';
 
@@ -134,7 +134,7 @@
 				inputFieldId,
 				tabId,
 				inputFieldType,
-				apiToken,
+				rtcConfiguration,
 				signalingServerUrlBase,
 				extensionClientUrlBase
 			],
@@ -143,7 +143,7 @@
 				inputFieldId: string,
 				tabId: number,
 				inputFieldType: string,
-				apiToken: string,
+				rtcConfiguration: RTCConfiguration,
 				signalingServerUrlBase: string,
 				extensionClientUrlBase: string
 			) => {
@@ -248,7 +248,7 @@
 					//console.log(`****Flottform will work on TextInput with id=${textInputId}*****`);
 					const data = {
 						type: inputFieldType,
-						token: apiToken,
+						rtcConfiguration,
 						flottformApi: signalingServerUrlBase
 					};
 
@@ -281,7 +281,7 @@
 					const data = {
 						type: 'file',
 						flottformApi: signalingServerUrlBase,
-						token: apiToken
+						rtcConfiguration
 					};
 
 					// Instantiate the FlottformFileInputHost with the provided inputId
@@ -420,17 +420,43 @@
 		}
 
 		const data = await chrome.storage.local.get([
-			'FLOTTFORM_TOKEN',
+			'FLOTTFORM_TURN_SERVER_METERED_ENDPOINT',
 			'FLOTTFORM_SIGNALING_SERVER_URL_BASE',
 			'FLOTTFORM_EXTENSION_CLIENTS_URL_BASE'
 		]);
-		apiToken = data.FLOTTFORM_TOKEN ?? defaultTokenValue;
+		let turnServerMeteredEndpointValue: string =
+			data.FLOTTFORM_TURN_SERVER_METERED_ENDPOINT ?? defaultTurnServerMeteredEndpointValue;
+
+		if (turnServerMeteredEndpointValue === '') {
+			rtcConfiguration = {
+				iceServers: [
+					{
+						urls: ['stun:stun1.l.google.com:19302']
+					}
+				]
+			};
+		} else {
+			try {
+				// Get TURN/STUN credentials from metered.ca
+				const response = await fetch(turnServerMeteredEndpointValue);
+				if (!response.ok) {
+					throw new Error(`Network Response not ok, status: ${response.status}`);
+				}
+				// Saving the response in the iceServers array
+				const iceServers = await response.json();
+
+				rtcConfiguration = { iceServers };
+			} catch (error) {
+				console.error(error);
+			}
+		}
+
 		signalingServerUrlBase =
 			data.FLOTTFORM_SIGNALING_SERVER_URL_BASE ?? defaultSignalingServerUrlBase;
 		extensionClientUrlBase =
 			data.FLOTTFORM_EXTENSION_CLIENTS_URL_BASE ?? defaultExtensionClientUrlBase;
 		console.log({
-			apiToken,
+			rtcConfiguration,
 			signalingServerUrlBase,
 			extensionClientUrlBase
 		});

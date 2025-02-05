@@ -1,43 +1,58 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import {
-		defaultTokenValue,
+		defaultTurnServerMeteredEndpointValue,
 		defaultSignalingServerUrlBase,
 		defaultExtensionClientUrlBase
 	} from '$lib/options';
 	import type { EventHandler } from 'svelte/elements';
 
-	let tokenValue: string;
+	let turnServerMeteredEndpointValue: string;
 	let flottformSignalingServerUrlBase: string;
 	let flottformExtensionClientsUrlBase: string;
 	let state: 'init' | 'saved' | 'error' = 'init';
+	let errorMessage = '';
 
-	const saveToken: EventHandler<SubmitEvent> = async (e) => {
+	const isValidTurnEndpoint = (turnEndpoint: string) => {
+		const pattern =
+			/^https:\/\/[a-zA-Z0-9.-]*metered\.live\/api\/v1\/turn\/credentials\?apiKey=[a-zA-Z0-9-]+$/;
+		return pattern.test(turnEndpoint);
+	};
+
+	const saveOptions: EventHandler<SubmitEvent> = async (e) => {
 		e.preventDefault();
+		errorMessage = '';
+
+		if (!isValidTurnEndpoint(turnServerMeteredEndpointValue)) {
+			errorMessage = 'Invalid TURN server endpoint format! Please check your URL!';
+			return;
+		}
+
 		try {
 			await chrome.storage.local.set({
-				FLOTTFORM_TOKEN: tokenValue,
+				FLOTTFORM_TURN_SERVER_METERED_ENDPOINT: turnServerMeteredEndpointValue,
 				FLOTTFORM_SIGNALING_SERVER_URL_BASE: flottformSignalingServerUrlBase,
 				FLOTTFORM_EXTENSION_CLIENTS_URL_BASE: flottformExtensionClientsUrlBase
 			});
-			console.log('saved the token');
+			console.log('saved the options');
 			state = 'saved';
 			setTimeout(() => {
 				state = 'init';
 			}, 5000);
 		} catch {
-			console.error('Could not save the token');
+			console.error('Could not save the options');
 			state = 'error';
 		}
 	};
 
 	onMount(async () => {
 		const data = await chrome.storage.local.get([
-			'FLOTTFORM_TOKEN',
+			'FLOTTFORM_TURN_SERVER_METERED_ENDPOINT',
 			'FLOTTFORM_SIGNALING_SERVER_URL_BASE',
 			'FLOTTFORM_EXTENSION_CLIENTS_URL_BASE'
 		]);
-		tokenValue = data.FLOTTFORM_TOKEN ?? defaultTokenValue;
+		turnServerMeteredEndpointValue =
+			data.FLOTTFORM_TURN_SERVER_METERED_ENDPOINT ?? defaultTurnServerMeteredEndpointValue;
 		flottformSignalingServerUrlBase =
 			data.FLOTTFORM_SIGNALING_SERVER_URL_BASE ?? defaultSignalingServerUrlBase;
 		flottformExtensionClientsUrlBase =
@@ -48,19 +63,29 @@
 <div class="w-full p-4 grid gap-4">
 	<h1>Flottform options</h1>
 	<p>
-		If you're behind a firewall or having issues with the network connection, you can visit the
-		flottform.io website and get a token.
+		We highly recommand creating an account on <a
+			href="https://www.metered.ca/stun-turn"
+			target="_blank"
+			rel="external noopener noreferrer"
+			class="underline">metered.ca</a
+		> since you're likely to have trouble using the extension due to a firewall! After that, Enter the
+		REST API endpoint to retrieve the necessary TURN/STUN server credentials in the input field.
 	</p>
-	<form onsubmit={saveToken} class="grid gap-2">
-		<label for="apiToken">Your API token</label>
+	<form onsubmit={saveOptions} class="grid gap-2">
+		<label for="turnServerMeteredEndpoint"
+			>REST API endpoint to retrieve STUN/TURN server credentials</label
+		>
 		<input
-			bind:value={tokenValue}
+			bind:value={turnServerMeteredEndpointValue}
 			type="text"
-			id="apiToken"
-			name="apiToken"
-			placeholder="YoUr_ToKeN"
+			id="turnServerMeteredEndpoint"
+			name="turnServerMeteredEndpoint"
+			placeholder="https://<domain>.metered.live/api/v1/turn/credentials?apiKey=<apiKey>"
 			class="border rounded border-gray-700 p-2"
 		/>
+		{#if errorMessage}
+			<p class="text-red-600">{errorMessage}</p>
+		{/if}
 		<label for="flottformSignalingServerUrlBase">Signaling server base URL</label>
 		<input
 			bind:value={flottformSignalingServerUrlBase}
@@ -79,7 +104,7 @@
 			placeholder="https://demo.flottform.io/browser-extensions"
 			class="border rounded border-gray-700 p-2"
 		/>
-		<button type="submit">Save</button>
+		<button type="submit" class="border rounded">Save</button>
 		{#if state === 'saved'}
 			<p class="text-green-700">✅ Saved the options!</p>
 		{:else if state === 'error'}
