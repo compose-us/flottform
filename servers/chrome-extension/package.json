@@ -4,7 +4,7 @@
 	"private": true,
 	"scripts": {
 		"dev": "vite dev",
-		"build": "pnpm run build:vendorize-flottform && pnpm run build:vite",
+		"build": "pnpm run build:vendorize-flottform && pnpm run build:vite && cp src/background/background.js build/",
 		"build:vite": "vite build",
 		"build:vendorize-flottform": "pnpm -C ../../flottform/forms run build:content && cp ../../flottform/forms/dist/content/flottform-bundle.js* static/scripts/",
 		"preview": "vite preview",
