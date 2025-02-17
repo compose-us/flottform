@@ -25,7 +25,8 @@
 			endpointId: $page.params.endpointId,
 			flottformApi: hash.flottformApi,
 			rtcConfiguration: hash.rtcConfiguration,
-			type: hash.type
+			type: hash.type,
+			encryptionKey: hash.encKey
 		};
 		console.log({ options });
 
@@ -43,6 +44,7 @@
 				endpointId: options.endpointId,
 				fileInput: inputField!,
 				flottformApi: options.flottformApi,
+				encryptionKey: options.encryptionKey,
 				rtcConfiguration: options.rtcConfiguration
 			});
 

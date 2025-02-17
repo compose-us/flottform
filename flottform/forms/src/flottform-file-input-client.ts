@@ -32,6 +32,7 @@ export class FlottformFileInputClient extends EventEmitter<Listeners> {
 		endpointId,
 		fileInput,
 		flottformApi,
+		encryptionKey,
 		rtcConfiguration = DEFAULT_WEBRTC_CONFIG,
 		pollTimeForIceInMs = POLL_TIME_IN_MS,
 		logger = console
@@ -39,6 +40,7 @@ export class FlottformFileInputClient extends EventEmitter<Listeners> {
 		endpointId: string;
 		fileInput: HTMLInputElement;
 		flottformApi: string;
+		encryptionKey: string;
 		rtcConfiguration?: RTCConfiguration;
 		pollTimeForIceInMs?: number;
 		logger?: Logger;
@@ -48,6 +50,7 @@ export class FlottformFileInputClient extends EventEmitter<Listeners> {
 			endpointId,
 			flottformApi,
 			rtcConfiguration,
+			encryptionKey,
 			pollTimeForIceInMs,
 			logger
 		});

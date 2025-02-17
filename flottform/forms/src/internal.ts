@@ -7,13 +7,13 @@ type EndpointInfo = {
 	hostKey: HostKey;
 	endpointId: EndpointId;
 	hostInfo: {
-		session: RTCSessionDescriptionInit;
-		iceCandidates: RTCIceCandidateInit[];
+		session: string;
+		iceCandidates: string;
 	};
 	clientKey?: ClientKey;
 	clientInfo?: {
-		session: RTCSessionDescriptionInit;
-		iceCandidates: RTCIceCandidateInit[];
+		session: string;
+		iceCandidates: string;
 	};
 };
 

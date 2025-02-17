@@ -5,6 +5,10 @@ export const RTCSessionDescriptionInitSchema = z.object({
 	sdp: z.string().optional()
 });
 
+export const CreateEndpointPayloadSchema = z.object({
+	session: z.string({ message: 'Expected session of type string' })
+});
+
 export type RTCSessionDescriptionInitValidated = z.infer<typeof RTCSessionDescriptionInitSchema>;
 assertType<TypeEqualityGuard<RTCSessionDescriptionInitValidated, RTCSessionDescriptionInit>>();
 

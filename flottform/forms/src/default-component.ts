@@ -92,7 +92,11 @@ export const createDefaultFlottformComponent = ({
 			onSuccessText
 		}: {
 			flottformApi: string;
-			createClientUrl: (params: { endpointId: string }) => Promise<string>;
+			createClientUrl: (params: {
+				endpointId: string;
+				encryptionKey: string;
+				optionalData?: object;
+			}) => Promise<string>;
 			inputField: HTMLInputElement;
 			id?: string;
 			additionalItemClasses?: string;
@@ -147,7 +151,11 @@ export const createDefaultFlottformComponent = ({
 			onSuccessText
 		}: {
 			flottformApi: string;
-			createClientUrl: (params: { endpointId: string }) => Promise<string>;
+			createClientUrl: (params: {
+				endpointId: string;
+				encryptionKey: string;
+				optionalData?: object;
+			}) => Promise<string>;
 			inputField?: HTMLInputElement | HTMLTextAreaElement;
 			id?: string;
 			additionalItemClasses?: string;

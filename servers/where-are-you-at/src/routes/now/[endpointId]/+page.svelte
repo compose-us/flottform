@@ -10,9 +10,11 @@
 	let updateCurrentPosition = $state<() => void>();
 
 	onMount(async () => {
+		const hash = JSON.parse(decodeURIComponent($page.url.hash.slice(1)));
 		const flottformTextInputClient = new FlottformTextInputClient({
 			endpointId: $page.params.endpointId,
-			flottformApi: sdpExchangeServerBase
+			flottformApi: sdpExchangeServerBase,
+			encryptionKey: hash.encKey
 		});
 		// Start the WebRTC connection process as soon as the page loads.
 		flottformTextInputClient.start();

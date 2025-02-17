@@ -30,7 +30,11 @@ export class FlottformTextInputHost extends BaseInputHost<Listeners> {
 		logger = console
 	}: {
 		flottformApi: string | URL;
-		createClientUrl: (params: { endpointId: string }) => Promise<string>;
+		createClientUrl: (params: {
+			endpointId: string;
+			encryptionKey: string;
+			optionalData?: object;
+		}) => Promise<string>;
 		inputField?: HTMLInputElement | HTMLTextAreaElement;
 		rtcConfiguration?: RTCConfiguration;
 		pollTimeForIceInMs?: number;

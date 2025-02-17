@@ -254,8 +254,16 @@
 
 					// Instantiate the FlottformTextInputHost with the provided inputId
 					let flottformTextInputHost = new FlottformTextInputHost({
-						createClientUrl: async ({ endpointId }: { endpointId: string }) =>
-							`${extensionClientUrlBase}/${endpointId}/#${encodeURIComponent(JSON.stringify(data))}`,
+						createClientUrl: async ({
+							endpointId,
+							encryptionKey,
+							optionalData = data
+						}: {
+							endpointId: string;
+							encryptionKey: string;
+							optionalData?: object;
+						}) =>
+							`${extensionClientUrlBase}/${endpointId}/#${encodeURIComponent(JSON.stringify({ encKey: encryptionKey, ...optionalData }))}`,
 						flottformApi: signalingServerUrlBase
 					});
 
@@ -286,8 +294,16 @@
 
 					// Instantiate the FlottformFileInputHost with the provided inputId
 					let flottformFileInputHost = new FlottformFileInputHost({
-						createClientUrl: async ({ endpointId }: { endpointId: string }) =>
-							`${extensionClientUrlBase}/${endpointId}/#${encodeURIComponent(JSON.stringify(data))}`,
+						createClientUrl: async ({
+							endpointId,
+							encryptionKey,
+							optionalData = data
+						}: {
+							endpointId: string;
+							encryptionKey: string;
+							optionalData?: object;
+						}) =>
+							`${extensionClientUrlBase}/${endpointId}/#${encodeURIComponent(JSON.stringify({ encKey: encryptionKey, ...optionalData }))}`,
 						flottformApi: signalingServerUrlBase,
 						inputField: targetedInputField
 					});

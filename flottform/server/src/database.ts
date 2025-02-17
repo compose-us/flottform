@@ -5,13 +5,13 @@ type EndpointInfo = {
 	hostKey: HostKey;
 	endpointId: EndpointId;
 	hostInfo: {
-		session: RTCSessionDescriptionInit;
-		iceCandidates: RTCIceCandidateInit[];
+		session: string;
+		iceCandidates: string;
 	};
 	clientKey?: ClientKey;
 	clientInfo?: {
-		session: RTCSessionDescriptionInit;
-		iceCandidates: RTCIceCandidateInit[];
+		session: string;
+		iceCandidates: string;
 	};
 };
 type SafeEndpointInfo = Omit<EndpointInfo, 'hostKey' | 'clientKey'>;
@@ -28,13 +28,13 @@ class FlottformDatabase {
 
 	constructor() {}
 
-	async createEndpoint({ session }: { session: RTCSessionDescriptionInit }): Promise<EndpointInfo> {
+	async createEndpoint({ session }: { session: string }): Promise<EndpointInfo> {
 		const entry = {
 			hostKey: createRandomHostKey(),
 			endpointId: createRandomEndpointId(),
 			hostInfo: {
 				session,
-				iceCandidates: []
+				iceCandidates: ''
 			}
 		};
 		this.map.set(entry.endpointId, entry);
@@ -59,8 +59,8 @@ class FlottformDatabase {
 	}: {
 		endpointId: EndpointId;
 		hostKey: HostKey;
-		session: RTCSessionDescriptionInit;
-		iceCandidates: RTCIceCandidateInit[];
+		session: string;
+		iceCandidates: string;
 	}): Promise<SafeEndpointInfo> {
 		const existingSession = this.map.get(endpointId);
 		if (!existingSession) {
@@ -89,8 +89,8 @@ class FlottformDatabase {
 	}: {
 		endpointId: EndpointId;
 		clientKey: ClientKey;
-		session: RTCSessionDescriptionInit;
-		iceCandidates: RTCIceCandidateInit[];
+		session: string;
+		iceCandidates: string;
 	}): Promise<Required<SafeEndpointInfo>> {
 		const existingSession = this.map.get(endpointId);
 		if (!existingSession) {

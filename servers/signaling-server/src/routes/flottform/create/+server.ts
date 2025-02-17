@@ -1,20 +1,17 @@
 import { type RequestHandler, json, error, text } from '@sveltejs/kit';
 import { retrieveFlottformDatabase } from '$lib/database';
-import { RTCSessionDescriptionInitSchema } from '$lib/validations';
 import { corsHeaders } from '$lib/cors-headers';
+import { CreateEndpointPayloadSchema } from '$lib/validations';
 
 export const POST: RequestHandler = async ({ request }) => {
 	const data = await request.json();
-	if (!data.session) {
-		return error(400, 'No session provided.');
-	}
 
-	let session: RTCSessionDescriptionInit;
+	let session: string;
 	try {
-		session = RTCSessionDescriptionInitSchema.parse(data.session);
+		session = CreateEndpointPayloadSchema.parse(data).session;
 	} catch (e) {
 		console.log(e);
-		return error(400, 'Could not parse session parameter into RTCSessionDescription.');
+		return error(400, 'Could not parse session parameter into string.');
 	}
 
 	const db = await retrieveFlottformDatabase();
