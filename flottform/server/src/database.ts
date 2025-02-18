@@ -15,7 +15,7 @@ type EndpointInfo = {
 	};
 	lastUpdate: number;
 };
-type SafeEndpointInfo = Omit<EndpointInfo, 'hostKey' | 'clientKey'>;
+type SafeEndpointInfo = Omit<EndpointInfo, 'hostKey' | 'clientKey' | 'lastUpdate'>;
 
 const DEFAULT_CLEANUP_PERIOD = 30 * 60 * 1000;
 const DEFAULT_ENTRY_TIME_TO_LIVE_IN_MS = 25 * 60 * 1000;
@@ -96,7 +96,7 @@ class FlottformDatabase {
 			throw Error('Endpoint not found');
 		}
 		entry.lastUpdate = Date.now();
-		const { hostKey: _ignore1, clientKey: _ignore2, ...endpoint } = entry;
+		const { hostKey: _ignore1, clientKey: _ignore2, lastUpdate: _ignore3, ...endpoint } = entry;
 
 		return endpoint;
 	}
@@ -105,14 +105,12 @@ class FlottformDatabase {
 		endpointId,
 		hostKey,
 		session,
-		iceCandidates,
-		lastUpdate = Date.now()
+		iceCandidates
 	}: {
 		endpointId: EndpointId;
 		hostKey: HostKey;
 		session: RTCSessionDescriptionInit;
 		iceCandidates: RTCIceCandidateInit[];
-		lastUpdate?: number;
 	}): Promise<SafeEndpointInfo> {
 		const existingSession = this.map.get(endpointId);
 		if (!existingSession) {
@@ -125,11 +123,16 @@ class FlottformDatabase {
 		const newInfo = {
 			...existingSession,
 			hostInfo: { ...existingSession.hostInfo, session, iceCandidates },
-			lastUpdate
+			lastUpdate: Date.now()
 		};
 		this.map.set(endpointId, newInfo);
 
-		const { hostKey: _ignore1, clientKey: _ignore2, ...newEndpoint } = newInfo;
+		const {
+			hostKey: _ignore1,
+			clientKey: _ignore2,
+			lastUpdate: _ignore3,
+			...newEndpoint
+		} = newInfo;
 
 		return newEndpoint;
 	}
@@ -138,14 +141,12 @@ class FlottformDatabase {
 		endpointId,
 		clientKey,
 		session,
-		iceCandidates,
-		lastUpdate = Date.now()
+		iceCandidates
 	}: {
 		endpointId: EndpointId;
 		clientKey: ClientKey;
 		session: RTCSessionDescriptionInit;
 		iceCandidates: RTCIceCandidateInit[];
-		lastUpdate?: number;
 	}): Promise<Required<SafeEndpointInfo>> {
 		const existingSession = this.map.get(endpointId);
 		if (!existingSession) {
@@ -161,11 +162,16 @@ class FlottformDatabase {
 			...existingSession,
 			clientKey,
 			clientInfo: { session, iceCandidates },
-			lastUpdate
+			lastUpdate: Date.now()
 		};
 		this.map.set(endpointId, newInfo);
 
-		const { hostKey: _ignore1, clientKey: _ignore2, ...newEndpoint } = newInfo;
+		const {
+			hostKey: _ignore1,
+			clientKey: _ignore2,
+			lastUpdate: _ignore3,
+			...newEndpoint
+		} = newInfo;
 
 		return newEndpoint;
 	}

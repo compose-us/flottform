@@ -33,7 +33,8 @@ describe('Flottform database', () => {
 					await db.putHostInfo({
 						endpointId,
 						hostKey: 'clearly-wrong',
-						iceCandidates: []
+						iceCandidates: [],
+						session: offer
 					})
 			).rejects.toThrow(/hostkey/i);
 		});
@@ -202,8 +203,7 @@ describe('Flottform database', () => {
 				endpointId,
 				clientKey,
 				session: answer,
-				iceCandidates: [],
-				lastUpdate: Date.now()
+				iceCandidates: []
 			});
 
 			// Sleep for enough time to trigger the first cleanup
@@ -231,8 +231,7 @@ describe('Flottform database', () => {
 				endpointId,
 				clientKey,
 				session: answer,
-				iceCandidates: [],
-				lastUpdate: Date.now()
+				iceCandidates: []
 			});
 
 			// The endpoint shouldn't be cleaned by now
