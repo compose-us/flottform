@@ -19,6 +19,7 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 	private pollTimeForIceInMs: number;
 	private logger: Logger;
 
+	private keepConnectionAliveIntervalId: NodeJS.Timeout | undefined;
 	private state: FlottformState | 'disconnected' = 'new';
 	private channelNumber: number = 0;
 	private openPeerConnection: RTCPeerConnection | null = null;
@@ -65,7 +66,7 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		}
 
 		try {
-			this.rtcConfiguration.iceServers = await this.fetchIceServers(this.baseApi);
+			this.rtcConfiguration.iceServers = await this.fetchIceServers();
 		} catch (error) {
 			// Use the default configuration as a fallback
 			this.logger.error(error);
@@ -108,8 +109,20 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 			this.openPeerConnection = null;
 		}
 		this.changeState('disconnected');
+		// Stop heartbeat function.
+		clearInterval(this.keepConnectionAliveIntervalId);
 		// Cleanup old entries.
 		this.deleteEndpoint(this.baseApi, this.endpointId, this.hostKey);
+	};
+
+	private keepConnectionAlive = async (getEndpointInfoUrl: string) => {
+		this.keepConnectionAliveIntervalId = setInterval(
+			async () => {
+				// Make a GET request to refresh the connection
+				await retrieveEndpointInfo(getEndpointInfoUrl);
+			},
+			5 * 60 * 1000
+		);
 	};
 
 	private setupDataChannelListener = () => {
@@ -177,12 +190,18 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 			this.logger.info(`onconnectionstatechange - ${this.openPeerConnection!.connectionState}`);
 			if (this.openPeerConnection!.connectionState === 'connected') {
 				this.stopPollingForConnection();
+				// Start the heartbeat process
+				this.keepConnectionAlive(getEndpointInfoUrl);
 			}
 			if (this.openPeerConnection!.connectionState === 'disconnected') {
 				this.startPollingForConnection(getEndpointInfoUrl);
+				// Stop the hearbeat process
+				clearInterval(this.keepConnectionAliveIntervalId);
 			}
 			if (this.openPeerConnection!.connectionState === 'failed') {
 				this.stopPollingForConnection();
+				// Stop the hearbeat process
+				clearInterval(this.keepConnectionAliveIntervalId);
 				this.changeState('error', { message: 'connection-failed' });
 			}
 		};
@@ -243,8 +262,8 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		return response.json();
 	};
 
-	private fetchIceServers = async (baseApi: string) => {
-		const response = await fetch(`${baseApi}/ice-server-credentials`, {
+	private fetchIceServers = async () => {
+		const response = await fetch(`${this.baseApi}/ice-server-credentials`, {
 			method: 'GET',
 			headers: {
 				Accept: 'application/json'
