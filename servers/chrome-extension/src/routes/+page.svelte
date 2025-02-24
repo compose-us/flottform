@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import {
-		defaultTurnServerMeteredEndpointValue,
+		defaultGetIceServersEndpoint,
 		defaultSignalingServerUrlBase,
 		defaultExtensionClientUrlBase
 	} from '$lib/options';
@@ -16,7 +16,7 @@
 
 	let inputFields: TrackedInputFields = $state([]);
 	let currentTabId: number | undefined;
-	let rtcConfiguration: RTCConfiguration = {};
+	let getIceServersEndpoint: string = '';
 	let signalingServerUrlBase: string = '';
 	let extensionClientUrlBase: string = '';
 
@@ -134,7 +134,7 @@
 				inputFieldId,
 				tabId,
 				inputFieldType,
-				rtcConfiguration,
+				getIceServersEndpoint,
 				signalingServerUrlBase,
 				extensionClientUrlBase
 			],
@@ -143,7 +143,7 @@
 				inputFieldId: string,
 				tabId: number,
 				inputFieldType: string,
-				rtcConfiguration: RTCConfiguration,
+				getIceServersEndpoint: string,
 				signalingServerUrlBase: string,
 				extensionClientUrlBase: string
 			) => {
@@ -164,26 +164,22 @@
 							const latestVersionOfInputFields: TrackedInputFields = result[`inputFields-${tabId}`];
 							const updatedInputFields = latestVersionOfInputFields.map((inputField) => {
 								if (inputField.id === id) {
-									//console.warn('Updating only the value of this inputField with ID= ', id);
 									return { ...inputField, connectionState: { event, data } };
 								}
 								return inputField;
 							});
-							//console.warn(`updatedInputFields =${JSON.stringify(updatedInputFields)}, id=${id}`);
 
 							updateSavedInputs(updatedInputFields, currentTabId);
 						}
 					});
 				}
 
-				function updateSavedInputs(updatedInputFields: TrackedInputFields, currentTabId: number) {
+				async function updateSavedInputs(
+					updatedInputFields: TrackedInputFields,
+					currentTabId: number
+				) {
 					// Update the UI and the local storage
-					chrome.storage.local.set({ [`inputFields-${currentTabId}`]: updatedInputFields }, () => {
-						console.warn(
-							`Saved ${JSON.stringify(updatedInputFields)} to chrome storage from page context!!!!!!!!!!!!`
-						);
-					});
-					//inputFields = updatedInputFields;
+					await chrome.storage.local.set({ [`inputFields-${currentTabId}`]: updatedInputFields });
 				}
 
 				function registerFlottformTextInputListeners(
@@ -248,7 +244,7 @@
 					//console.log(`****Flottform will work on TextInput with id=${textInputId}*****`);
 					const data = {
 						type: inputFieldType,
-						rtcConfiguration,
+						getIceApi: getIceServersEndpoint,
 						flottformApi: signalingServerUrlBase
 					};
 
@@ -256,14 +252,12 @@
 					let flottformTextInputHost = new FlottformTextInputHost({
 						createClientUrl: async ({
 							endpointId,
-							encryptionKey,
-							optionalData = data
+							encryptionKey
 						}: {
 							endpointId: string;
 							encryptionKey: string;
-							optionalData?: object;
 						}) =>
-							`${extensionClientUrlBase}/${endpointId}/#${encodeURIComponent(JSON.stringify({ encKey: encryptionKey, ...optionalData }))}`,
+							`${extensionClientUrlBase}/${endpointId}/#${encodeURIComponent(JSON.stringify({ encKey: encryptionKey, ...data }))}`,
 						flottformApi: signalingServerUrlBase
 					});
 
@@ -289,21 +283,19 @@
 					const data = {
 						type: 'file',
 						flottformApi: signalingServerUrlBase,
-						rtcConfiguration
+						getIceApi: getIceServersEndpoint
 					};
 
 					// Instantiate the FlottformFileInputHost with the provided inputId
 					let flottformFileInputHost = new FlottformFileInputHost({
 						createClientUrl: async ({
 							endpointId,
-							encryptionKey,
-							optionalData = data
+							encryptionKey
 						}: {
 							endpointId: string;
 							encryptionKey: string;
-							optionalData?: object;
 						}) =>
-							`${extensionClientUrlBase}/${endpointId}/#${encodeURIComponent(JSON.stringify({ encKey: encryptionKey, ...optionalData }))}`,
+							`${extensionClientUrlBase}/${endpointId}/#${encodeURIComponent(JSON.stringify({ encKey: encryptionKey, ...data }))}`,
 						flottformApi: signalingServerUrlBase,
 						inputField: targetedInputField
 					});
@@ -436,43 +428,17 @@
 		}
 
 		const data = await chrome.storage.local.get([
-			'FLOTTFORM_TURN_SERVER_METERED_ENDPOINT',
+			'FLOTTFORM_GET_ICE_SERVERS_ENDPOINT',
 			'FLOTTFORM_SIGNALING_SERVER_URL_BASE',
 			'FLOTTFORM_EXTENSION_CLIENTS_URL_BASE'
 		]);
-		let turnServerMeteredEndpointValue: string =
-			data.FLOTTFORM_TURN_SERVER_METERED_ENDPOINT ?? defaultTurnServerMeteredEndpointValue;
-
-		if (turnServerMeteredEndpointValue === '') {
-			rtcConfiguration = {
-				iceServers: [
-					{
-						urls: ['stun:stun1.l.google.com:19302']
-					}
-				]
-			};
-		} else {
-			try {
-				// Get TURN/STUN credentials from metered.ca
-				const response = await fetch(turnServerMeteredEndpointValue);
-				if (!response.ok) {
-					throw new Error(`Network Response not ok, status: ${response.status}`);
-				}
-				// Saving the response in the iceServers array
-				const iceServers = await response.json();
-
-				rtcConfiguration = { iceServers };
-			} catch (error) {
-				console.error(error);
-			}
-		}
-
+		getIceServersEndpoint = data.FLOTTFORM_GET_ICE_SERVERS_ENDPOINT ?? defaultGetIceServersEndpoint;
 		signalingServerUrlBase =
 			data.FLOTTFORM_SIGNALING_SERVER_URL_BASE ?? defaultSignalingServerUrlBase;
 		extensionClientUrlBase =
 			data.FLOTTFORM_EXTENSION_CLIENTS_URL_BASE ?? defaultExtensionClientUrlBase;
 		console.log({
-			rtcConfiguration,
+			getIceServersEndpoint,
 			signalingServerUrlBase,
 			extensionClientUrlBase
 		});

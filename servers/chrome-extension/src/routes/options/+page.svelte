@@ -1,36 +1,34 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import {
-		defaultTurnServerMeteredEndpointValue,
+		defaultGetIceServersEndpoint,
 		defaultSignalingServerUrlBase,
 		defaultExtensionClientUrlBase
 	} from '$lib/options';
 	import type { EventHandler } from 'svelte/elements';
 
-	let turnServerMeteredEndpointValue: string;
+	let getIceServersEndpoint: string;
 	let flottformSignalingServerUrlBase: string;
 	let flottformExtensionClientsUrlBase: string;
 	let state: 'init' | 'saved' | 'error' = 'init';
 	let errorMessage = '';
 
 	const isValidTurnEndpoint = (turnEndpoint: string) => {
-		const pattern =
-			/^https:\/\/[a-zA-Z0-9.-]*metered\.live\/api\/v1\/turn\/credentials\?apiKey=[a-zA-Z0-9-]+$/;
-		return pattern.test(turnEndpoint);
+		return URL.parse(turnEndpoint) !== null;
 	};
 
 	const saveOptions: EventHandler<SubmitEvent> = async (e) => {
 		e.preventDefault();
 		errorMessage = '';
 
-		if (!isValidTurnEndpoint(turnServerMeteredEndpointValue)) {
+		if (getIceServersEndpoint !== '' && !isValidTurnEndpoint(getIceServersEndpoint)) {
 			errorMessage = 'Invalid TURN server endpoint format! Please check your URL!';
 			return;
 		}
 
 		try {
 			await chrome.storage.local.set({
-				FLOTTFORM_TURN_SERVER_METERED_ENDPOINT: turnServerMeteredEndpointValue,
+				FLOTTFORM_GET_ICE_SERVERS_ENDPOINT: getIceServersEndpoint,
 				FLOTTFORM_SIGNALING_SERVER_URL_BASE: flottformSignalingServerUrlBase,
 				FLOTTFORM_EXTENSION_CLIENTS_URL_BASE: flottformExtensionClientsUrlBase
 			});
@@ -47,12 +45,11 @@
 
 	onMount(async () => {
 		const data = await chrome.storage.local.get([
-			'FLOTTFORM_TURN_SERVER_METERED_ENDPOINT',
+			'FLOTTFORM_GET_ICE_SERVERS_ENDPOINT',
 			'FLOTTFORM_SIGNALING_SERVER_URL_BASE',
 			'FLOTTFORM_EXTENSION_CLIENTS_URL_BASE'
 		]);
-		turnServerMeteredEndpointValue =
-			data.FLOTTFORM_TURN_SERVER_METERED_ENDPOINT ?? defaultTurnServerMeteredEndpointValue;
+		getIceServersEndpoint = data.FLOTTFORM_GET_ICE_SERVERS_ENDPOINT ?? defaultGetIceServersEndpoint;
 		flottformSignalingServerUrlBase =
 			data.FLOTTFORM_SIGNALING_SERVER_URL_BASE ?? defaultSignalingServerUrlBase;
 		flottformExtensionClientsUrlBase =
@@ -76,7 +73,7 @@
 			>REST API endpoint to retrieve STUN/TURN server credentials</label
 		>
 		<input
-			bind:value={turnServerMeteredEndpointValue}
+			bind:value={getIceServersEndpoint}
 			type="text"
 			id="turnServerMeteredEndpoint"
 			name="turnServerMeteredEndpoint"

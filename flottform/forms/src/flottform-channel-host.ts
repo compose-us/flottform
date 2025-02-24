@@ -14,7 +14,6 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 	private createClientUrl: (params: {
 		endpointId: string;
 		encryptionKey: string;
-		optionalData?: object;
 	}) => Promise<string>;
 	private rtcConfiguration: RTCConfiguration;
 	private pollTimeForIceInMs: number;
@@ -35,11 +34,7 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		logger
 	}: {
 		flottformApi: string | URL;
-		createClientUrl: (params: {
-			endpointId: string;
-			encryptionKey: string;
-			optionalData?: object;
-		}) => Promise<string>;
+		createClientUrl: (params: { endpointId: string; encryptionKey: string }) => Promise<string>;
 		rtcConfiguration: RTCConfiguration;
 		pollTimeForIceInMs: number;
 		logger: Logger;

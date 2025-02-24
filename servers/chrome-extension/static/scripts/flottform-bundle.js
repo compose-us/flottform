@@ -26,7 +26,7 @@ const q = class q {
 };
 u(q, "instance");
 let vt = q;
-var x = {}, et, Lt;
+var $ = {}, et, Lt;
 function ye() {
   return Lt || (Lt = 1, et = function() {
     return typeof Promise == "function" && Promise.prototype && Promise.prototype.then;
@@ -102,9 +102,9 @@ function K() {
     return o(t);
   }, U;
 }
-var it = {}, Nt;
+var it = {}, Rt;
 function Tt() {
-  return Nt || (Nt = 1, function(o) {
+  return Rt || (Rt = 1, function(o) {
     o.L = { bit: 1 }, o.M = { bit: 0 }, o.Q = { bit: 3 }, o.H = { bit: 2 };
     function r(e) {
       if (typeof e != "string")
@@ -139,10 +139,10 @@ function Tt() {
     };
   }(it)), it;
 }
-var ot, Rt;
+var ot, Nt;
 function we() {
-  if (Rt) return ot;
-  Rt = 1;
+  if (Nt) return ot;
+  Nt = 1;
   function o() {
     this.buffer = [], this.length = 0;
   }
@@ -726,10 +726,10 @@ function Te() {
     };
   }(lt)), lt;
 }
-var ut, xt;
+var ut, $t;
 function Ae() {
-  if (xt) return ut;
-  xt = 1;
+  if ($t) return ut;
+  $t = 1;
   const o = Te();
   function r(e) {
     this.genPoly = void 0, this.degree = e, this.degree && this.initialize(this.degree);
@@ -749,30 +749,30 @@ function Ae() {
     return i;
   }, ut = r, ut;
 }
-var ht = {}, ft = {}, dt = {}, $t;
+var ht = {}, ft = {}, dt = {}, xt;
 function se() {
-  return $t || ($t = 1, dt.isValid = function(r) {
+  return xt || (xt = 1, dt.isValid = function(r) {
     return !isNaN(r) && r >= 1 && r <= 40;
   }), dt;
 }
-var N = {}, Ht;
+var R = {}, Ht;
 function ae() {
-  if (Ht) return N;
+  if (Ht) return R;
   Ht = 1;
   const o = "[0-9]+", r = "[A-Z $%*+\\-./:]+";
   let e = "(?:[u3000-u303F]|[u3040-u309F]|[u30A0-u30FF]|[uFF00-uFFEF]|[u4E00-u9FAF]|[u2605-u2606]|[u2190-u2195]|u203B|[u2010u2015u2018u2019u2025u2026u201Cu201Du2225u2260]|[u0391-u0451]|[u00A7u00A8u00B1u00B4u00D7u00F7])+";
   e = e.replace(/u/g, "\\u");
   const t = "(?:(?![A-Z0-9 $%*+\\-./:]|" + e + `)(?:.|[\r
 ]))+`;
-  N.KANJI = new RegExp(e, "g"), N.BYTE_KANJI = new RegExp("[^A-Z0-9 $%*+\\-./:]+", "g"), N.BYTE = new RegExp(t, "g"), N.NUMERIC = new RegExp(o, "g"), N.ALPHANUMERIC = new RegExp(r, "g");
+  R.KANJI = new RegExp(e, "g"), R.BYTE_KANJI = new RegExp("[^A-Z0-9 $%*+\\-./:]+", "g"), R.BYTE = new RegExp(t, "g"), R.NUMERIC = new RegExp(o, "g"), R.ALPHANUMERIC = new RegExp(r, "g");
   const n = new RegExp("^" + e + "$"), i = new RegExp("^" + o + "$"), s = new RegExp("^[A-Z0-9 $%*+\\-./:]+$");
-  return N.testKanji = function(c) {
+  return R.testKanji = function(c) {
     return n.test(c);
-  }, N.testNumeric = function(c) {
+  }, R.testNumeric = function(c) {
     return i.test(c);
-  }, N.testAlphanumeric = function(c) {
+  }, R.testAlphanumeric = function(c) {
     return s.test(c);
-  }, N;
+  }, R;
 }
 var Ot;
 function z() {
@@ -1026,7 +1026,7 @@ function Me() {
   }, yt = r, yt;
 }
 var wt, Qt;
-function Ne() {
+function Re() {
   if (Qt) return wt;
   Qt = 1;
   const o = z(), r = K();
@@ -1057,7 +1057,7 @@ Make sure your charset is UTF-8`
   }, wt = e, wt;
 }
 var bt = { exports: {} }, Wt;
-function Re() {
+function Ne() {
   return Wt || (Wt = 1, function(o) {
     var r = {
       single_source_shortest_paths: function(e, t, n) {
@@ -1127,7 +1127,7 @@ function Re() {
 var Zt;
 function De() {
   return Zt || (Zt = 1, function(o) {
-    const r = z(), e = ve(), t = Le(), n = Me(), i = Ne(), s = ae(), a = K(), c = Re();
+    const r = z(), e = ve(), t = Le(), n = Me(), i = Re(), s = ae(), a = K(), c = Ne();
     function l(w) {
       return unescape(encodeURIComponent(w)).length;
     }
@@ -1332,23 +1332,23 @@ function ke() {
     return b(m, p, E);
   }
   function b(p, E, S) {
-    const m = o.getSymbolTotalCodewords(E), P = a.getTotalCodewordsCount(E, S), C = m - P, F = a.getBlocksCount(E, S), y = m % F, v = F - y, k = Math.floor(m / F), $ = Math.floor(C / F), de = $ + 1, At = k - $, ge = new c(At);
+    const m = o.getSymbolTotalCodewords(E), P = a.getTotalCodewordsCount(E, S), C = m - P, F = a.getBlocksCount(E, S), y = m % F, v = F - y, k = Math.floor(m / F), x = Math.floor(C / F), de = x + 1, At = k - x, ge = new c(At);
     let W = 0;
     const V = new Array(F), Pt = new Array(F);
     let Z = 0;
     const pe = new Uint8Array(p.buffer);
     for (let _ = 0; _ < F; _++) {
-      const tt = _ < v ? $ : de;
+      const tt = _ < v ? x : de;
       V[_] = pe.slice(W, W + tt), Pt[_] = ge.encode(V[_]), W += tt, Z = Math.max(Z, tt);
     }
     const X = new Uint8Array(m);
-    let Bt = 0, R, D;
-    for (R = 0; R < Z; R++)
+    let Bt = 0, N, D;
+    for (N = 0; N < Z; N++)
       for (D = 0; D < F; D++)
-        R < V[D].length && (X[Bt++] = V[D][R]);
-    for (R = 0; R < At; R++)
+        N < V[D].length && (X[Bt++] = V[D][N]);
+    for (N = 0; N < At; N++)
       for (D = 0; D < F; D++)
-        X[Bt++] = Pt[D][R];
+        X[Bt++] = Pt[D][N];
     return X;
   }
   function M(p, E, S, m) {
@@ -1358,8 +1358,8 @@ function ke() {
     else if (typeof p == "string") {
       let k = E;
       if (!k) {
-        const $ = g.rawSplit(p);
-        k = l.getBestVersionForData($, S);
+        const x = g.rawSplit(p);
+        k = l.getBestVersionForData(x, S);
       }
       P = g.fromString(p, k || 40);
     } else
@@ -1505,7 +1505,7 @@ function qe() {
 }
 var ie;
 function Ke() {
-  if (ie) return x;
+  if (ie) return $;
   ie = 1;
   const o = ye(), r = ke(), e = Ue(), t = qe();
   function n(i, s, a, c, l) {
@@ -1535,9 +1535,9 @@ function Ke() {
       l(d);
     }
   }
-  return x.create = r.create, x.toCanvas = n.bind(null, e.render), x.toDataURL = n.bind(null, e.renderToDataURL), x.toString = n.bind(null, function(i, s, a) {
+  return $.create = r.create, $.toCanvas = n.bind(null, e.render), $.toDataURL = n.bind(null, e.renderToDataURL), $.toString = n.bind(null, function(i, s, a) {
     return t.render(i, a);
-  }), x;
+  }), $;
 }
 var ze = Ke();
 const J = 1e3, Q = {
@@ -1579,7 +1579,7 @@ class G {
 }
 class ue extends G {
 }
-async function xe() {
+async function $e() {
   return await crypto.subtle.generateKey(
     {
       name: "AES-GCM",
@@ -1590,7 +1590,7 @@ async function xe() {
     ["encrypt", "decrypt"]
   );
 }
-async function $e(o) {
+async function xe(o) {
   return (await crypto.subtle.exportKey("jwk", o)).k;
 }
 async function He(o) {
@@ -1607,7 +1607,6 @@ async function He(o) {
     {
       name: "AES-GCM",
       length: 256
-      // Make sure this matches your key length
     },
     !0,
     // extractable
@@ -1678,7 +1677,7 @@ class he extends G {
       this.state = e, this.emit(e, t), this.logger.info(`State changed to: ${e}`, t ?? "");
     });
     u(this, "start", async () => {
-      this.openPeerConnection && this.close(), this.cryptoKey = await xe();
+      this.openPeerConnection && this.close(), this.cryptoKey = await $e();
       const e = (this.flottformApi instanceof URL ? this.flottformApi : new URL(this.flottformApi)).toString().replace(/\/$/, "");
       this.openPeerConnection = new RTCPeerConnection(this.rtcConfiguration), this.dataChannel = this.createDataChannel();
       const t = await this.openPeerConnection.createOffer();
@@ -1687,7 +1686,7 @@ class he extends G {
       this.logger.log("Created endpoint", { endpointId: n, hostKey: i });
       const s = `${e}/${n}`, a = `${e}/${n}/host`, c = /* @__PURE__ */ new Set();
       await this.putHostInfo(a, i, c, t), this.setUpConnectionStateGathering(s), this.setupHostIceGathering(a, i, c, t), this.setupDataChannelForTransfer();
-      const l = await $e(this.cryptoKey);
+      const l = await xe(this.cryptoKey);
       if (!l)
         throw new Error("Encryption Key is undefined!");
       const h = await this.createClientUrl({ endpointId: n, encryptionKey: l });
@@ -1973,7 +1972,7 @@ class fe extends G {
       this.state = e, this.emit(e, t), this.logger.info(`**Client State changed to: ${e}`, t ?? "");
     });
     u(this, "start", async () => {
-      this.openPeerConnection && this.close(), this.cryptoKey = await He(this.encryptionKey), this.openPeerConnection = new RTCPeerConnection(this.rtcConfiguration);
+      this.openPeerConnection && this.close(), this.cryptoKey = await He(this.encryptionKey), (this.flottformApi instanceof URL ? this.flottformApi : new URL(this.flottformApi)).toString().replace(/\/$/, ""), this.openPeerConnection = new RTCPeerConnection(this.rtcConfiguration);
       const e = _e(), t = /* @__PURE__ */ new Set(), n = `${this.flottformApi}/${this.endpointId}`, i = `${this.flottformApi}/${this.endpointId}/client`;
       this.changeState("retrieving-info-from-endpoint");
       const { hostInfo: s } = await It(n);

@@ -45,11 +45,7 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 		logger = console
 	}: {
 		flottformApi: string | URL;
-		createClientUrl: (params: {
-			endpointId: string;
-			encryptionKey: string;
-			optionalData?: object;
-		}) => Promise<string>;
+		createClientUrl: (params: { endpointId: string; encryptionKey: string }) => Promise<string>;
 		inputField?: HTMLInputElement;
 		rtcConfiguration?: RTCConfiguration;
 		pollTimeForIceInMs?: number;
