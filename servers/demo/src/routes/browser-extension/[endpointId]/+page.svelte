@@ -21,6 +21,15 @@
 	let inputType = $state('');
 
 	async function retrieveIceServersIfSet(apiUrl: string): Promise<RTCConfiguration['iceServers']> {
+		if (!apiUrl) {
+			console.warn('No API URL provided, using default STUN server configuration.');
+			return [
+				{
+					urls: ['stun:stun1.l.google.com:19302']
+				}
+			];
+		}
+
 		const response = await fetch(apiUrl);
 		if (!response.ok) {
 			console.warn(
@@ -60,6 +69,7 @@
 
 		inputType = options.type;
 
+		// Get the iceServers details for FlottformClient classes.
 		const iceServers = await retrieveIceServersIfSet(options.getIceApi);
 
 		// Wait for the DOM to be fully rendered with the text or file input field.

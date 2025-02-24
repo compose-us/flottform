@@ -6,6 +6,7 @@
 		defaultExtensionClientUrlBase
 	} from '$lib/options';
 	import type * as Flottform from '@flottform/forms';
+	import { isOfTypeRTCIceServer } from '$lib/isOfTypeRTCIceServer';
 
 	type TrackedInputFields = Array<{
 		id: string;
@@ -17,6 +18,7 @@
 	let inputFields: TrackedInputFields = $state([]);
 	let currentTabId: number | undefined;
 	let getIceServersEndpoint: string = '';
+	let iceServers: RTCIceServer[] | undefined;
 	let signalingServerUrlBase: string = '';
 	let extensionClientUrlBase: string = '';
 
@@ -136,7 +138,8 @@
 				inputFieldType,
 				getIceServersEndpoint,
 				signalingServerUrlBase,
-				extensionClientUrlBase
+				extensionClientUrlBase,
+				iceServers
 			],
 			func: async (
 				flottformModuleFile: string,
@@ -145,7 +148,8 @@
 				inputFieldType: string,
 				getIceServersEndpoint: string,
 				signalingServerUrlBase: string,
-				extensionClientUrlBase: string
+				extensionClientUrlBase: string,
+				iceServers: RTCIceServer[] | undefined
 			) => {
 				const fm: typeof Flottform = await import(flottformModuleFile);
 				const { FlottformTextInputHost, FlottformFileInputHost, ConnectionManager } = fm;
@@ -247,7 +251,7 @@
 						getIceApi: getIceServersEndpoint,
 						flottformApi: signalingServerUrlBase
 					};
-
+					console.log('data-->', data);
 					// Instantiate the FlottformTextInputHost with the provided inputId
 					let flottformTextInputHost = new FlottformTextInputHost({
 						createClientUrl: async ({
@@ -258,7 +262,8 @@
 							encryptionKey: string;
 						}) =>
 							`${extensionClientUrlBase}/${endpointId}/#${encodeURIComponent(JSON.stringify({ encKey: encryptionKey, ...data }))}`,
-						flottformApi: signalingServerUrlBase
+						flottformApi: signalingServerUrlBase,
+						...(iceServers ? { rtcConfiguration: { iceServers } } : {})
 					});
 
 					flottformTextInputHost.start();
@@ -286,6 +291,8 @@
 						getIceApi: getIceServersEndpoint
 					};
 
+					console.log('data-->', data);
+
 					// Instantiate the FlottformFileInputHost with the provided inputId
 					let flottformFileInputHost = new FlottformFileInputHost({
 						createClientUrl: async ({
@@ -297,7 +304,8 @@
 						}) =>
 							`${extensionClientUrlBase}/${endpointId}/#${encodeURIComponent(JSON.stringify({ encKey: encryptionKey, ...data }))}`,
 						flottformApi: signalingServerUrlBase,
-						inputField: targetedInputField
+						inputField: targetedInputField,
+						...(iceServers ? { rtcConfiguration: { iceServers } } : {})
 					});
 
 					flottformFileInputHost.start();
@@ -421,6 +429,42 @@
 		});
 	};
 
+	async function retrieveIceServersIfSet(apiUrl: string): Promise<RTCConfiguration['iceServers']> {
+		if (!apiUrl) {
+			console.warn('No API URL provided, using default STUN server configuration.');
+			return [
+				{
+					urls: ['stun:stun1.l.google.com:19302']
+				}
+			];
+		}
+
+		const response = await fetch(apiUrl);
+		if (!response.ok) {
+			console.warn(
+				'Could not fetch iceServers from the provided URL, received status:',
+				response.status,
+				'-',
+				response.statusText
+			);
+			console.warn('Will use the default STUN server configuration.');
+			return;
+		}
+
+		const body: unknown = await response.json();
+		if (!Array.isArray(body)) {
+			console.warn('Expected an array of type RTCIceServer');
+			return;
+		}
+
+		if (!body.every(isOfTypeRTCIceServer)) {
+			console.warn('Expected an array of type RTCIceServer, found invalid types');
+			return;
+		}
+
+		return body;
+	}
+
 	onMount(async () => {
 		if (!chrome) {
 			console.warn('Chrome API is not available in this context!!');
@@ -442,6 +486,9 @@
 			signalingServerUrlBase,
 			extensionClientUrlBase
 		});
+
+		// Get the iceServers details for FlottformHost classes.
+		iceServers = await retrieveIceServersIfSet(getIceServersEndpoint);
 
 		let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 		currentTabId = tab.id;
