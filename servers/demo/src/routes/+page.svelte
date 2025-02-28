@@ -64,5 +64,10 @@
 			title="Customized default UI"
 			description="See how you can tailor Flottform's default UI to better match your design, while still retaining all the powerful features of the original interface. This demo lets you explore how easy it is to adapt the default elements to fit seamlessly with your brand's style."
 		/>
+		<DemoLink
+			href="{base}/remote-file-drop"
+			title="Remote File Drop"
+			description="Move files from your phone to your computer in seconds."
+		/>
 	</div>
 </section>
