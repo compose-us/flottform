@@ -5,6 +5,10 @@ export const RTCSessionDescriptionInitSchema = z.object({
 	sdp: z.string().optional()
 });
 
+export const CreateEndpointPayloadSchema = z.object({
+	hostInfo: z.string({ message: 'Expected hostInfo of type string' })
+});
+
 export type RTCSessionDescriptionInitValidated = z.infer<typeof RTCSessionDescriptionInitSchema>;
 assertType<TypeEqualityGuard<RTCSessionDescriptionInitValidated, RTCSessionDescriptionInit>>();
 

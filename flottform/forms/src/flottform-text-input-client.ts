@@ -17,6 +17,7 @@ export class FlottformTextInputClient extends EventEmitter<Listeners> {
 	constructor({
 		endpointId,
 		flottformApi,
+		encryptionKey,
 		rtcConfiguration = DEFAULT_WEBRTC_CONFIG,
 		pollTimeForIceInMs = POLL_TIME_IN_MS,
 		logger = console
@@ -24,6 +25,7 @@ export class FlottformTextInputClient extends EventEmitter<Listeners> {
 		endpointId: string;
 		flottformApi: string;
 		rtcConfiguration?: RTCConfiguration;
+		encryptionKey: string;
 		pollTimeForIceInMs?: number;
 		logger?: Logger;
 	}) {
@@ -32,6 +34,7 @@ export class FlottformTextInputClient extends EventEmitter<Listeners> {
 			endpointId,
 			flottformApi,
 			rtcConfiguration,
+			encryptionKey,
 			pollTimeForIceInMs,
 			logger
 		});

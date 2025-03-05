@@ -6,15 +6,9 @@ type EndpointId = string;
 type EndpointInfo = {
 	hostKey: HostKey;
 	endpointId: EndpointId;
-	hostInfo: {
-		session: RTCSessionDescriptionInit;
-		iceCandidates: RTCIceCandidateInit[];
-	};
+	hostInfo: string;
 	clientKey?: ClientKey;
-	clientInfo?: {
-		session: RTCSessionDescriptionInit;
-		iceCandidates: RTCIceCandidateInit[];
-	};
+	clientInfo?: string;
 };
 
 export type BaseListeners = {

@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import {
-		defaultTurnServerMeteredEndpointValue,
+		defaultGetIceServersEndpoint,
 		defaultSignalingServerUrlBase,
 		defaultExtensionClientUrlBase
 	} from '$lib/options';
 	import type * as Flottform from '@flottform/forms';
+	import { isOfTypeRTCIceServer } from '$lib/isOfTypeRTCIceServer';
 
 	type TrackedInputFields = Array<{
 		id: string;
@@ -16,7 +17,8 @@
 
 	let inputFields: TrackedInputFields = $state([]);
 	let currentTabId: number | undefined;
-	let rtcConfiguration: RTCConfiguration = {};
+	let getIceServersEndpoint: string = '';
+	let iceServers: RTCIceServer[] | undefined;
 	let signalingServerUrlBase: string = '';
 	let extensionClientUrlBase: string = '';
 
@@ -134,18 +136,20 @@
 				inputFieldId,
 				tabId,
 				inputFieldType,
-				rtcConfiguration,
+				getIceServersEndpoint,
 				signalingServerUrlBase,
-				extensionClientUrlBase
+				extensionClientUrlBase,
+				iceServers
 			],
 			func: async (
 				flottformModuleFile: string,
 				inputFieldId: string,
 				tabId: number,
 				inputFieldType: string,
-				rtcConfiguration: RTCConfiguration,
+				getIceServersEndpoint: string,
 				signalingServerUrlBase: string,
-				extensionClientUrlBase: string
+				extensionClientUrlBase: string,
+				iceServers: RTCIceServer[] | undefined
 			) => {
 				const fm: typeof Flottform = await import(flottformModuleFile);
 				const { FlottformTextInputHost, FlottformFileInputHost, ConnectionManager } = fm;
@@ -164,26 +168,22 @@
 							const latestVersionOfInputFields: TrackedInputFields = result[`inputFields-${tabId}`];
 							const updatedInputFields = latestVersionOfInputFields.map((inputField) => {
 								if (inputField.id === id) {
-									//console.warn('Updating only the value of this inputField with ID= ', id);
 									return { ...inputField, connectionState: { event, data } };
 								}
 								return inputField;
 							});
-							//console.warn(`updatedInputFields =${JSON.stringify(updatedInputFields)}, id=${id}`);
 
 							updateSavedInputs(updatedInputFields, currentTabId);
 						}
 					});
 				}
 
-				function updateSavedInputs(updatedInputFields: TrackedInputFields, currentTabId: number) {
+				async function updateSavedInputs(
+					updatedInputFields: TrackedInputFields,
+					currentTabId: number
+				) {
 					// Update the UI and the local storage
-					chrome.storage.local.set({ [`inputFields-${currentTabId}`]: updatedInputFields }, () => {
-						console.warn(
-							`Saved ${JSON.stringify(updatedInputFields)} to chrome storage from page context!!!!!!!!!!!!`
-						);
-					});
-					//inputFields = updatedInputFields;
+					await chrome.storage.local.set({ [`inputFields-${currentTabId}`]: updatedInputFields });
 				}
 
 				function registerFlottformTextInputListeners(
@@ -248,15 +248,22 @@
 					//console.log(`****Flottform will work on TextInput with id=${textInputId}*****`);
 					const data = {
 						type: inputFieldType,
-						rtcConfiguration,
+						getIceApi: getIceServersEndpoint,
 						flottformApi: signalingServerUrlBase
 					};
-
+					console.log('data-->', data);
 					// Instantiate the FlottformTextInputHost with the provided inputId
 					let flottformTextInputHost = new FlottformTextInputHost({
-						createClientUrl: async ({ endpointId }: { endpointId: string }) =>
-							`${extensionClientUrlBase}/${endpointId}/#${encodeURIComponent(JSON.stringify(data))}`,
-						flottformApi: signalingServerUrlBase
+						createClientUrl: async ({
+							endpointId,
+							encryptionKey
+						}: {
+							endpointId: string;
+							encryptionKey: string;
+						}) =>
+							`${extensionClientUrlBase}/${endpointId}/#${encodeURIComponent(JSON.stringify({ encKey: encryptionKey, ...data }))}`,
+						flottformApi: signalingServerUrlBase,
+						...(iceServers ? { rtcConfiguration: { iceServers } } : {})
 					});
 
 					flottformTextInputHost.start();
@@ -281,15 +288,24 @@
 					const data = {
 						type: 'file',
 						flottformApi: signalingServerUrlBase,
-						rtcConfiguration
+						getIceApi: getIceServersEndpoint
 					};
+
+					console.log('data-->', data);
 
 					// Instantiate the FlottformFileInputHost with the provided inputId
 					let flottformFileInputHost = new FlottformFileInputHost({
-						createClientUrl: async ({ endpointId }: { endpointId: string }) =>
-							`${extensionClientUrlBase}/${endpointId}/#${encodeURIComponent(JSON.stringify(data))}`,
+						createClientUrl: async ({
+							endpointId,
+							encryptionKey
+						}: {
+							endpointId: string;
+							encryptionKey: string;
+						}) =>
+							`${extensionClientUrlBase}/${endpointId}/#${encodeURIComponent(JSON.stringify({ encKey: encryptionKey, ...data }))}`,
 						flottformApi: signalingServerUrlBase,
-						inputField: targetedInputField
+						inputField: targetedInputField,
+						...(iceServers ? { rtcConfiguration: { iceServers } } : {})
 					});
 
 					flottformFileInputHost.start();
@@ -413,6 +429,42 @@
 		});
 	};
 
+	async function retrieveIceServersIfSet(apiUrl: string): Promise<RTCConfiguration['iceServers']> {
+		if (!apiUrl) {
+			console.warn('No API URL provided, using default STUN server configuration.');
+			return [
+				{
+					urls: ['stun:stun1.l.google.com:19302']
+				}
+			];
+		}
+
+		const response = await fetch(apiUrl);
+		if (!response.ok) {
+			console.warn(
+				'Could not fetch iceServers from the provided URL, received status:',
+				response.status,
+				'-',
+				response.statusText
+			);
+			console.warn('Will use the default STUN server configuration.');
+			return;
+		}
+
+		const body: unknown = await response.json();
+		if (!Array.isArray(body)) {
+			console.warn('Expected an array of type RTCIceServer');
+			return;
+		}
+
+		if (!body.every(isOfTypeRTCIceServer)) {
+			console.warn('Expected an array of type RTCIceServer, found invalid types');
+			return;
+		}
+
+		return body;
+	}
+
 	onMount(async () => {
 		if (!chrome) {
 			console.warn('Chrome API is not available in this context!!');
@@ -420,46 +472,23 @@
 		}
 
 		const data = await chrome.storage.local.get([
-			'FLOTTFORM_TURN_SERVER_METERED_ENDPOINT',
+			'FLOTTFORM_GET_ICE_SERVERS_ENDPOINT',
 			'FLOTTFORM_SIGNALING_SERVER_URL_BASE',
 			'FLOTTFORM_EXTENSION_CLIENTS_URL_BASE'
 		]);
-		let turnServerMeteredEndpointValue: string =
-			data.FLOTTFORM_TURN_SERVER_METERED_ENDPOINT ?? defaultTurnServerMeteredEndpointValue;
-
-		if (turnServerMeteredEndpointValue === '') {
-			rtcConfiguration = {
-				iceServers: [
-					{
-						urls: ['stun:stun1.l.google.com:19302']
-					}
-				]
-			};
-		} else {
-			try {
-				// Get TURN/STUN credentials from metered.ca
-				const response = await fetch(turnServerMeteredEndpointValue);
-				if (!response.ok) {
-					throw new Error(`Network Response not ok, status: ${response.status}`);
-				}
-				// Saving the response in the iceServers array
-				const iceServers = await response.json();
-
-				rtcConfiguration = { iceServers };
-			} catch (error) {
-				console.error(error);
-			}
-		}
-
+		getIceServersEndpoint = data.FLOTTFORM_GET_ICE_SERVERS_ENDPOINT ?? defaultGetIceServersEndpoint;
 		signalingServerUrlBase =
 			data.FLOTTFORM_SIGNALING_SERVER_URL_BASE ?? defaultSignalingServerUrlBase;
 		extensionClientUrlBase =
 			data.FLOTTFORM_EXTENSION_CLIENTS_URL_BASE ?? defaultExtensionClientUrlBase;
 		console.log({
-			rtcConfiguration,
+			getIceServersEndpoint,
 			signalingServerUrlBase,
 			extensionClientUrlBase
 		});
+
+		// Get the iceServers details for FlottformHost classes.
+		iceServers = await retrieveIceServersIfSet(getIceServersEndpoint);
 
 		let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 		currentTabId = tab.id;

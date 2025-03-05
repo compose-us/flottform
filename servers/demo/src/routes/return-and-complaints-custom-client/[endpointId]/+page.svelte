@@ -20,10 +20,13 @@
 	let currentState: State = 'init';
 
 	onMount(async () => {
+		const hash = JSON.parse(decodeURIComponent($page.url.hash.slice(1)));
+
 		const flottformFileInputClient = new FlottformFileInputClient({
 			endpointId: $page.params.endpointId,
 			fileInput,
-			flottformApi: sdpExchangeServerBase
+			flottformApi: sdpExchangeServerBase,
+			encryptionKey: hash.encKey
 		});
 
 		flottformFileInputClient.start();

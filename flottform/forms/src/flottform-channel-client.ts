@@ -1,3 +1,4 @@
+import { decrypt, encrypt, encryptionKeyToCryptoKey } from './encryption';
 import {
 	ClientState,
 	EventEmitter,
@@ -28,6 +29,8 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 	private pollTimeForIceInMs: number;
 	private logger: Logger;
 
+	private cryptoKey: CryptoKey | null = null;
+	private encryptionKey: string;
 	private state: ClientState = 'init';
 	private openPeerConnection: RTCPeerConnection | null = null;
 	private dataChannel: RTCDataChannel | null = null;
@@ -38,12 +41,14 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		endpointId,
 		flottformApi,
 		rtcConfiguration,
+		encryptionKey,
 		pollTimeForIceInMs = POLL_TIME_IN_MS,
 		logger = console
 	}: {
 		endpointId: string;
 		flottformApi: string | URL;
 		rtcConfiguration: RTCConfiguration;
+		encryptionKey: string;
 		pollTimeForIceInMs?: number;
 		logger?: Logger;
 	}) {
@@ -51,6 +56,7 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		this.endpointId = endpointId;
 		this.flottformApi = flottformApi;
 		this.rtcConfiguration = rtcConfiguration;
+		this.encryptionKey = encryptionKey;
 		this.pollTimeForIceInMs = pollTimeForIceInMs;
 		this.logger = logger;
 	}
@@ -66,6 +72,9 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		if (this.openPeerConnection) {
 			this.close();
 		}
+		// Import cryptoKey from encryptionKey
+		this.cryptoKey = await encryptionKeyToCryptoKey(this.encryptionKey);
+
 		const baseApi = (
 			this.flottformApi instanceof URL ? this.flottformApi : new URL(this.flottformApi)
 		)
@@ -73,7 +82,7 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 			.replace(/\/$/, '');
 
 		// For now the fetching can be done outside of these classes and should be passed as an argument.
-		
+
 		/* try {
 			this.rtcConfiguration.iceServers = await this.fetchIceServers(baseApi);
 		} catch (error) {
@@ -88,8 +97,16 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		const putClientInfoUrl = `${this.flottformApi}/${this.endpointId}/client`;
 
 		this.changeState('retrieving-info-from-endpoint');
-		const { hostInfo } = await retrieveEndpointInfo(getEndpointInfoUrl);
-		await this.openPeerConnection.setRemoteDescription(hostInfo.session);
+		const hostInfoCipherText = await retrieveEndpointInfo(getEndpointInfoUrl);
+
+		if (!this.cryptoKey) {
+			throw new Error('CryptoKey is null! Decryption is not possible!!');
+		}
+		const hostInfo = await decrypt(hostInfoCipherText.hostInfo, this.cryptoKey);
+
+		const hostSession: RTCSessionDescriptionInit = JSON.parse(hostInfo.session);
+
+		await this.openPeerConnection.setRemoteDescription(hostSession);
 		const session = await this.openPeerConnection.createAnswer();
 		await this.openPeerConnection.setLocalDescription(session);
 
@@ -179,6 +196,7 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 			this.logger.error(`onicecandidateerror - ${this.openPeerConnection!.connectionState}`, e);
 		};
 	};
+
 	private setUpConnectionStateGathering = (getEndpointInfoUrl: string) => {
 		if (this.openPeerConnection === null) {
 			this.changeState(
@@ -216,12 +234,14 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 			}
 		};
 	};
+
 	private stopPollingForIceCandidates = async () => {
 		if (this.pollForIceTimer) {
 			clearTimeout(this.pollForIceTimer);
 		}
 		this.pollForIceTimer = null;
 	};
+
 	private startPollingForIceCandidates = async (getEndpointInfoUrl: string) => {
 		if (this.pollForIceTimer) {
 			clearTimeout(this.pollForIceTimer);
@@ -231,6 +251,7 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 
 		this.pollForIceTimer = setTimeout(this.startPollingForIceCandidates, this.pollTimeForIceInMs);
 	};
+
 	private pollForConnection = async (getEndpointInfoUrl: string) => {
 		if (this.openPeerConnection === null) {
 			this.changeState('error', "openPeerConnection is null. Unable to retrieve Host's details");
@@ -238,11 +259,19 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		}
 
 		this.logger.log('polling for host ice candidates', this.openPeerConnection.iceGatheringState);
-		const { hostInfo } = await retrieveEndpointInfo(getEndpointInfoUrl);
-		for (const iceCandidate of hostInfo.iceCandidates) {
+		const hostInfoCipherText = await retrieveEndpointInfo(getEndpointInfoUrl);
+		if (!this.cryptoKey) {
+			throw new Error('CryptoKey is null! Decryption is not possible!!');
+		}
+		const hostInfo = await decrypt(hostInfoCipherText.hostInfo, this.cryptoKey);
+
+		const hostIceCandidates: RTCIceCandidateInit[] = JSON.parse(hostInfo.iceCandidates);
+
+		for (const iceCandidate of hostIceCandidates) {
 			await this.openPeerConnection.addIceCandidate(iceCandidate);
 		}
 	};
+
 	private putClientInfo = async (
 		putClientInfoUrl: string,
 		clientKey: string,
@@ -250,13 +279,23 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		session: RTCSessionDescriptionInit
 	) => {
 		this.logger.log('Updating client info with new list of ice candidates');
+		if (!this.cryptoKey) {
+			throw new Error('CryptoKey is null! Encryption is not possible!!');
+		}
+		const encryptedClientInfo = await encrypt(
+			JSON.stringify({
+				session: JSON.stringify(session),
+				iceCandidates: JSON.stringify([...clientIceCandidates])
+			}),
+			this.cryptoKey
+		);
+
 		const response = await fetch(putClientInfoUrl, {
 			method: 'PUT',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				clientKey,
-				iceCandidates: [...clientIceCandidates],
-				session
+				clientInfo: encryptedClientInfo
 			})
 		});
 		if (!response.ok) {

@@ -1,6 +1,10 @@
 export interface FlottformCreateItemParams {
 	flottformApi: string;
-	createClientUrl: (params: { endpointId: string }) => Promise<string>;
+	createClientUrl: (params: {
+		endpointId: string;
+		encryptionKey: string;
+		optionalData?: object;
+	}) => Promise<string>;
 	id?: string;
 	additionalItemClasses?: string;
 	label?: string;

@@ -1,13 +1,11 @@
 import { type RequestHandler, json, error, text } from '@sveltejs/kit';
 import { retrieveFlottformDatabase } from '$lib/database';
-import { RTCIceCandidateInitSchema, RTCSessionDescriptionInitSchema } from '$lib/validations';
 import { z, ZodError } from 'zod';
 import { corsHeaders } from '$lib/cors-headers';
 
 const validatePutPeerInfosBody = z.object({
 	clientKey: z.string(),
-	iceCandidates: z.array(RTCIceCandidateInitSchema),
-	session: RTCSessionDescriptionInitSchema
+	clientInfo: z.string()
 });
 
 export const PUT: RequestHandler = async ({ params, request }) => {
@@ -25,9 +23,9 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 	}
 
 	try {
-		const { session, iceCandidates, clientKey } = validatePutPeerInfosBody.parse(data);
+		const { clientInfo, clientKey } = validatePutPeerInfosBody.parse(data);
 		const db = await retrieveFlottformDatabase();
-		const endpoint = await db.putClientInfo({ endpointId, session, iceCandidates, clientKey });
+		const endpoint = await db.putClientInfo({ endpointId, clientInfo, clientKey });
 
 		return json(endpoint, {
 			headers: corsHeaders(['PUT', 'OPTIONS'], request)

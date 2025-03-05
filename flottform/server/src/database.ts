@@ -4,15 +4,9 @@ type EndpointId = string;
 type EndpointInfo = {
 	hostKey: HostKey;
 	endpointId: EndpointId;
-	hostInfo: {
-		session: RTCSessionDescriptionInit;
-		iceCandidates: RTCIceCandidateInit[];
-	};
+	hostInfo: string;
 	clientKey?: ClientKey;
-	clientInfo?: {
-		session: RTCSessionDescriptionInit;
-		iceCandidates: RTCIceCandidateInit[];
-	};
+	clientInfo?: string;
 };
 type SafeEndpointInfo = Omit<EndpointInfo, 'hostKey' | 'clientKey'>;
 
@@ -28,14 +22,11 @@ class FlottformDatabase {
 
 	constructor() {}
 
-	async createEndpoint({ session }: { session: RTCSessionDescriptionInit }): Promise<EndpointInfo> {
+	async createEndpoint({ hostInfo }: { hostInfo: string }): Promise<EndpointInfo> {
 		const entry = {
 			hostKey: createRandomHostKey(),
 			endpointId: createRandomEndpointId(),
-			hostInfo: {
-				session,
-				iceCandidates: []
-			}
+			hostInfo
 		};
 		this.map.set(entry.endpointId, entry);
 		return entry;
@@ -54,13 +45,11 @@ class FlottformDatabase {
 	async putHostInfo({
 		endpointId,
 		hostKey,
-		session,
-		iceCandidates
+		hostInfo
 	}: {
 		endpointId: EndpointId;
 		hostKey: HostKey;
-		session: RTCSessionDescriptionInit;
-		iceCandidates: RTCIceCandidateInit[];
+		hostInfo: string;
 	}): Promise<SafeEndpointInfo> {
 		const existingSession = this.map.get(endpointId);
 		if (!existingSession) {
@@ -72,7 +61,7 @@ class FlottformDatabase {
 
 		const newInfo = {
 			...existingSession,
-			hostInfo: { ...existingSession.hostInfo, session, iceCandidates }
+			hostInfo
 		};
 		this.map.set(endpointId, newInfo);
 
@@ -84,13 +73,11 @@ class FlottformDatabase {
 	async putClientInfo({
 		endpointId,
 		clientKey,
-		session,
-		iceCandidates
+		clientInfo
 	}: {
 		endpointId: EndpointId;
 		clientKey: ClientKey;
-		session: RTCSessionDescriptionInit;
-		iceCandidates: RTCIceCandidateInit[];
+		clientInfo: string;
 	}): Promise<Required<SafeEndpointInfo>> {
 		const existingSession = this.map.get(endpointId);
 		if (!existingSession) {
@@ -105,7 +92,7 @@ class FlottformDatabase {
 		const newInfo = {
 			...existingSession,
 			clientKey,
-			clientInfo: { session, iceCandidates }
+			clientInfo
 		};
 		this.map.set(endpointId, newInfo);
 

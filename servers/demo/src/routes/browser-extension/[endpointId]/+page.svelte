@@ -3,6 +3,7 @@
 	import { page } from '$app/stores';
 	import { onMount, tick } from 'svelte';
 	import FileInput from '$lib/components/FileInput.svelte';
+	import { isOfTypeRTCIceServer } from '$lib/isOfTypeRTCIceServer';
 
 	let currentState = $state<
 		| 'init'
@@ -19,17 +20,58 @@
 	let textToSend = $state('');
 	let inputType = $state('');
 
+	async function retrieveIceServersIfSet(apiUrl: string): Promise<RTCConfiguration['iceServers']> {
+		if (!apiUrl) {
+			console.warn('No API URL provided, using default STUN server configuration.');
+			return [
+				{
+					urls: ['stun:stun1.l.google.com:19302']
+				}
+			];
+		}
+
+		const response = await fetch(apiUrl);
+		if (!response.ok) {
+			console.warn(
+				'Could not fetch iceServers from the provided URL, received status:',
+				response.status,
+				'-',
+				response.statusText
+			);
+			console.warn('Will use the default STUN server configuration.');
+			return;
+		}
+
+		const body: unknown = await response.json();
+		if (!Array.isArray(body)) {
+			console.warn('Expected an array of type RTCIceServer');
+			return;
+		}
+
+		if (!body.every(isOfTypeRTCIceServer)) {
+			console.warn('Expected an array of type RTCIceServer, found invalid types');
+			return;
+		}
+
+		return body;
+	}
+
 	onMount(async () => {
 		const hash = JSON.parse(decodeURIComponent($page.url.hash.slice(1)));
 		const options = {
 			endpointId: $page.params.endpointId,
 			flottformApi: hash.flottformApi,
-			rtcConfiguration: hash.rtcConfiguration,
-			type: hash.type
+			getIceApi: hash.getIceApi,
+			type: hash.type,
+			encryptionKey: hash.encKey
 		};
 		console.log({ options });
 
 		inputType = options.type;
+
+		// Get the iceServers details for FlottformClient classes.
+		const iceServers = await retrieveIceServersIfSet(options.getIceApi);
+
 		// Wait for the DOM to be fully rendered with the text or file input field.
 		await tick();
 
@@ -43,7 +85,8 @@
 				endpointId: options.endpointId,
 				fileInput: inputField!,
 				flottformApi: options.flottformApi,
-				rtcConfiguration: options.rtcConfiguration
+				encryptionKey: options.encryptionKey,
+				...(options.getIceApi ? { rtcConfiguration: { iceServers } } : {})
 			});
 
 			flottformFileInputClient.start();
