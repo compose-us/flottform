@@ -97,11 +97,14 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		const putClientInfoUrl = `${this.flottformApi}/${this.endpointId}/client`;
 
 		this.changeState('retrieving-info-from-endpoint');
-		const { hostInfo } = await retrieveEndpointInfo(getEndpointInfoUrl);
+		const hostInfoCipherText = await retrieveEndpointInfo(getEndpointInfoUrl);
+
 		if (!this.cryptoKey) {
 			throw new Error('CryptoKey is null! Decryption is not possible!!');
 		}
-		const hostSession: RTCSessionDescriptionInit = await decrypt(hostInfo.session, this.cryptoKey);
+		const hostInfo = await decrypt(hostInfoCipherText.hostInfo, this.cryptoKey);
+
+		const hostSession: RTCSessionDescriptionInit = JSON.parse(hostInfo.session);
 
 		await this.openPeerConnection.setRemoteDescription(hostSession);
 		const session = await this.openPeerConnection.createAnswer();
@@ -256,15 +259,13 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		}
 
 		this.logger.log('polling for host ice candidates', this.openPeerConnection.iceGatheringState);
-		const { hostInfo } = await retrieveEndpointInfo(getEndpointInfoUrl);
-
+		const hostInfoCipherText = await retrieveEndpointInfo(getEndpointInfoUrl);
 		if (!this.cryptoKey) {
 			throw new Error('CryptoKey is null! Decryption is not possible!!');
 		}
-		const hostIceCandidates: RTCIceCandidateInit[] = await decrypt(
-			hostInfo.iceCandidates,
-			this.cryptoKey
-		);
+		const hostInfo = await decrypt(hostInfoCipherText.hostInfo, this.cryptoKey);
+
+		const hostIceCandidates: RTCIceCandidateInit[] = JSON.parse(hostInfo.iceCandidates);
 
 		for (const iceCandidate of hostIceCandidates) {
 			await this.openPeerConnection.addIceCandidate(iceCandidate);
@@ -281,20 +282,20 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		if (!this.cryptoKey) {
 			throw new Error('CryptoKey is null! Encryption is not possible!!');
 		}
-
-		const encryptedIceCandidates = await encrypt(
-			JSON.stringify([...clientIceCandidates]),
+		const encryptedClientInfo = await encrypt(
+			JSON.stringify({
+				session: JSON.stringify(session),
+				iceCandidates: JSON.stringify([...clientIceCandidates])
+			}),
 			this.cryptoKey
 		);
-		const encryptedSession = await encrypt(JSON.stringify(session), this.cryptoKey);
 
 		const response = await fetch(putClientInfoUrl, {
 			method: 'PUT',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				clientKey,
-				iceCandidates: encryptedIceCandidates,
-				session: encryptedSession
+				clientInfo: encryptedClientInfo
 			})
 		});
 		if (!response.ok) {

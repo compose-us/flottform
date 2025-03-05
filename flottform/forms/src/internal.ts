@@ -6,15 +6,9 @@ type EndpointId = string;
 type EndpointInfo = {
 	hostKey: HostKey;
 	endpointId: EndpointId;
-	hostInfo: {
-		session: string;
-		iceCandidates: string;
-	};
+	hostInfo: string;
 	clientKey?: ClientKey;
-	clientInfo?: {
-		session: string;
-		iceCandidates: string;
-	};
+	clientInfo?: string;
 };
 
 export type BaseListeners = {

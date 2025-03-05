@@ -6,7 +6,7 @@ export const RTCSessionDescriptionInitSchema = z.object({
 });
 
 export const CreateEndpointPayloadSchema = z.object({
-	session: z.string({ message: 'Expected session of type string' })
+	hostInfo: z.string({ message: 'Expected hostInfo of type string' })
 });
 
 export type RTCSessionDescriptionInitValidated = z.infer<typeof RTCSessionDescriptionInitSchema>;

@@ -5,8 +5,7 @@ import { corsHeaders } from '$lib/cors-headers';
 
 const validatePutPeerInfosBody = z.object({
 	clientKey: z.string(),
-	iceCandidates: z.string(),
-	session: z.string()
+	clientInfo: z.string()
 });
 
 export const PUT: RequestHandler = async ({ params, request }) => {
@@ -24,9 +23,9 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 	}
 
 	try {
-		const { session, iceCandidates, clientKey } = validatePutPeerInfosBody.parse(data);
+		const { clientInfo, clientKey } = validatePutPeerInfosBody.parse(data);
 		const db = await retrieveFlottformDatabase();
-		const endpoint = await db.putClientInfo({ endpointId, session, iceCandidates, clientKey });
+		const endpoint = await db.putClientInfo({ endpointId, clientInfo, clientKey });
 
 		return json(endpoint, {
 			headers: corsHeaders(['PUT', 'OPTIONS'], request)

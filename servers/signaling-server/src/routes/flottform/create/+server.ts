@@ -6,16 +6,16 @@ import { CreateEndpointPayloadSchema } from '$lib/validations';
 export const POST: RequestHandler = async ({ request }) => {
 	const data = await request.json();
 
-	let session: string;
+	let hostInfo: string;
 	try {
-		session = CreateEndpointPayloadSchema.parse(data).session;
+		hostInfo = CreateEndpointPayloadSchema.parse(data).hostInfo;
 	} catch (e) {
 		console.log(e);
-		return error(400, 'Could not parse session parameter into string.');
+		return error(400, 'Could not parse hostInfo parameter into string.');
 	}
 
 	const db = await retrieveFlottformDatabase();
-	const endpoint = await db.createEndpoint({ session });
+	const endpoint = await db.createEndpoint({ hostInfo });
 
 	return json(endpoint, {
 		headers: corsHeaders(['POST', 'OPTIONS'], request)
