@@ -17,7 +17,7 @@
 
 	let inputFields: TrackedInputFields = $state([]);
 	let currentTabId: number | undefined;
-	let getIceServersEndpoint: string = '';
+	let getIceServersEndpoint = $state('');
 	let iceServers: RTCIceServer[] | undefined;
 	let signalingServerUrlBase: string = '';
 	let extensionClientUrlBase: string = '';
@@ -195,24 +195,19 @@
 					flottformTextInputHost.on(
 						'endpoint-created',
 						({ link, qrCode }: { link: string; qrCode: string }) => {
-							//console.log(`*****Inside "endpoint-created" event, link=${link}*****`);
 							handleFlottformEvent('endpoint-created', { link, qrCode }, textInputId, currentTabId);
 						}
 					);
 
 					flottformTextInputHost.on('connected', () => {
-						//console.log('****Inside "connected" event*****');
 						handleFlottformEvent('connected', undefined, textInputId, currentTabId);
 					});
 
 					flottformTextInputHost.on('error', (error: Error) => {
-						//console.log('****Inside "error" event*****');
 						handleFlottformEvent('error', { message: error.message }, textInputId, currentTabId);
 					});
 
 					flottformTextInputHost.on('done', (message: string) => {
-						//console.log('****Inside "done" event*****');
-
 						handleFlottformEvent('done', undefined, textInputId, currentTabId);
 
 						const ourMap = window.___flottform_map;
@@ -245,13 +240,11 @@
 					inputFieldType: string
 				) {
 					// Query the doc with the ID: textInputId in order to find the input field where you'll paste the text.
-					//console.log(`****Flottform will work on TextInput with id=${textInputId}*****`);
 					const data = {
 						type: inputFieldType,
 						getIceApi: getIceServersEndpoint,
 						flottformApi: signalingServerUrlBase
 					};
-					console.log('data-->', data);
 					// Instantiate the FlottformTextInputHost with the provided inputId
 					let flottformTextInputHost = new FlottformTextInputHost({
 						createClientUrl: async ({
@@ -291,8 +284,6 @@
 						getIceApi: getIceServersEndpoint
 					};
 
-					console.log('data-->', data);
-
 					// Instantiate the FlottformFileInputHost with the provided inputId
 					let flottformFileInputHost = new FlottformFileInputHost({
 						createClientUrl: async ({
@@ -312,7 +303,6 @@
 
 					// Track instances of FlottformFileInputHost
 					connectionManager.addConnection(fileInputId, flottformFileInputHost);
-					/* console.log('connectionManager: ', connectionManager); */
 
 					registerFlottformFileInputListeners(flottformFileInputHost, fileInputId, currentTabId);
 				}
@@ -325,13 +315,11 @@
 					flottformFileInputHost.on(
 						'endpoint-created',
 						({ link, qrCode }: { link: string; qrCode: string }) => {
-							//console.log(`*****Inside "endpoint-created" event, link=${link}*****`);
 							handleFlottformEvent('endpoint-created', { link, qrCode }, fileInputId, currentTabId);
 						}
 					);
 
 					flottformFileInputHost.on('connected', () => {
-						//console.log('****Inside "connected" event*****');
 						handleFlottformEvent('connected', undefined, fileInputId, currentTabId);
 					});
 
@@ -355,12 +343,10 @@
 					);
 
 					flottformFileInputHost.on('error', (error: Error) => {
-						//console.log('****Inside "error" event*****');
 						handleFlottformEvent('error', { message: error.message }, fileInputId, currentTabId);
 					});
 
 					flottformFileInputHost.on('done', () => {
-						//console.log('****Inside "done" event*****');
 						handleFlottformEvent('done', undefined, fileInputId, currentTabId);
 						// TODO: HANDLE THE DONE PROCESS
 						const ourMap = window.___flottform_map;
@@ -495,7 +481,6 @@
 
 		// Listen to storage changes in chrome.storage.local
 		chrome.storage.local.onChanged.addListener((changes) => {
-			//console.log('CHANGES: ', changes);
 			const key = `inputFields-${currentTabId}`;
 			if (changes[key]) {
 				console.warn('Detected change in inputFields:', changes[key].newValue);
