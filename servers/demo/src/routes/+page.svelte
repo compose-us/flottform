@@ -64,5 +64,10 @@
 			title="Customized default UI"
 			description="See how you can tailor Flottform's default UI to better match your design, while still retaining all the powerful features of the original interface. This demo lets you explore how easy it is to adapt the default elements to fit seamlessly with your brand's style."
 		/>
+		<DemoLink
+			href="{base}/flottform-file-sharing"
+			title="Flottform File Sharing"
+			description="See how you can use Flottform to exchange files between two peers!"
+		/>
 	</div>
 </section>
