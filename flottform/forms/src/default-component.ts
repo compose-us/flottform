@@ -305,8 +305,9 @@ const handleTextInputStates = ({
 	if (id) {
 		flottformItem.setAttribute('id', id);
 	}
-	flottformTextInputHost.on('done', (message: string) => {
-		statusInformation.innerHTML = onSuccessText ?? `✨ You have succesfully submitted your message`;
+	flottformTextInputHost.on('text-received', (message: string) => {
+		statusInformation.innerHTML =
+			onSuccessText ?? `✨ You have succesfully submitted your message: ${message}`;
 		statusInformation.appendChild(refreshChannelButton);
 		flottformItem.replaceChildren(statusInformation);
 	});
