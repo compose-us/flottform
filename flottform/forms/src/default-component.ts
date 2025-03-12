@@ -104,7 +104,7 @@ export const createDefaultFlottformComponent = ({
 			const flottformBaseInputHost = new FlottformFileInputHost({
 				flottformApi,
 				createClientUrl,
-				inputField
+				incomingInputField: inputField
 			});
 
 			const {
@@ -260,7 +260,7 @@ const handleFileInputStates = ({
 	}
 
 	flottformFileInputHost.on(
-		'progress',
+		'file-receiving-progress',
 		({ currentFileProgress, overallProgress, fileIndex, totalFileCount, fileName }) => {
 			removeConnectionStatusInformation(flottformStateItemsContainer);
 			updateOverallFilesStatusBar(
@@ -279,7 +279,7 @@ const handleFileInputStates = ({
 			);
 		}
 	);
-	flottformFileInputHost.on('done', () => {
+	flottformFileInputHost.on('single-file-received', () => {
 		statusInformation.innerHTML =
 			onSuccessText ?? `✨ You have succesfully downloaded all your files.`;
 		statusInformation.appendChild(refreshChannelButton);
