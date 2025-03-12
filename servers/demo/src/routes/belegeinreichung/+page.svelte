@@ -115,7 +115,7 @@
 		const flottformFileInputHost = new FlottformFileInputHost({
 			flottformApi: sdpExchangeServerBase,
 			createClientUrl: createDeExpenseReportClientUrl,
-			inputField: fileInput
+			incomingInputField: fileInput
 		});
 
 		flottformFileInputHost.on('new', () => {
@@ -145,14 +145,14 @@
 			flottformDialogDescription = 'Warte auf eine Verbindung...';
 		});
 
-		flottformFileInputHost.on('receive', () => {
+		flottformFileInputHost.on('file-receiving-progress', () => {
 			flottformState = 'receive';
 			flottformStatusWrapper = 'Empfange Daten';
 			flottformDialogDescription =
 				'Ein anderes Gerät sendet gerade Daten. Warte auf den Abschluss der Übertragung...';
 		});
 
-		flottformFileInputHost.on('done', () => {
+		flottformFileInputHost.on('single-file-received', () => {
 			flottformState = 'done';
 			hasFile = true;
 			flottformStatusSvg = done;

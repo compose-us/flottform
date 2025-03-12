@@ -160,7 +160,7 @@
 		const flottformFileInputHost = new FlottformFileInputHost({
 			flottformApi: sdpExchangeServerBase,
 			createClientUrl: createExpenseReportClientUrl,
-			inputField: fileInput
+			incomingInputField: fileInput
 		});
 
 		flottformFileInputHost.on('new', () => {
@@ -189,14 +189,14 @@
 			flottformDialogDescription = 'Waiting for data channel connection';
 		});
 
-		flottformFileInputHost.on('receive', () => {
+		flottformFileInputHost.on('file-receiving-progress', () => {
 			flottformState = 'receive';
 			flottformStatusWrapper = 'Receiving data';
 			flottformDialogDescription =
 				'Another device is sending data. Waiting for incoming data transfer to complete';
 		});
 
-		flottformFileInputHost.on('done', () => {
+		flottformFileInputHost.on('single-file-received', () => {
 			flottformState = 'done';
 			flottformStatusSvg = done;
 			flottformStatusWrapper = 'Done!';
