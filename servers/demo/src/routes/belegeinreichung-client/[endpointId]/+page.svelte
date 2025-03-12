@@ -21,7 +21,7 @@
 	onMount(async () => {
 		const flottformFileInputClient = new FlottformFileInputClient({
 			endpointId: $page.params.endpointId,
-			fileInput,
+			outgoingInputField: fileInput,
 			flottformApi: sdpExchangeServerBase
 		});
 
@@ -34,13 +34,11 @@
 		flottformFileInputClient.on('connected', () => {
 			currentState = 'connected';
 		});
-		flottformFileInputClient.on('sending', () => {
+		flottformFileInputClient.on('file-sending-progress', (p) => {
+			console.log('progress= ', p);
 			currentState = 'sending';
 		});
-		flottformFileInputClient.on('progress', (p) => {
-			console.log('progress= ', p);
-		});
-		flottformFileInputClient.on('done', () => {
+		flottformFileInputClient.on('single-file-transfered', () => {
 			currentState = 'done';
 		});
 		flottformFileInputClient.on('disconnected', () => {
