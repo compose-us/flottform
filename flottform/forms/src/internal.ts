@@ -122,6 +122,7 @@ export type FlottformEventMap = {
 	error: [error: Error];
 	connected: [];
 	disconnected: [];
+	bufferedamountlow: [];
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
