@@ -8,9 +8,9 @@ import {
 } from './internal';
 
 type Listeners = BaseListeners & {
-	done: [data: string];
+	'text-transferred': [text: string]; // Emitted to signal the transfer of one text TO the Client.
+	'text-received': [text: string]; // Emitted to signal the reception of one text FROM the Client.
 	'webrtc:waiting-for-text': [];
-	receive: [];
 	'webrtc:waiting-for-data': [];
 };
 
@@ -76,10 +76,15 @@ export class FlottformTextInputHost extends BaseInputHost<Listeners> {
 		return this.qrCode;
 	};
 
+	sendText = (text: string) => {
+		// For now, I didn't handle very large texts since for most use cases the text won't exceed the size of 1 chunk ( 16KB )
+		this.channel?.sendData(text);
+		this.emit('text-transferred', text);
+	};
+
 	private handleIncomingData = (e: MessageEvent) => {
-		this.emit('receive');
 		// We suppose that the data received is small enough to be all included in 1 message
-		this.emit('done', e.data);
+		this.emit('text-received', e.data);
 		if (this.inputField) {
 			this.inputField.value = e.data;
 			const event = new Event('change');
