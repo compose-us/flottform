@@ -3,9 +3,9 @@
 	import { browser } from '$app/environment';
 	import { onMount } from 'svelte';
 	import { writable } from 'svelte/store';
-	import ShowLocation from './ShowLocation.svelte';
 	import { sdpExchangeServerBase } from '$lib/api';
 	import { base } from '$app/paths';
+	import ShowLocation from './ShowLocation.svelte';
 
 	type Coordinates = {
 		accuracy: number;
@@ -52,7 +52,7 @@
 		flottformTextInputHost.on('connected', () => {
 			$currentState = 'connected';
 		});
-		flottformTextInputHost.on('done', (message: string) => {
+		flottformTextInputHost.on('text-received', (message: string) => {
 			$currentState = 'done';
 			const coords: Coordinates = JSON.parse(message);
 			$latitude = coords.latitude;
