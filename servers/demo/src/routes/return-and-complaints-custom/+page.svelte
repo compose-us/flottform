@@ -166,21 +166,18 @@
 			flottformDialogDescription = 'Waiting for data channel connection';
 		});
 
-		flottformFileInputHost.on('receive', () => {
+		flottformFileInputHost.on('file-receiving-progress', () => {
 			flottformStatusWrapper = 'Receiving data';
 			flottformDialogDescription =
 				'Another device is sending data. Waiting for incoming data transfer to complete';
 			flottformButtonBackgroundColor = 'bg-[#7EA4FF]';
 		});
 
-		flottformFileInputHost.on('single-file-transferred', (receivedFile) => {
+		flottformFileInputHost.on('single-file-received', (receivedFile) => {
 			const dt = new DataTransfer();
 			dt.items.add(receivedFile);
 			fileInput.files = dt.files;
 			console.log(`Received file: ${receivedFile.name} (${receivedFile.size} bytes)`);
-		});
-
-		flottformFileInputHost.on('done', () => {
 			flottformStatusWrapper = 'Done!';
 			flottformDialogDescription =
 				'You have received a file from another device. Please close this dialog to finish your form.';
