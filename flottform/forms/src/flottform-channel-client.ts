@@ -1,6 +1,8 @@
+import { FlottformChannelPeer } from './flottform-channel-peer';
 import {
 	ClientState,
 	EventEmitter,
+	FlottformChannelClientEvents,
 	Logger,
 	POLL_TIME_IN_MS,
 	generateSecretKey,
@@ -8,22 +10,7 @@ import {
 	setIncludes
 } from './internal';
 
-type Listeners = {
-	init: () => void;
-	'retrieving-info-from-endpoint': () => void;
-	'sending-client-info': () => void;
-	'connecting-to-host': () => void;
-	connected: () => void;
-	'connection-impossible': () => void;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	'receiving-data': (data: any) => void;
-	done: () => void;
-	disconnected: () => void;
-	error: (event: string) => void;
-	bufferedamountlow: () => void;
-};
-
-export class FlottformChannelClient extends EventEmitter<Listeners> {
+export class FlottformChannelClient extends FlottformChannelPeer<FlottformChannelClientEvents> {
 	private flottformApi: string | URL;
 	private endpointId: string;
 	private rtcConfiguration: RTCConfiguration;
@@ -55,9 +42,6 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		this.rtcConfiguration = rtcConfiguration;
 		this.pollTimeForIceInMs = pollTimeForIceInMs;
 		this.logger = logger;
-		Promise.resolve().then(() => {
-			this.changeState('init');
-		});
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -103,7 +87,6 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 			this.changeState('connected');
 			this.dataChannel = e.channel;
 			this.configureDataChannel();
-			this.setupDataChannelListener();
 		};
 
 		this.changeState('sending-client-info');
@@ -121,21 +104,6 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		this.changeState('disconnected');
 	};
 
-	private setupDataChannelListener = () => {
-		if (!this.dataChannel) {
-			this.changeState(
-				'error',
-				'dataChannel is not defined. Unable to setup the listeners for the data channel'
-			);
-			return;
-		}
-
-		this.dataChannel.onmessage = (e) => {
-			// Handling the incoming data from the Host depends on the use case.
-			this.emit('receiving-data', e);
-		};
-	};
-
 	private configureDataChannel = () => {
 		if (!this.dataChannel) {
 			this.changeState('error', 'dataChannel is not defined! Unable to configure it!');
@@ -149,6 +117,11 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		};
 		this.dataChannel.onopen = (e) => {
 			this.logger.info(`ondatachannel - onopen: ${e.type}`);
+		};
+
+		this.dataChannel.onmessage = (e) => {
+			// Handling the incoming data from the Host depends on the use case.
+			this.emit('receiving-data', e);
 		};
 	};
 
@@ -287,23 +260,5 @@ export class FlottformChannelClient extends EventEmitter<Listeners> {
 		if (!response.ok) {
 			throw Error('Could not update client info. Did another peer already connect?');
 		}
-	};
-	private fetchIceServers = async (baseApi: string) => {
-		const response = await fetch(`${baseApi}/ice-server-credentials`, {
-			method: 'GET',
-			headers: {
-				Accept: 'application/json'
-			}
-		});
-		if (!response.ok) {
-			throw new Error('Fetching Error!');
-		}
-		const data = await response.json();
-
-		if (data.success === false) {
-			throw new Error(data.message || 'Unknown error occurred');
-		}
-
-		return data.iceServers;
 	};
 }

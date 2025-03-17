@@ -5,8 +5,7 @@
 	import { onMount } from 'svelte';
 	let connectionStatus = $state<'init' | 'connected' | 'done' | 'disconnected' | 'error'>('init');
 	let error = $state<string>('');
-	let createWebRtcChannel: () => void;
-	let messagesContainer: HTMLDivElement | null = null;
+	let messagesContainer: HTMLDivElement | null = $state(null);
 	let sendMessage: (text: string) => void;
 	let endConversation: () => void;
 	let messageInput = $state<string>('');
@@ -28,9 +27,11 @@
 			endpointId: $page.params.endpointId,
 			flottformApi: sdpExchangeServerBase
 		});
+
 		flottformTextInputClient.start();
 		sendMessage = flottformTextInputClient.sendText;
 		endConversation = flottformTextInputClient.close;
+
 		flottformTextInputClient.on('connected', () => {
 			connectionStatus = 'connected';
 		});
@@ -96,7 +97,9 @@
 							>
 							<button
 								class="text-white px-5 py-2.5 rounded-md border-none cursor-pointer bg-[#dc3545] hover:bg-[#c82333]"
-								onclick={endConversation}
+								onclick={() => {
+									endConversation();
+								}}
 							>
 								End Conversation
 							</button>
@@ -118,11 +121,6 @@
 					<p class="text-center text-red-500">
 						Connection Failed with the following error: {error}
 					</p>
-					<button
-						onclick={createWebRtcChannel}
-						class="bg-[#0079b2] hover:bg-[#007bff] text-white px-4 py-2 rounded-lg text-base"
-						>Try to Connect Again</button
-					>
 				</div>
 			{/if}
 		</div>

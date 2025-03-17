@@ -18,7 +18,7 @@ type EndpointInfo = {
 };
 
 export type BaseListeners = {
-	new: () => void;
+	starting: () => void;
 	disconnected: () => void;
 	error: (event: Error) => void;
 	connected: () => void;
@@ -44,14 +44,37 @@ export type ClientState =
 	| 'done' // done with sending
 	| 'error';
 
-export type FlottformState =
-	| 'new'
-	| 'waiting-for-client'
-	| 'waiting-for-ice'
-	| 'waiting-for-data'
-	| 'receiving-data'
-	| 'done'
-	| 'error';
+export type FlottformChannelPeerEvents = {
+	starting: () => void;
+	'waiting-for-data': () => void;
+	'waiting-for-ice': () => void;
+	'receiving-data': (event: MessageEvent) => void;
+	error: (event: Error) => void;
+	connected: () => void;
+	disconnected: () => void;
+}
+export type FlottformChannelClientEvents = FlottformChannelPeerEvents & {
+	'retrieving-info-from-endpoint': () => void;
+	'sending-client-info': () => void;
+	'connecting-to-host': () => void;
+	'connection-impossible': () => void;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	'receiving-data': (data: any) => void;
+	done: () => void;
+	bufferedamountlow: () => void;
+	error: (event: string) => void;
+	connected: () => void;
+	disconnected: () => void;
+}
+export type FlottformChannelHostEvents = FlottformChannelPeerEvents & {
+	'waiting-for-client': (event: {
+		qrCode: string;
+		link: string;
+		channel: FlottformChannelHost;
+	}) => void;
+};
+
+export type FlottformState = keyof FlottformChannelPeerEvents;
 
 export type Logger = {
 	debug: typeof console.debug;
@@ -105,24 +128,6 @@ export function setIncludes<T>(set: Set<T>, x: T): boolean {
 	}
 	return false;
 }
-
-export type FlottformEventMap = {
-	new: (event: { channel: FlottformChannelHost }) => void;
-	'waiting-for-client': (event: {
-		qrCode: string;
-		link: string;
-		channel: FlottformChannelHost;
-	}) => void;
-	'waiting-for-data': () => void;
-	'waiting-for-ice': () => void;
-	'receiving-data': (event: MessageEvent) => void;
-	'file-received': (event: { fileMeta: FileMetaInfos; arrayBuffer: Array<ArrayBuffer> }) => void;
-	done: () => void;
-	error: (event: Error) => void;
-	connected: () => void;
-	disconnected: () => void;
-	bufferedamountlow: () => void;
-};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class EventEmitter<EventMap extends Record<string, (...args: any[]) => any>> {

@@ -3,7 +3,7 @@
 	import { onMount } from 'svelte';
 	import { createFlottformMessagingClientUrl, sdpExchangeServerBase } from '../../api';
 	let connectionStatus = $state<
-		'new' | 'endpoint-created' | 'connected' | 'done' | 'disconnected' | 'error'
+		'new' | 'starting' | 'endpoint-created' | 'connected' | 'done' | 'disconnected' | 'error'
 	>('new');
 	let connectionInfo = { link: '', qrCode: '' };
 	let error = $state<string>('');
@@ -33,11 +33,14 @@
 			flottformApi: sdpExchangeServerBase,
 			createClientUrl: createFlottformMessagingClientUrl
 		});
-		flottformTextInputHost.on('new', () => {
-			createWebRtcChannel = flottformTextInputHost.start;
-			sendMessage = flottformTextInputHost.sendText;
-			endConversation = flottformTextInputHost.close;
-			connectionStatus = 'new';
+
+		createWebRtcChannel = flottformTextInputHost.start;
+		sendMessage = flottformTextInputHost.sendText;
+		endConversation = flottformTextInputHost.close;
+
+		flottformTextInputHost.on('starting', () => {
+			console.log('changed status to starting');
+			connectionStatus = 'starting';
 		});
 		flottformTextInputHost.on('endpoint-created', ({ link, qrCode }) => {
 			connectionInfo.link = link;
@@ -73,11 +76,12 @@
 	<div class="max-w-screen-xl w-full p-4 box-border flex flex-col items-center">
 		<h1 class="text-2xl font-bold text-gray-800 mb-8">Flottform Messaging - Host</h1>
 		<div class="w-full max-w-md bg-white shadow-lg rounded-lg">
-			{#if connectionStatus === 'new'}
+			{#if connectionStatus === 'new' || connectionStatus === 'starting'}
 				<div class="flex flex-col items-center w-full p-8">
 					<p class="mb-8 text-center">Start a new connection to chat with someone else!</p>
 					<button
-						class="bg-[#0079b2] hover:bg-[#007bff] text-white px-4 py-2 rounded-lg text-base"
+						class="bg-[#0079b2] enabled:hover:bg-[#007bff] text-white px-4 py-2 rounded-lg text-base"
+						disabled={connectionStatus === 'starting'}
 						onclick={() => {
 							createWebRtcChannel();
 						}}>Start Connection</button

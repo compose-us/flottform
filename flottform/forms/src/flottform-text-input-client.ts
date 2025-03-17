@@ -60,9 +60,6 @@ export class FlottformTextInputClient extends EventEmitter<Listeners> {
 	};
 
 	private registerListeners = () => {
-		this.channel?.on('init', () => {
-			this.emit('init');
-		});
 		this.channel?.on('retrieving-info-from-endpoint', () => {});
 		this.channel?.on('sending-client-info', () => {});
 		this.channel?.on('connecting-to-host', () => {});

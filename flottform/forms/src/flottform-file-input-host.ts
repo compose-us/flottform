@@ -349,9 +349,6 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 	};
 
 	private registerListeners = () => {
-		this.channel?.on('new', () => {
-			this.emit('new');
-		});
 		this.channel?.on('waiting-for-client', (event) => {
 			this.emit('webrtc:waiting-for-client', event);
 			const { qrCode, link } = event;

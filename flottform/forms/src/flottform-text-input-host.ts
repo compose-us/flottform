@@ -93,8 +93,8 @@ export class FlottformTextInputHost extends BaseInputHost<Listeners> {
 	};
 
 	private registerListeners = () => {
-		this.channel?.on('new', () => {
-			this.emit('new');
+		this.channel?.on('starting', () => {
+			this.emit('starting');
 		});
 		this.channel?.on('waiting-for-client', (event) => {
 			this.emit('webrtc:waiting-for-client', event);

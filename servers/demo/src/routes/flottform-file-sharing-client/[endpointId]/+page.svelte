@@ -41,11 +41,8 @@
 			outgoingInputField
 		});
 		flottformFileInputClient.start();
-		flottformFileInputClient.on('init', () => {
-			sendFiles = flottformFileInputClient.sendFiles;
-			stopFileTransfer = flottformFileInputClient.close;
-			connectionStatus = 'init';
-		});
+		sendFiles = flottformFileInputClient.sendFiles;
+		stopFileTransfer = flottformFileInputClient.close;
 		flottformFileInputClient.on('connected', async () => {
 			connectionStatus = 'connected';
 			await tick();

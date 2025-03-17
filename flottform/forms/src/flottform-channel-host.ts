@@ -1,21 +1,23 @@
 import { toDataURL } from 'qrcode';
 import {
 	EventEmitter,
-	FlottformEventMap,
+	FlottformChannelEvents,
+	FlottformChannelHostEvents,
 	FlottformState,
 	Logger,
 	retrieveEndpointInfo,
 	setIncludes
 } from './internal';
+import { FlottformChannelPeer } from './flottform-channel-peer';
 
-export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
+export class FlottformChannelHost extends FlottformChannelPeer<FlottformChannelHostEvents> {
 	private flottformApi: string | URL;
 	private createClientUrl: (params: { endpointId: string }) => Promise<string>;
 	private rtcConfiguration: RTCConfiguration;
 	private pollTimeForIceInMs: number;
 	private logger: Logger;
 
-	private state: FlottformState | 'disconnected' = 'new';
+	private state: FlottformState | 'new' = 'new';
 	private channelNumber: number = 0;
 	private openPeerConnection: RTCPeerConnection | null = null;
 	private dataChannel: RTCDataChannel | null = null;
@@ -41,21 +43,24 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		this.rtcConfiguration = rtcConfiguration;
 		this.pollTimeForIceInMs = pollTimeForIceInMs;
 		this.logger = logger;
-		Promise.resolve().then(() => {
-			this.changeState('new', { channel: this });
-		});
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	private changeState = (newState: FlottformState | 'disconnected', details?: any) => {
+	private changeState = (newState: keyof FlottformChannelHostEvents, details?: any) => {
 		this.state = newState;
 		this.emit(newState, details);
 		this.logger.info(`State changed to: ${newState}`, details == undefined ? '' : details);
 	};
 
 	start = async () => {
+		if (this.state === 'starting') {
+			console.log('starting already, not going to do anything');
+			return;
+		}
+		this.changeState('starting');
 		if (this.openPeerConnection) {
-			this.close();
+			this.openPeerConnection.close();
+			this.openPeerConnection = null;
 		}
 		const baseApi = (
 			this.flottformApi instanceof URL ? this.flottformApi : new URL(this.flottformApi)
@@ -72,10 +77,7 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		this.openPeerConnection = new RTCPeerConnection(this.rtcConfiguration);
 
 		this.dataChannel = this.createDataChannel();
-		if (this.dataChannel) {
-			this.configureDataChannel();
-			this.setupDataChannelListener();
-		}
+		this.configureDataChannel();
 
 		const session = await this.openPeerConnection.createOffer();
 		await this.openPeerConnection.setLocalDescription(session);
@@ -99,8 +101,6 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 			link: connectLink,
 			channel: this
 		});
-		// Setup listener for messages incoming from the client
-		this.setupDataChannelListener();
 	};
 
 	close = () => {
@@ -111,34 +111,24 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		this.changeState('disconnected');
 	};
 
-	private setupDataChannelListener = () => {
-		if (this.dataChannel == null) {
-			this.changeState(
-				'error',
-				'dataChannel is null. Unable to setup the listeners for the data channel'
-			);
-			return;
-		}
-
-		this.dataChannel.onmessage = (e) => {
-			// Handling the incoming data from the client depends on the use case.
-			this.emit('receiving-data', e);
-		};
-	};
-
 	private configureDataChannel = () => {
 		if (this.dataChannel == null) {
-			this.changeState('error', 'dataChannel is null. Unable to setup the configure it!');
+			this.changeState('error', 'dataChannel is null. Unable to configure it!');
 			return;
 		}
 		// Set the maximum amount of data waiting inside the datachannel's buffer
 		this.dataChannel.bufferedAmountLowThreshold = this.BUFFER_THRESHOLD;
 		// Set the listener to listen then emit an event when the buffer has more space available and can be used to send more data
 		this.dataChannel.onbufferedamountlow = () => {
-			this.emit('bufferedamountlow');
+			// TODO this needs to be checked and handled inside the send method
+			// this.emit('bufferedamountlow');
 		};
 		this.dataChannel.onopen = (e) => {
 			this.logger.info(`ondatachannel - onopen: ${e.type}`);
+		};
+		this.dataChannel.onmessage = (e) => {
+			// Handling the incoming data from the client depends on the use case.
+			this.emit('receiving-data', e);
 		};
 	};
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -261,25 +251,6 @@ export class FlottformChannelHost extends EventEmitter<FlottformEventMap> {
 		});
 
 		return response.json();
-	};
-
-	private fetchIceServers = async (baseApi: string) => {
-		const response = await fetch(`${baseApi}/ice-server-credentials`, {
-			method: 'GET',
-			headers: {
-				Accept: 'application/json'
-			}
-		});
-		if (!response.ok) {
-			throw new Error('Fetching Error!');
-		}
-		const data = await response.json();
-
-		if (data.success === false) {
-			throw new Error(data.message || 'Unknown error occurred');
-		}
-
-		return data.iceServers;
 	};
 
 	private pollForConnection = async (getEndpointInfoUrl: string) => {
