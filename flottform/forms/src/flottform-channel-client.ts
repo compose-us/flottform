@@ -9,18 +9,18 @@ import {
 } from './internal';
 
 type Listeners = {
-	init: [];
-	'retrieving-info-from-endpoint': [];
-	'sending-client-info': [];
-	'connecting-to-host': [];
-	connected: [];
-	'connection-impossible': [];
+	init: () => void;
+	'retrieving-info-from-endpoint': () => void;
+	'sending-client-info': () => void;
+	'connecting-to-host': () => void;
+	connected: () => void;
+	'connection-impossible': () => void;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	'receiving-data': [e: any];
-	done: [];
-	disconnected: [];
-	error: [e: string];
-	bufferedamountlow: [];
+	'receiving-data': (data: any) => void;
+	done: () => void;
+	disconnected: () => void;
+	error: (event: string) => void;
+	bufferedamountlow: () => void;
 };
 
 export class FlottformChannelClient extends EventEmitter<Listeners> {

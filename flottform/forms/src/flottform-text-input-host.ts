@@ -8,10 +8,10 @@ import {
 } from './internal';
 
 type Listeners = BaseListeners & {
-	'text-transferred': [text: string]; // Emitted to signal the transfer of one text TO the Client.
-	'text-received': [text: string]; // Emitted to signal the reception of one text FROM the Client.
-	'webrtc:waiting-for-text': [];
-	'webrtc:waiting-for-data': [];
+	'text-transferred': (text: string) => void; // Emitted to signal the transfer of one text TO the Client.
+	'text-received': (text: string) => void; // Emitted to signal the reception of one text FROM the Client.
+	'webrtc:waiting-for-text': () => void;
+	'webrtc:waiting-for-data': () => void;
 };
 
 export class FlottformTextInputHost extends BaseInputHost<Listeners> {

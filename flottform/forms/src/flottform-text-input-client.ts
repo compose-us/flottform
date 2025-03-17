@@ -2,13 +2,13 @@ import { FlottformChannelClient } from './flottform-channel-client';
 import { DEFAULT_WEBRTC_CONFIG, EventEmitter, Logger, POLL_TIME_IN_MS } from './internal';
 
 type Listeners = {
-	init: [];
-	connected: [];
-	'webrtc:connection-impossible': [];
-	'text-transferred': [text: string]; // Emitted to signal the transfer of one text TO the Host.
-	'text-received': [text: string]; // Emitted to signal the reception of one text FROM the Host.
-	disconnected: [];
-	error: [e: string];
+	init: () => void;
+	connected: () => void;
+	'webrtc:connection-impossible': () => void;
+	'text-transferred': (text: string) => void; // Emitted to signal the transfer of one text TO the Host.
+	'text-received': (text: string) => void; // Emitted to signal the reception of one text FROM the Host.
+	disconnected: () => void;
+	error: (e: string) => void;
 };
 
 export class FlottformTextInputClient extends EventEmitter<Listeners> {

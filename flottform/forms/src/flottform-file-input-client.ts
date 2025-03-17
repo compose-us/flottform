@@ -2,24 +2,27 @@ import { FlottformChannelClient } from './flottform-channel-client';
 import { DEFAULT_WEBRTC_CONFIG, EventEmitter, Logger, POLL_TIME_IN_MS } from './internal';
 
 type Listeners = {
-	init: [];
-	connected: [];
-	'webrtc:connection-impossible': [];
-	'file-sending-progress': [
-		{ fileIndex: number; totalFileCount: number; fileName: string; currentFileProgress: number }
-	];
-	'single-file-transfered': [{ name: string; type: string; size: number }];
-	'file-receiving-progress': {
+	init: () => void;
+	connected: () => void;
+	'webrtc:connection-impossible': () => void;
+	'file-sending-progress': (event: {
+		fileIndex: number;
+		totalFileCount: number;
+		fileName: string;
+		currentFileProgress: number;
+	}) => void;
+	'single-file-transfered': (event: { name: string; type: string; size: number }) => void;
+	'file-receiving-progress': (event: {
 		fileIndex: number;
 		totalFileCount: number;
 		fileName: string;
 		currentFileProgress: number;
 		overallProgress: number;
-	}[];
-	'single-file-received': [file: File];
-	done: [];
-	disconnected: [];
-	error: [e: string];
+	}) => void;
+	'single-file-received': (event: File) => void;
+	done: () => void;
+	disconnected: () => void;
+	error: (event: string) => void;
 };
 
 type MetaData = {

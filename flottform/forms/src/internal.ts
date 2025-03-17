@@ -18,15 +18,17 @@ type EndpointInfo = {
 };
 
 export type BaseListeners = {
-	new: [];
-	disconnected: [];
-	error: [error: Error];
-	connected: [];
-	'endpoint-created': [{ link: string; qrCode: string }];
-	'webrtc:waiting-for-client': [
-		event: { link: string; qrCode: string; channel: FlottformChannelHost }
-	];
-	'webrtc:waiting-for-ice': [];
+	new: () => void;
+	disconnected: () => void;
+	error: (event: Error) => void;
+	connected: () => void;
+	'endpoint-created': (event: { link: string; qrCode: string }) => void;
+	'webrtc:waiting-for-client': (event: {
+		link: string;
+		qrCode: string;
+		channel: FlottformChannelHost;
+	}) => void;
+	'webrtc:waiting-for-ice': () => void;
 };
 
 export type SafeEndpointInfo = Omit<EndpointInfo, 'hostKey' | 'clientKey'>;
@@ -104,38 +106,35 @@ export function setIncludes<T>(set: Set<T>, x: T): boolean {
 	return false;
 }
 
-type Listener<T extends Array<any>> = (...args: T) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
 export type FlottformEventMap = {
-	new: [details: { channel: FlottformChannelHost }];
-	'waiting-for-client': [
-		details: {
-			qrCode: string;
-			link: string;
-			channel: FlottformChannelHost;
-		}
-	];
-	'waiting-for-data': [];
-	'waiting-for-ice': [];
-	'receiving-data': [e: MessageEvent];
-	'file-received': [{ fileMeta: FileMetaInfos; arrayBuffer: Array<ArrayBuffer> }];
-	done: [];
-	error: [error: Error];
-	connected: [];
-	disconnected: [];
-	bufferedamountlow: [];
+	new: (event: { channel: FlottformChannelHost }) => void;
+	'waiting-for-client': (event: {
+		qrCode: string;
+		link: string;
+		channel: FlottformChannelHost;
+	}) => void;
+	'waiting-for-data': () => void;
+	'waiting-for-ice': () => void;
+	'receiving-data': (event: MessageEvent) => void;
+	'file-received': (event: { fileMeta: FileMetaInfos; arrayBuffer: Array<ArrayBuffer> }) => void;
+	done: () => void;
+	error: (event: Error) => void;
+	connected: () => void;
+	disconnected: () => void;
+	bufferedamountlow: () => void;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export class EventEmitter<EventMap extends Record<string, Array<any>>> {
-	private eventListeners: { [K in keyof EventMap]?: Set<Listener<EventMap[K]>> } = {};
+export class EventEmitter<EventMap extends Record<string, (...args: any[]) => any>> {
+	private eventListeners: { [K in keyof EventMap]?: Set<EventMap[K]> } = {};
 
-	on<K extends keyof EventMap>(eventName: K, listener: Listener<EventMap[K]>) {
+	on<K extends keyof EventMap>(eventName: K, listener: EventMap[K]) {
 		const listeners = this.eventListeners[eventName] ?? new Set();
 		listeners.add(listener);
 		this.eventListeners[eventName] = listeners;
 	}
 
-	off<K extends keyof EventMap>(eventName: K, listener: Listener<EventMap[K]>) {
+	off<K extends keyof EventMap>(eventName: K, listener: EventMap[K]) {
 		const listeners = this.eventListeners[eventName];
 		if (listeners) {
 			listeners.delete(listener);
@@ -145,7 +144,7 @@ export class EventEmitter<EventMap extends Record<string, Array<any>>> {
 		}
 	}
 
-	emit<K extends keyof EventMap>(eventName: K, ...args: EventMap[K]) {
+	emit<K extends keyof EventMap>(eventName: K, ...args: Parameters<EventMap[K]>) {
 		const listeners = this.eventListeners[eventName] ?? new Set();
 		for (const listener of listeners) {
 			listener(...args);

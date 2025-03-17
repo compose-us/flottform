@@ -8,19 +8,22 @@ import {
 } from './internal';
 
 type Listeners = BaseListeners & {
-	'file-receiving-progress': {
+	'file-receiving-progress': (event: {
 		fileIndex: number;
 		totalFileCount: number;
 		fileName: string;
 		currentFileProgress: number;
 		overallProgress: number;
-	}[];
-	'single-file-received': [file: File];
-	'file-sending-progress': [
-		{ fileIndex: number; totalFileCount: number; fileName: string; currentFileProgress: number }
-	];
-	'single-file-transfered': [{ name: string; type: string; size: number }];
-	'webrtc:waiting-for-file': [];
+	}) => void;
+	'single-file-received': (file: File) => void;
+	'file-sending-progress': (event: {
+		fileIndex: number;
+		totalFileCount: number;
+		fileName: string;
+		currentFileProgress: number;
+	}) => void;
+	'single-file-transfered': (event: { name: string; type: string; size: number }) => void;
+	'webrtc:waiting-for-file': () => void;
 };
 
 type MetaData = {
