@@ -1,13 +1,13 @@
 import { FlottformChannelHost } from './flottform-channel-host';
 import {
 	BaseInputHost,
-	BaseListeners,
+	BaseInputHostEvents,
 	DEFAULT_WEBRTC_CONFIG,
 	Logger,
 	POLL_TIME_IN_MS
 } from './internal';
 
-type Listeners = BaseListeners & {
+type Listeners = BaseInputHostEvents & {
 	'file-receiving-progress': (event: {
 		fileIndex: number;
 		totalFileCount: number;
@@ -23,7 +23,6 @@ type Listeners = BaseListeners & {
 		currentFileProgress: number;
 	}) => void;
 	'single-file-transfered': (event: { name: string; type: string; size: number }) => void;
-	'webrtc:waiting-for-file': () => void;
 };
 
 type MetaData = {
@@ -349,8 +348,7 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 	};
 
 	private registerListeners = () => {
-		this.channel?.on('waiting-for-client', (event) => {
-			this.emit('webrtc:waiting-for-client', event);
+		this.channel?.on('endpoint-created', (event) => {
 			const { qrCode, link } = event;
 			this.emit('endpoint-created', { link, qrCode });
 			this.link = link;
@@ -360,7 +358,6 @@ export class FlottformFileInputHost extends BaseInputHost<Listeners> {
 			this.emit('webrtc:waiting-for-ice');
 		});
 		this.channel?.on('waiting-for-data', () => {
-			this.emit('webrtc:waiting-for-file');
 			this.emit('connected');
 		});
 		this.channel?.on('receiving-data', (e) => {

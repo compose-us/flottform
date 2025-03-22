@@ -2,7 +2,6 @@ import { FlottformChannelClient } from './flottform-channel-client';
 import { DEFAULT_WEBRTC_CONFIG, EventEmitter, Logger, POLL_TIME_IN_MS } from './internal';
 
 type Listeners = {
-	init: () => void;
 	connected: () => void;
 	'webrtc:connection-impossible': () => void;
 	'file-sending-progress': (event: {
@@ -22,7 +21,7 @@ type Listeners = {
 	'single-file-received': (event: File) => void;
 	done: () => void;
 	disconnected: () => void;
-	error: (event: string) => void;
+	error: (event: Error) => void;
 };
 
 type MetaData = {
@@ -323,7 +322,7 @@ export class FlottformFileInputClient extends EventEmitter<Listeners> {
 	};
 
 	private registerListeners = () => {
-		this.channel?.on('retrieving-info-from-endpoint', () => {});
+		this.channel?.on('retrieving-host-info', () => {});
 		this.channel?.on('sending-client-info', () => {});
 		this.channel?.on('connecting-to-host', () => {});
 		this.channel?.on('connected', () => {
@@ -333,10 +332,6 @@ export class FlottformFileInputClient extends EventEmitter<Listeners> {
 			//Handle file(s) reception
 			this.handleIncomingData(e);
 		});
-		this.channel?.on('connection-impossible', () => {
-			this.emit('webrtc:connection-impossible');
-		});
-		this.channel?.on('done', () => {});
 		this.channel?.on('disconnected', () => {
 			this.emit('disconnected');
 		});

@@ -1,7 +1,6 @@
 import { FlottformChannelPeer } from './flottform-channel-peer';
 import {
-	ClientState,
-	EventEmitter,
+	ChannelClientState,
 	FlottformChannelClientEvents,
 	Logger,
 	POLL_TIME_IN_MS,
@@ -17,7 +16,7 @@ export class FlottformChannelClient extends FlottformChannelPeer<FlottformChanne
 	private pollTimeForIceInMs: number;
 	private logger: Logger;
 
-	private state: ClientState = 'init';
+	private state: ChannelClientState = 'starting';
 	private openPeerConnection: RTCPeerConnection | null = null;
 	private dataChannel: RTCDataChannel | null = null;
 	private pollForIceTimer: NodeJS.Timeout | number | null = null;
@@ -45,7 +44,7 @@ export class FlottformChannelClient extends FlottformChannelPeer<FlottformChanne
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	private changeState = (newState: ClientState, details?: any) => {
+	private changeState = (newState: ChannelClientState, details?: any) => {
 		this.state = newState;
 		this.emit(newState, details);
 		this.logger.info(`**Client State changed to: ${newState}`, details == undefined ? '' : details);
@@ -74,7 +73,7 @@ export class FlottformChannelClient extends FlottformChannelPeer<FlottformChanne
 		const getEndpointInfoUrl = `${this.flottformApi}/${this.endpointId}`;
 		const putClientInfoUrl = `${this.flottformApi}/${this.endpointId}/client`;
 
-		this.changeState('retrieving-info-from-endpoint');
+		this.changeState('retrieving-host-info');
 		const { hostInfo } = await retrieveEndpointInfo(getEndpointInfoUrl);
 		await this.openPeerConnection.setRemoteDescription(hostInfo.session);
 		const session = await this.openPeerConnection.createAnswer();
@@ -198,9 +197,9 @@ export class FlottformChannelClient extends FlottformChannelPeer<FlottformChanne
 			}
 			if (this.openPeerConnection!.connectionState === 'failed') {
 				this.stopPollingForIceCandidates();
-				if (this.state !== 'done') {
+				/* if (this.state !== 'done') {
 					this.changeState('disconnected');
-				}
+				} */
 			}
 		};
 
@@ -210,7 +209,7 @@ export class FlottformChannelClient extends FlottformChannelPeer<FlottformChanne
 			);
 			if (this.openPeerConnection!.iceConnectionState === 'failed') {
 				this.logger.log('Failed to find a possible connection path');
-				this.changeState('connection-impossible');
+				this.changeState('error', { message: 'connection-impossible' });
 			}
 		};
 	};

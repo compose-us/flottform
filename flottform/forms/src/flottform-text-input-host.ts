@@ -1,17 +1,15 @@
 import { FlottformChannelHost } from './flottform-channel-host';
 import {
 	BaseInputHost,
-	BaseListeners,
+	BaseInputHostEvents,
 	DEFAULT_WEBRTC_CONFIG,
 	Logger,
 	POLL_TIME_IN_MS
 } from './internal';
 
-type Listeners = BaseListeners & {
+type Listeners = BaseInputHostEvents & {
 	'text-transferred': (text: string) => void; // Emitted to signal the transfer of one text TO the Client.
 	'text-received': (text: string) => void; // Emitted to signal the reception of one text FROM the Client.
-	'webrtc:waiting-for-text': () => void;
-	'webrtc:waiting-for-data': () => void;
 };
 
 export class FlottformTextInputHost extends BaseInputHost<Listeners> {
@@ -96,8 +94,7 @@ export class FlottformTextInputHost extends BaseInputHost<Listeners> {
 		this.channel?.on('starting', () => {
 			this.emit('starting');
 		});
-		this.channel?.on('waiting-for-client', (event) => {
-			this.emit('webrtc:waiting-for-client', event);
+		this.channel?.on('endpoint-created', (event) => {
 			const { qrCode, link } = event;
 			this.emit('endpoint-created', { link, qrCode });
 			this.link = link;

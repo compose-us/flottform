@@ -1,7 +1,4 @@
-import {
-	EventEmitter,
-	FlottformChannelPeerEvents,
-} from './internal';
+import { EventEmitter, FlottformChannelPeerEvents } from './internal';
 
 export abstract class FlottformChannelPeer<
 	EventMap extends FlottformChannelPeerEvents

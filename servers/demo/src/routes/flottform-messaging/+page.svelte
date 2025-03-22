@@ -3,8 +3,8 @@
 	import { onMount } from 'svelte';
 	import { createFlottformMessagingClientUrl, sdpExchangeServerBase } from '../../api';
 	let connectionStatus = $state<
-		'new' | 'starting' | 'endpoint-created' | 'connected' | 'done' | 'disconnected' | 'error'
-	>('new');
+		'starting' | 'starting' | 'endpoint-created' | 'connected' | 'done' | 'disconnected' | 'error'
+	>('starting');
 	let connectionInfo = { link: '', qrCode: '' };
 	let error = $state<string>('');
 	let messagesContainer: HTMLDivElement | null = null;
@@ -76,7 +76,7 @@
 	<div class="max-w-screen-xl w-full p-4 box-border flex flex-col items-center">
 		<h1 class="text-2xl font-bold text-gray-800 mb-8">Flottform Messaging - Host</h1>
 		<div class="w-full max-w-md bg-white shadow-lg rounded-lg">
-			{#if connectionStatus === 'new' || connectionStatus === 'starting'}
+			{#if connectionStatus === 'starting'}
 				<div class="flex flex-col items-center w-full p-8">
 					<p class="mb-8 text-center">Start a new connection to chat with someone else!</p>
 					<button

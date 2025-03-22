@@ -1,6 +1,6 @@
 import { FlottformFileInputHost } from './flottform-file-input-host';
 import { FlottformTextInputHost } from './flottform-text-input-host';
-import { BaseInputHost, BaseListeners } from './internal';
+import { BaseInputHost, BaseInputHostEvents } from './internal';
 import { FlottformCreateFileParams, FlottformCreateTextParams } from './types';
 
 const openInputsList = () => {
@@ -186,7 +186,7 @@ export const createDefaultFlottformComponent = ({
 	};
 };
 
-const createBaseFlottformItems = <L extends BaseListeners>({
+const createBaseFlottformItems = <L extends BaseInputHostEvents>({
 	flottformBaseInputHost,
 	additionalItemClasses,
 	label,

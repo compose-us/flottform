@@ -16,65 +16,43 @@ type EndpointInfo = {
 		iceCandidates: RTCIceCandidateInit[];
 	};
 };
-
-export type BaseListeners = {
-	starting: () => void;
-	disconnected: () => void;
-	error: (event: Error) => void;
-	connected: () => void;
-	'endpoint-created': (event: { link: string; qrCode: string }) => void;
-	'webrtc:waiting-for-client': (event: {
-		link: string;
-		qrCode: string;
-		channel: FlottformChannelHost;
-	}) => void;
-	'webrtc:waiting-for-ice': () => void;
-};
-
 export type SafeEndpointInfo = Omit<EndpointInfo, 'hostKey' | 'clientKey'>;
-
-export type ClientState =
-	| 'init'
-	| 'retrieving-info-from-endpoint' // first request to server
-	| 'sending-client-info' // initial request to endpoint
-	| 'connecting-to-host' // initial connection
-	| 'connection-impossible' // if a connection is not possible due to network restrictions
-	| 'connected' // waiting for user input, having a connection
-	| 'disconnected' // failed after having a connection
-	| 'done' // done with sending
-	| 'error';
 
 export type FlottformChannelPeerEvents = {
 	starting: () => void;
-	'waiting-for-data': () => void;
-	'waiting-for-ice': () => void;
-	'receiving-data': (event: MessageEvent) => void;
-	error: (event: Error) => void;
 	connected: () => void;
+	'receiving-data': (event: MessageEvent) => void;
+	bufferedamountlow: () => void;
 	disconnected: () => void;
-}
+	error: (event: Error) => void;
+};
 export type FlottformChannelClientEvents = FlottformChannelPeerEvents & {
-	'retrieving-info-from-endpoint': () => void;
+	'retrieving-host-info': () => void;
 	'sending-client-info': () => void;
 	'connecting-to-host': () => void;
-	'connection-impossible': () => void;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	'receiving-data': (data: any) => void;
-	done: () => void;
-	bufferedamountlow: () => void;
-	error: (event: string) => void;
-	connected: () => void;
-	disconnected: () => void;
-}
+};
 export type FlottformChannelHostEvents = FlottformChannelPeerEvents & {
-	'waiting-for-client': (event: {
+	'endpoint-created': (event: {
 		qrCode: string;
 		link: string;
 		channel: FlottformChannelHost;
 	}) => void;
+	'waiting-for-ice': () => void;
+	'waiting-for-data': () => void;
 };
 
-export type FlottformState = keyof FlottformChannelPeerEvents;
+export type ChannelClientState = keyof FlottformChannelClientEvents;
+export type ChannelHostState = keyof FlottformChannelHostEvents;
+
+export type BaseInputHostEvents = {
+	starting: () => void;
+	'endpoint-created': ({ link, qrCode }: { link: string; qrCode: string }) => void;
+	disconnected: () => void;
+	error: (event: Error) => void;
+	connected: () => void;
+	'webrtc:waiting-for-ice': () => void;
+	'webrtc:waiting-for-data': () => void;
+};
 
 export type Logger = {
 	debug: typeof console.debug;
@@ -157,7 +135,7 @@ export class EventEmitter<EventMap extends Record<string, (...args: any[]) => an
 	}
 }
 
-export abstract class BaseInputHost<L extends BaseListeners> extends EventEmitter<L> {
+export abstract class BaseInputHost<L extends BaseInputHostEvents> extends EventEmitter<L> {
 	abstract start();
 	abstract close();
 }

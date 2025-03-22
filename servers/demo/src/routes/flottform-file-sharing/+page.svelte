@@ -5,12 +5,12 @@
 	import FileExchangeProgress from '$lib/components/FileExchangeProgress.svelte';
 	import ReceivedFilesList from '$lib/components/ReceivedFilesList.svelte';
 	let connectionStatus:
-		| 'new'
+		| 'starting'
 		| 'endpoint-created'
 		| 'connected'
 		| 'done'
 		| 'disconnected'
-		| 'error' = 'new';
+		| 'error' = 'starting';
 	let connectionInfo = { link: '', qrCode: '' };
 	let error: string = '';
 	let createWebRtcChannel: () => void;
@@ -49,11 +49,11 @@
 			flottformApi: sdpExchangeServerBase,
 			createClientUrl: createFlottformFileSharingClientUrl
 		});
-		flottformFileInputHost.on('new', () => {
+		flottformFileInputHost.on('starting', () => {
 			createWebRtcChannel = flottformFileInputHost.start;
 			sendFiles = flottformFileInputHost.sendFiles;
 			stopFileTransfer = flottformFileInputHost.close;
-			connectionStatus = 'new';
+			connectionStatus = 'starting';
 		});
 		flottformFileInputHost.on('endpoint-created', ({ link, qrCode }) => {
 			connectionInfo.link = link;
@@ -130,7 +130,7 @@
 	<div class="max-w-screen-xl w-full p-4 box-border flex flex-col items-center">
 		<h1 class="text-2xl font-bold text-gray-800 mb-8">Flottform File Sharing - Host</h1>
 		<div class="w-full max-w-md bg-white shadow-lg rounded-lg">
-			{#if connectionStatus === 'new'}
+			{#if connectionStatus === 'starting'}
 				<div class="flex flex-col items-center w-full p-8">
 					<p class="mb-8 text-center">
 						Start a new connection to exchange files with someone else!

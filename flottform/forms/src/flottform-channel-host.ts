@@ -1,9 +1,7 @@
 import { toDataURL } from 'qrcode';
 import {
-	EventEmitter,
-	FlottformChannelEvents,
 	FlottformChannelHostEvents,
-	FlottformState,
+	ChannelHostState,
 	Logger,
 	retrieveEndpointInfo,
 	setIncludes
@@ -17,7 +15,7 @@ export class FlottformChannelHost extends FlottformChannelPeer<FlottformChannelH
 	private pollTimeForIceInMs: number;
 	private logger: Logger;
 
-	private state: FlottformState | 'new' = 'new';
+	private state: ChannelHostState | 'new' = 'new';
 	private channelNumber: number = 0;
 	private openPeerConnection: RTCPeerConnection | null = null;
 	private dataChannel: RTCDataChannel | null = null;
@@ -96,7 +94,7 @@ export class FlottformChannelHost extends FlottformChannelPeer<FlottformChannelH
 		this.setupDataChannelForTransfer();
 
 		const connectLink = await this.createClientUrl({ endpointId });
-		this.changeState('waiting-for-client', {
+		this.changeState('endpoint-created', {
 			qrCode: await toDataURL(connectLink),
 			link: connectLink,
 			channel: this
@@ -262,7 +260,7 @@ export class FlottformChannelHost extends FlottformChannelPeer<FlottformChannelH
 		this.logger.log('polling for client ice candidates', this.openPeerConnection.iceGatheringState);
 		const { clientInfo } = await retrieveEndpointInfo(getEndpointInfoUrl);
 
-		if (clientInfo && this.state === 'waiting-for-client') {
+		if (clientInfo && this.state === 'endpoint-created') {
 			this.logger.log('Found a client that wants to connect!');
 			this.changeState('waiting-for-ice');
 			await this.openPeerConnection.setRemoteDescription(clientInfo.session);

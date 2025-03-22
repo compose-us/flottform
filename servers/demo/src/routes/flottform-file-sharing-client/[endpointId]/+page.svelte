@@ -100,7 +100,7 @@
 		});
 		flottformFileInputClient.on('error', (e) => {
 			connectionStatus = 'error';
-			error = e;
+			error = JSON.stringify(e);
 		});
 	});
 </script>

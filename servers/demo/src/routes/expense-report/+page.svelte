@@ -163,7 +163,7 @@
 			incomingInputField: fileInput
 		});
 
-		flottformFileInputHost.on('new', () => {
+		flottformFileInputHost.on('starting', () => {
 			createWebRtcChannel = flottformFileInputHost.start;
 		});
 
