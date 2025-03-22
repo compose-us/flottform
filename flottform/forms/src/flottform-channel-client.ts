@@ -2,25 +2,17 @@ import { FlottformChannelPeer } from './flottform-channel-peer';
 import {
 	ChannelClientState,
 	FlottformChannelClientEvents,
-	Logger,
 	POLL_TIME_IN_MS,
+	Logger,
 	generateSecretKey,
 	retrieveEndpointInfo,
 	setIncludes
 } from './internal';
 
 export class FlottformChannelClient extends FlottformChannelPeer<FlottformChannelClientEvents> {
-	private flottformApi: string | URL;
 	private endpointId: string;
-	private rtcConfiguration: RTCConfiguration;
-	private pollTimeForIceInMs: number;
-	private logger: Logger;
 
 	private state: ChannelClientState = 'starting';
-	private openPeerConnection: RTCPeerConnection | null = null;
-	private dataChannel: RTCDataChannel | null = null;
-	private pollForIceTimer: NodeJS.Timeout | number | null = null;
-	private BUFFER_THRESHOLD = 128 * 1024; // 128KB buffer threshold (maximum of 4 chunks in the buffer waiting to be sent over the network)
 
 	constructor({
 		endpointId,
@@ -35,19 +27,15 @@ export class FlottformChannelClient extends FlottformChannelPeer<FlottformChanne
 		pollTimeForIceInMs?: number;
 		logger?: Logger;
 	}) {
-		super();
+		super(logger, flottformApi, rtcConfiguration, pollTimeForIceInMs);
 		this.endpointId = endpointId;
-		this.flottformApi = flottformApi;
-		this.rtcConfiguration = rtcConfiguration;
-		this.pollTimeForIceInMs = pollTimeForIceInMs;
-		this.logger = logger;
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	private changeState = (newState: ChannelClientState, details?: any) => {
 		this.state = newState;
 		this.emit(newState, details);
-		this.logger.info(`**Client State changed to: ${newState}`, details == undefined ? '' : details);
+		this.logger.info(`State changed to: ${newState}`, details == undefined ? '' : details);
 	};
 
 	start = async () => {
@@ -122,25 +110,6 @@ export class FlottformChannelClient extends FlottformChannelPeer<FlottformChanne
 			// Handling the incoming data from the Host depends on the use case.
 			this.emit('receiving-data', e);
 		};
-	};
-
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	sendData = (data: any) => {
-		if (!this.dataChannel) {
-			this.changeState('error', 'dataChannel is not defined. Unable to send the file to the Host!');
-			return;
-		} else if (!this.canSendMoreData()) {
-			this.logger.warn('Data channel is full! Cannot send data at the moment');
-			return;
-		}
-		this.dataChannel.send(data);
-	};
-
-	canSendMoreData = () => {
-		return (
-			this.dataChannel &&
-			this.dataChannel.bufferedAmount < this.dataChannel.bufferedAmountLowThreshold
-		);
 	};
 
 	private setUpClientIceGathering = (

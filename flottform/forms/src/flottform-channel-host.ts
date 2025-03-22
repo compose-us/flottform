@@ -9,18 +9,10 @@ import {
 import { FlottformChannelPeer } from './flottform-channel-peer';
 
 export class FlottformChannelHost extends FlottformChannelPeer<FlottformChannelHostEvents> {
-	private flottformApi: string | URL;
 	private createClientUrl: (params: { endpointId: string }) => Promise<string>;
-	private rtcConfiguration: RTCConfiguration;
-	private pollTimeForIceInMs: number;
-	private logger: Logger;
 
 	private state: ChannelHostState | 'new' = 'new';
 	private channelNumber: number = 0;
-	private openPeerConnection: RTCPeerConnection | null = null;
-	private dataChannel: RTCDataChannel | null = null;
-	private pollForIceTimer: NodeJS.Timeout | number | null = null;
-	private BUFFER_THRESHOLD = 128 * 1024; // 128KB buffer threshold (maximum of 4 chunks in the buffer waiting to be sent over the network)
 
 	constructor({
 		flottformApi,
@@ -35,16 +27,11 @@ export class FlottformChannelHost extends FlottformChannelPeer<FlottformChannelH
 		pollTimeForIceInMs: number;
 		logger: Logger;
 	}) {
-		super();
-		this.flottformApi = flottformApi;
+		super(logger, flottformApi, rtcConfiguration, pollTimeForIceInMs);
 		this.createClientUrl = createClientUrl;
-		this.rtcConfiguration = rtcConfiguration;
-		this.pollTimeForIceInMs = pollTimeForIceInMs;
-		this.logger = logger;
 	}
-
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	private changeState = (newState: keyof FlottformChannelHostEvents, details?: any) => {
+	private changeState = (newState: ChannelHostState, details?: any) => {
 		this.state = newState;
 		this.emit(newState, details);
 		this.logger.info(`State changed to: ${newState}`, details == undefined ? '' : details);
@@ -128,24 +115,6 @@ export class FlottformChannelHost extends FlottformChannelPeer<FlottformChannelH
 			// Handling the incoming data from the client depends on the use case.
 			this.emit('receiving-data', e);
 		};
-	};
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	sendData = (data: any) => {
-		if (this.dataChannel == null) {
-			this.changeState('error', 'dataChannel is null. Unable to send the data to the Client!');
-			return;
-		} else if (!this.canSendMoreData()) {
-			this.logger.warn('Data channel is full! Cannot send data at the moment');
-			return;
-		}
-		this.dataChannel.send(data);
-	};
-
-	canSendMoreData = () => {
-		return (
-			this.dataChannel &&
-			this.dataChannel.bufferedAmount < this.dataChannel.bufferedAmountLowThreshold
-		);
 	};
 
 	private setupHostIceGathering = (

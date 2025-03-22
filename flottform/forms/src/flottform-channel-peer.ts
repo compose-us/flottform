@@ -1,16 +1,52 @@
-import { EventEmitter, FlottformChannelPeerEvents } from './internal';
+import { EventEmitter, Logger, FlottformChannelPeerEvents } from './internal';
 
 export abstract class FlottformChannelPeer<
 	EventMap extends FlottformChannelPeerEvents
 > extends EventEmitter<EventMap> {
+	protected dataChannel: RTCDataChannel | null = null;
+	protected flottformApi: string | URL;
+	protected rtcConfiguration: RTCConfiguration;
+	protected pollTimeForIceInMs: number;
+	protected openPeerConnection: RTCPeerConnection | null = null;
+	protected pollForIceTimer: NodeJS.Timeout | number | null = null;
+	protected BUFFER_THRESHOLD = 128 * 1024; // 128KB buffer threshold (maximum of 4 chunks in the buffer waiting to be sent over the network)
+	protected logger: Logger;
+
+	constructor(
+		logger: Logger,
+		flottformApi: string | URL,
+		rtcConfiguration: RTCConfiguration,
+		pollTimeForIceInMs: number
+	) {
+		super();
+		this.logger = logger;
+		this.flottformApi = flottformApi;
+		this.rtcConfiguration = rtcConfiguration;
+		this.pollTimeForIceInMs = pollTimeForIceInMs;
+	}
+
 	abstract start();
 
 	abstract close();
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	abstract sendData(data: any);
+	sendData = (data: any) => {
+		if (!this.dataChannel) {
+			throw new Error('dataChannel is not defined. Unable to send the file to the other Peer!');
+			return;
+		} else if (!this.canSendMoreData()) {
+			this.logger.warn('Data channel is full! Cannot send data at the moment');
+			return;
+		}
+		this.dataChannel.send(data);
+	};
 
-	abstract canSendMoreData();
+	canSendMoreData = () => {
+		return (
+			this.dataChannel &&
+			this.dataChannel.bufferedAmount < this.dataChannel.bufferedAmountLowThreshold
+		);
+	};
 
 	protected fetchIceServers = async (baseApi: string) => {
 		// TOOD remove after testing
