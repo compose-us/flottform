@@ -3,8 +3,8 @@
 	import { onMount } from 'svelte';
 	import { createFlottformMessagingClientUrl, sdpExchangeServerBase } from '../../api';
 	let connectionStatus = $state<
-		'starting' | 'starting' | 'endpoint-created' | 'connected' | 'done' | 'disconnected' | 'error'
-	>('starting');
+		'new' | 'starting' | 'endpoint-created' | 'connected' | 'done' | 'disconnected' | 'error'
+	>('new');
 	let connectionInfo = { link: '', qrCode: '' };
 	let error = $state<string>('');
 	let messagesContainer: HTMLDivElement | null = null;
@@ -28,6 +28,12 @@
 			messagesContainer.scrollTop = messagesContainer.scrollHeight;
 		}
 	}
+	function restartConnection() {
+		console.log('**RESTARTING**');
+		messages = [];
+		console.log('**messages= ', messages);
+		createWebRtcChannel();
+	}
 	onMount(async () => {
 		const flottformTextInputHost = new FlottformTextInputHost({
 			flottformApi: sdpExchangeServerBase,
@@ -39,7 +45,6 @@
 		endConversation = flottformTextInputHost.close;
 
 		flottformTextInputHost.on('starting', () => {
-			console.log('changed status to starting');
 			connectionStatus = 'starting';
 		});
 		flottformTextInputHost.on('endpoint-created', ({ link, qrCode }) => {
@@ -76,7 +81,7 @@
 	<div class="max-w-screen-xl w-full p-4 box-border flex flex-col items-center">
 		<h1 class="text-2xl font-bold text-gray-800 mb-8">Flottform Messaging - Host</h1>
 		<div class="w-full max-w-md bg-white shadow-lg rounded-lg">
-			{#if connectionStatus === 'starting'}
+			{#if connectionStatus === 'new' || connectionStatus === 'starting'}
 				<div class="flex flex-col items-center w-full p-8">
 					<p class="mb-8 text-center">Start a new connection to chat with someone else!</p>
 					<button
@@ -106,7 +111,9 @@
 					</div>
 					<button
 						class="bg-[#0079b2] hover:bg-[#007bff] text-white px-4 py-2 rounded-lg text-base"
-						onclick={createWebRtcChannel}>Restart Connection</button
+						onclick={() => {
+							restartConnection();
+						}}>Restart Connection</button
 					>
 				</div>
 			{:else if connectionStatus === 'connected'}
@@ -120,7 +127,7 @@
 								You're connected to Client! You can start exchanging messages!
 							</p>
 						{/if}
-						{#each messages as message}
+						{#each messages as message, index (index)}
 							<div class="p-3 rounded-lg max-w-[70%] break-words {message.sender}">
 								<p>{message.text}</p>
 							</div>
@@ -154,7 +161,9 @@
 					<p class="text-center">Channel is disconnected!</p>
 					<p class="text-center">Do want to connect one more time? Click the button below!</p>
 					<button
-						onclick={createWebRtcChannel}
+						onclick={() => {
+							restartConnection();
+						}}
 						class="bg-[#0079b2] hover:bg-[#007bff] text-white px-4 py-2 rounded-lg text-base"
 						>Re-connect!</button
 					>
@@ -166,7 +175,9 @@
 						Connection Channel Failed with the following error: {error}
 					</p>
 					<button
-						onclick={createWebRtcChannel}
+						onclick={() => {
+							restartConnection();
+						}}
 						class="bg-[#0079b2] hover:bg-[#007bff] text-white px-4 py-2 rounded-lg text-base"
 						>Try to Connect Again</button
 					>

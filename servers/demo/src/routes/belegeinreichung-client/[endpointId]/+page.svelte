@@ -4,14 +4,7 @@
 	import { onMount } from 'svelte';
 	import { sdpExchangeServerBase } from '../../../api';
 
-	type State =
-		| 'init'
-		| 'connected'
-		| 'webrtc:connection-impossible'
-		| 'sending'
-		| 'done'
-		| 'disconnected'
-		| 'error';
+	type State = 'init' | 'connected' | 'sending' | 'done' | 'disconnected' | 'error';
 
 	let sendFileToPeer = () => {};
 	let fileInput: HTMLInputElement;
@@ -26,10 +19,6 @@
 		});
 
 		flottformFileInputClient.start();
-
-		flottformFileInputClient.on('webrtc:connection-impossible', () => {
-			currentState = 'webrtc:connection-impossible';
-		});
 
 		flottformFileInputClient.on('connected', () => {
 			currentState = 'connected';
@@ -126,8 +115,6 @@
 			Wird aufgebaut...
 		{:else if currentState === 'connected'}
 			Verbunden!
-		{:else if currentState === 'webrtc:connection-impossible'}
-			Verbindung in diesem Netzwerk nicht möglich!
 		{:else if currentState === 'sending'}
 			Sende Daten...
 		{:else if currentState === 'done'}

@@ -5,14 +5,7 @@
 	import FileInput from '$lib/components/FileInput.svelte';
 	import { sdpExchangeServerBase } from '../../../api';
 
-	type State =
-		| 'init'
-		| 'connected'
-		| 'webrtc:connection-impossible'
-		| 'sending'
-		| 'done'
-		| 'disconnected'
-		| 'error';
+	type State = 'init' | 'connected' | 'sending' | 'done' | 'disconnected' | 'error';
 
 	let sendFileToPeer = () => {};
 	let fileInput: HTMLInputElement;
@@ -27,10 +20,6 @@
 		});
 
 		flottformFileInputClient.start();
-
-		flottformFileInputClient.on('webrtc:connection-impossible', () => {
-			currentState = 'webrtc:connection-impossible';
-		});
 
 		flottformFileInputClient.on('connected', () => {
 			currentState = 'connected';
@@ -51,10 +40,6 @@
 		});
 
 		sendFileToPeer = flottformFileInputClient.sendFiles;
-
-		/* sendFileToPeer = async (e) => {
-			await flottformFileInputClient.sendFile();
-		}; */
 	});
 </script>
 

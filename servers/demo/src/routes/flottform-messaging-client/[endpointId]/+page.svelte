@@ -43,7 +43,7 @@
 		});
 		flottformTextInputClient.on('error', (e) => {
 			connectionStatus = 'error';
-			error = e;
+			error = e.message;
 		});
 	});
 	$effect(() => {

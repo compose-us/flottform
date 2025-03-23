@@ -17,12 +17,14 @@ export class FlottformTextInputHost extends BaseInputHost<Listeners> {
 	private logger: Logger;
 	private link: string = '';
 	private qrCode: string = '';
-	private inputField: HTMLInputElement | HTMLTextAreaElement | undefined = undefined;
+	private incomingInputField: HTMLInputElement | HTMLTextAreaElement | undefined = undefined;
+	private outgoingInputField: HTMLInputElement | HTMLTextAreaElement | undefined = undefined;
 
 	constructor({
 		flottformApi,
 		createClientUrl,
-		inputField = undefined,
+		incomingInputField,
+		outgoingInputField,
 		rtcConfiguration = DEFAULT_WEBRTC_CONFIG,
 		pollTimeForIceInMs = POLL_TIME_IN_MS,
 		logger = console
@@ -30,6 +32,8 @@ export class FlottformTextInputHost extends BaseInputHost<Listeners> {
 		flottformApi: string | URL;
 		createClientUrl: (params: { endpointId: string }) => Promise<string>;
 		inputField?: HTMLInputElement | HTMLTextAreaElement;
+		incomingInputField?: HTMLInputElement | HTMLTextAreaElement;
+		outgoingInputField?: HTMLInputElement | HTMLTextAreaElement;
 		rtcConfiguration?: RTCConfiguration;
 		pollTimeForIceInMs?: number;
 		logger?: Logger;
@@ -43,7 +47,8 @@ export class FlottformTextInputHost extends BaseInputHost<Listeners> {
 			logger
 		});
 		this.logger = logger;
-		this.inputField = inputField;
+		this.incomingInputField = incomingInputField;
+		this.outgoingInputField = outgoingInputField;
 
 		this.registerListeners();
 	}
@@ -74,19 +79,32 @@ export class FlottformTextInputHost extends BaseInputHost<Listeners> {
 		return this.qrCode;
 	};
 
-	sendText = (text: string) => {
+	sendText = (text?: string) => {
 		// For now, I didn't handle very large texts since for most use cases the text won't exceed the size of 1 chunk ( 16KB )
-		this.channel?.sendData(text);
-		this.emit('text-transferred', text);
+		if (!text) {
+			// Get the Text to send from the input field.
+			if (this.outgoingInputField && this.outgoingInputField.value) {
+				this.channel?.sendData(this.outgoingInputField.value);
+				this.emit('text-transferred', this.outgoingInputField.value);
+				this.outgoingInputField.value = '';
+			} else {
+				this.logger.error(
+					'You have to provide a string parameter to send, or you have to fill the outgoingInputField with a value!'
+				);
+			}
+		} else {
+			this.channel?.sendData(text);
+			this.emit('text-transferred', text);
+		}
 	};
 
 	private handleIncomingData = (e: MessageEvent) => {
 		// We suppose that the data received is small enough to be all included in 1 message
 		this.emit('text-received', e.data);
-		if (this.inputField) {
-			this.inputField.value = e.data;
+		if (this.incomingInputField) {
+			this.incomingInputField.value = e.data;
 			const event = new Event('change');
-			this.inputField.dispatchEvent(event);
+			this.incomingInputField.dispatchEvent(event);
 		}
 	};
 

@@ -77,6 +77,9 @@ export class FlottformFileInputHost extends FlottformBaseFileInputPeer<
 	};
 
 	private registerListeners = () => {
+		this.channel?.on('starting', () => {
+			this.emit('starting');
+		});
 		this.channel?.on('endpoint-created', (event) => {
 			const { qrCode, link } = event;
 			this.emit('endpoint-created', { link, qrCode });

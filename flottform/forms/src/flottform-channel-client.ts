@@ -166,9 +166,7 @@ export class FlottformChannelClient extends FlottformChannelPeer<FlottformChanne
 			}
 			if (this.openPeerConnection!.connectionState === 'failed') {
 				this.stopPollingForIceCandidates();
-				/* if (this.state !== 'done') {
-					this.changeState('disconnected');
-				} */
+				this.changeState('disconnected');
 			}
 		};
 
