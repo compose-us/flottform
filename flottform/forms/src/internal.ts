@@ -54,6 +54,27 @@ export type BaseInputHostEvents = {
 	'webrtc:waiting-for-data': () => void;
 };
 
+export type BaseFileInputPeerEvents = {
+	connected: () => void;
+	'file-receiving-progress': (event: {
+		fileIndex: number;
+		totalFileCount: number;
+		fileName: string;
+		currentFileProgress: number;
+		overallProgress: number;
+	}) => void;
+	'single-file-received': (event: File) => void;
+	'file-sending-progress': (event: {
+		fileIndex: number;
+		totalFileCount: number;
+		fileName: string;
+		currentFileProgress: number;
+	}) => void;
+	'single-file-transfered': (event: { name: string; type: string; size: number }) => void;
+	error: (event: Error) => void;
+	disconnected: () => void;
+};
+
 export type Logger = {
 	debug: typeof console.debug;
 	info: typeof console.info;
@@ -127,10 +148,10 @@ export class EventEmitter<EventMap extends Record<string, (...args: any[]) => an
 		}
 	}
 
-	emit<K extends keyof EventMap>(eventName: K, ...args: Parameters<EventMap[K]>) {
+	emit<K extends keyof EventMap>(eventName: K, args?: Parameters<EventMap[K]>[0]) {
 		const listeners = this.eventListeners[eventName] ?? new Set();
 		for (const listener of listeners) {
-			listener(...args);
+			listener(args);
 		}
 	}
 }
