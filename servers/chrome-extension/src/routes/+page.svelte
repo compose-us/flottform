@@ -17,7 +17,7 @@
 
 	let inputFields: TrackedInputFields = $state([]);
 	let currentTabId: number | undefined;
-	let getIceServersEndpoint: string = '';
+	let getIceServersEndpoint = $state('');
 	let iceServers: RTCIceServer[] | undefined;
 	let signalingServerUrlBase: string = '';
 	let extensionClientUrlBase: string = '';
@@ -195,24 +195,19 @@
 					flottformTextInputHost.on(
 						'endpoint-created',
 						({ link, qrCode }: { link: string; qrCode: string }) => {
-							//console.log(`*****Inside "endpoint-created" event, link=${link}*****`);
 							handleFlottformEvent('endpoint-created', { link, qrCode }, textInputId, currentTabId);
 						}
 					);
 
 					flottformTextInputHost.on('connected', () => {
-						//console.log('****Inside "connected" event*****');
 						handleFlottformEvent('connected', undefined, textInputId, currentTabId);
 					});
 
 					flottformTextInputHost.on('error', (error: Error) => {
-						//console.log('****Inside "error" event*****');
 						handleFlottformEvent('error', { message: error.message }, textInputId, currentTabId);
 					});
 
 					flottformTextInputHost.on('done', (message: string) => {
-						//console.log('****Inside "done" event*****');
-
 						handleFlottformEvent('done', undefined, textInputId, currentTabId);
 
 						const ourMap = window.___flottform_map;
@@ -245,13 +240,11 @@
 					inputFieldType: string
 				) {
 					// Query the doc with the ID: textInputId in order to find the input field where you'll paste the text.
-					//console.log(`****Flottform will work on TextInput with id=${textInputId}*****`);
 					const data = {
 						type: inputFieldType,
 						getIceApi: getIceServersEndpoint,
 						flottformApi: signalingServerUrlBase
 					};
-					console.log('data-->', data);
 					// Instantiate the FlottformTextInputHost with the provided inputId
 					let flottformTextInputHost = new FlottformTextInputHost({
 						createClientUrl: async ({
@@ -291,8 +284,6 @@
 						getIceApi: getIceServersEndpoint
 					};
 
-					console.log('data-->', data);
-
 					// Instantiate the FlottformFileInputHost with the provided inputId
 					let flottformFileInputHost = new FlottformFileInputHost({
 						createClientUrl: async ({
@@ -312,7 +303,6 @@
 
 					// Track instances of FlottformFileInputHost
 					connectionManager.addConnection(fileInputId, flottformFileInputHost);
-					/* console.log('connectionManager: ', connectionManager); */
 
 					registerFlottformFileInputListeners(flottformFileInputHost, fileInputId, currentTabId);
 				}
@@ -325,13 +315,11 @@
 					flottformFileInputHost.on(
 						'endpoint-created',
 						({ link, qrCode }: { link: string; qrCode: string }) => {
-							//console.log(`*****Inside "endpoint-created" event, link=${link}*****`);
 							handleFlottformEvent('endpoint-created', { link, qrCode }, fileInputId, currentTabId);
 						}
 					);
 
 					flottformFileInputHost.on('connected', () => {
-						//console.log('****Inside "connected" event*****');
 						handleFlottformEvent('connected', undefined, fileInputId, currentTabId);
 					});
 
@@ -355,12 +343,10 @@
 					);
 
 					flottformFileInputHost.on('error', (error: Error) => {
-						//console.log('****Inside "error" event*****');
 						handleFlottformEvent('error', { message: error.message }, fileInputId, currentTabId);
 					});
 
 					flottformFileInputHost.on('done', () => {
-						//console.log('****Inside "done" event*****');
 						handleFlottformEvent('done', undefined, fileInputId, currentTabId);
 						// TODO: HANDLE THE DONE PROCESS
 						const ourMap = window.___flottform_map;
@@ -495,7 +481,6 @@
 
 		// Listen to storage changes in chrome.storage.local
 		chrome.storage.local.onChanged.addListener((changes) => {
-			//console.log('CHANGES: ', changes);
 			const key = `inputFields-${currentTabId}`;
 			if (changes[key]) {
 				console.warn('Detected change in inputFields:', changes[key].newValue);
@@ -513,6 +498,41 @@
 		clearOutdatedTables();
 	});
 </script>
+
+{#if !getIceServersEndpoint}
+	<div
+		class="flex items-center p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700"
+		role="alert"
+	>
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			class="mr-4"
+			fill="none"
+			viewBox="0 0 24 24"
+			stroke="currentColor"
+			height="120"
+			width="120"
+		>
+			<path
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				stroke-width="2"
+				d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+			/>
+		</svg>
+		<div>
+			<p class="font-bold">Connection Reliability Warning</p>
+			<p class="text-sm">
+				Your connection might work, but it could be unstable. <button
+					class="underline text-blue-700 hover:text-blue-900 bg-transparent p-0 border-0"
+					onclick={() => {
+						chrome.runtime.openOptionsPage();
+					}}>Add your own connection servers</button
+				> to ensure a more reliable connection.
+			</p>
+		</div>
+	</div>
+{/if}
 
 <div class="p-2 grid grid-cols-2 gap-2">
 	<button
@@ -544,7 +564,7 @@
 					>Get a QR code and link</button
 				>
 			{:else if input.connectionState.event === 'endpoint-created'}
-				<img src={input.connectionState.data.qrCode} alt="qrCode" class="w-36" />
+				<img src={input.connectionState.data.qrCode} alt="qrCode" class="w-full" />
 				<input type="text" value={input.connectionState.data.link} class="w-full" />
 			{:else if input.connectionState.event === 'connected'}
 				<p>Connected!</p>

@@ -9,9 +9,6 @@
 		"default_title": "Connect a secondary device to the form fields you see on this page."
 	},
 	"host_permissions": ["https://*/*"],
-	"background": {
-		"service_worker": "background.js"
-	},
 	"options_page": "options.html",
 	"permissions": ["tabs", "activeTab", "scripting", "storage"],
 	"web_accessible_resources": [
