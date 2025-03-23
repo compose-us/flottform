@@ -564,7 +564,7 @@
 					>Get a QR code and link</button
 				>
 			{:else if input.connectionState.event === 'endpoint-created'}
-				<img src={input.connectionState.data.qrCode} alt="qrCode" class="w-36" />
+				<img src={input.connectionState.data.qrCode} alt="qrCode" class="w-full" />
 				<input type="text" value={input.connectionState.data.link} class="w-full" />
 			{:else if input.connectionState.event === 'connected'}
 				<p>Connected!</p>
