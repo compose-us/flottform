@@ -1,22 +1,11 @@
 import { FlottformChannelHost } from './flottform-channel-host';
 
-type HostKey = string;
-type ClientKey = string;
 type EndpointId = string;
-type EndpointInfo = {
-	hostKey: HostKey;
+export type SafeEndpointInfo = {
 	endpointId: EndpointId;
-	hostInfo: {
-		session: RTCSessionDescriptionInit;
-		iceCandidates: RTCIceCandidateInit[];
-	};
-	clientKey?: ClientKey;
-	clientInfo?: {
-		session: RTCSessionDescriptionInit;
-		iceCandidates: RTCIceCandidateInit[];
-	};
+	hostInfo: string;
+	clientInfo?: string;
 };
-export type SafeEndpointInfo = Omit<EndpointInfo, 'hostKey' | 'clientKey'>;
 
 export type FlottformChannelPeerEvents = {
 	starting: () => void;
