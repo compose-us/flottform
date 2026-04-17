@@ -1,10 +1,19 @@
 {
 	"manifest_version": 3,
 	"name": "Flottform",
-	"description": "Connect devices through Flottform",
-	"version": "1.0",
+	"description": "Fill web forms from your phone. Scan a QR code to send text, photos, and files from your mobile device to any form field.",
+	"version": "1.0.0",
+	"icons": {
+		"16": "icons/icon-16.png",
+		"48": "icons/icon-48.png",
+		"128": "icons/icon-128.png"
+	},
 	"action": {
-		"default_icon": "flottform.png",
+		"default_icon": {
+			"16": "icons/icon-16.png",
+			"48": "icons/icon-48.png",
+			"128": "icons/icon-128.png"
+		},
 		"default_popup": "index.html",
 		"default_title": "Connect a secondary device to the form fields you see on this page."
 	},
@@ -13,7 +22,7 @@
 		"service_worker": "background.js"
 	},
 	"options_page": "options.html",
-	"permissions": ["tabs", "activeTab", "scripting", "storage"],
+	"permissions": ["tabs", "activeTab", "scripting", "storage", "webNavigation"],
 	"web_accessible_resources": [
 		{
 			"resources": ["scripts/flottform-bundle.js"],

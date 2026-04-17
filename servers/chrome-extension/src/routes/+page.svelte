@@ -10,10 +10,12 @@
 
 	type TrackedInputFields = Array<{
 		id: string;
+		frameId: number;
 		type: 'text' | 'textarea' | 'file';
 		connectionState: { event: string; data?: any };
 		label: string | undefined | null;
 		screenshot: string | undefined;
+		isVisible: boolean;
 	}>;
 
 	let inputFields: TrackedInputFields = $state([]);
@@ -85,111 +87,181 @@
 		}, 2000);
 	};
 
-	// TODO remove all listeners and flottform processes
+	const regenerateQr = async (inputFieldId: string, inputFieldType: string, frameId: number = 0) => {
+		const flottformModuleFile = chrome.runtime.getURL('scripts/flottform-bundle.js');
+		try {
+			await chrome.scripting.executeScript({
+				target: { tabId: currentTabId!, frameIds: [frameId] },
+				args: [flottformModuleFile, inputFieldId],
+				func: async (flottformModuleFile: string, inputFieldId: string) => {
+					const fm: typeof Flottform = await import(flottformModuleFile);
+					const { ConnectionManager } = fm;
+					const connectionManager = ConnectionManager.getInstance();
+					const existing = connectionManager.getConnection(inputFieldId);
+					if (existing) {
+						existing.close();
+						connectionManager.removeConnection(inputFieldId);
+					}
+				}
+			});
+		} catch (e) {}
+
+		const updated = inputFields.map((f) =>
+			f.id === inputFieldId ? { ...f, connectionState: { event: 'new' } } : f
+		);
+		inputFields = updated;
+		chrome.storage.local.set({ [`inputFields-${currentTabId}`]: updated });
+
+		await handleGenerateQr(inputFieldId, inputFieldType, frameId);
+	};
+
 	const removeSavedInputs = async () => {
 		// It'll remove all the data stored inside `chrome.storage.local`
 		chrome.storage.local.set({ [`inputFields-${currentTabId}`]: [] });
 		inputFields = [];
 
 		const flottformModuleFile = chrome.runtime.getURL('scripts/flottform-bundle.js');
-		chrome.scripting.executeScript({
-			target: { tabId: currentTabId! },
-			args: [currentTabId, flottformModuleFile],
-			func: async (currentTabId, flottformModuleFile: string) => {
-				const fm: typeof Flottform = await import(flottformModuleFile);
-				const { ConnectionManager } = fm;
-
-				const connectionManager = ConnectionManager.getInstance();
-				connectionManager.closeAllConnections();
-				console.log(
-					'All connections should be closed Now, connectionManager = ',
-					connectionManager
-				);
+		// Close connections in all frames
+		const frames = await chrome.webNavigation.getAllFrames({ tabId: currentTabId! });
+		const validFrames = (frames ?? []).filter(
+			(f) => f.url && !f.url.startsWith('about:') && !f.url.startsWith('chrome')
+		);
+		for (const frame of validFrames) {
+			try {
+				await chrome.scripting.executeScript({
+					target: { tabId: currentTabId!, frameIds: [frame.frameId] },
+					args: [flottformModuleFile],
+					func: async (flottformModuleFile: string) => {
+						const fm: typeof Flottform = await import(flottformModuleFile);
+						const { ConnectionManager } = fm;
+						const connectionManager = ConnectionManager.getInstance();
+						connectionManager.closeAllConnections();
+					}
+				});
+			} catch (e) {
+				// Frame may not have had any connections
 			}
-		});
+		}
 	};
 
 	const extractInputFieldsFromCurrentPage = async () => {
 		isScanning = true;
 		await removeSavedInputs();
 		console.log('Searching for input fields in page');
-		const injectionResult = await chrome.scripting.executeScript({
-			target: { tabId: currentTabId! },
-			args: [currentTabId],
-			func: async (currentTabId) => {
-				window.___flottform_map ??= new Map<string, HTMLElement>();
-				const inputFields: TrackedInputFields = Array.from(
-					document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLElement>(
-						'input[type="text"],input[type="file"],input[type="password"],textarea,*[contenteditable="true"]'
-					)
-				).map((input, index) => {
-					const ourMap = window.___flottform_map;
-					const inputId = `input-${index}`;
-					ourMap.set(inputId, input);
-					let nearestLabel: HTMLLabelElement | null = input.id
-						? document.querySelector(`label[for="${input.id}"]`)
-						: null;
-					nearestLabel ??= input.closest('label');
 
-					// Priority: label text > aria-label > placeholder > null
-					// Only fall back to technical IDs if nothing human-readable is found
-					let labelText: string | null = nearestLabel?.innerText?.trim() || null;
-					if (!labelText) {
-						if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) {
-							labelText = input.ariaLabel || input.placeholder || null;
-						} else {
-							labelText = input.ariaLabel || null;
-						}
+		// Discover all frames on the page
+		const frames = await chrome.webNavigation.getAllFrames({ tabId: currentTabId! });
+		const validFrames = (frames ?? []).filter(
+			(f) => f.url && !f.url.startsWith('about:') && !f.url.startsWith('chrome')
+		);
+
+		const allInputs: TrackedInputFields = [];
+
+		for (const frame of validFrames) {
+			try {
+				const injectionResult = await chrome.scripting.executeScript({
+					target: { tabId: currentTabId!, frameIds: [frame.frameId] },
+					args: [frame.frameId],
+					func: (frameId) => {
+						window.___flottform_map ??= new Map<string, HTMLElement>();
+						const inputFields = Array.from(
+							document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLElement>(
+								'input[type="text"],input[type="file"],input[type="password"],textarea,*[contenteditable="true"]'
+							)
+						).map((input, index) => {
+							const ourMap = window.___flottform_map;
+							const inputId = `frame-${frameId}-input-${index}`;
+							ourMap.set(inputId, input);
+							let nearestLabel: HTMLLabelElement | null = input.id
+								? document.querySelector(`label[for="${input.id}"]`)
+								: null;
+							nearestLabel ??= input.closest('label');
+
+							let labelText: string | null = nearestLabel?.innerText?.trim() || null;
+							if (!labelText) {
+								if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) {
+									labelText = input.ariaLabel || input.placeholder || null;
+								} else {
+									labelText = input.ariaLabel || null;
+								}
+							}
+
+							const rect = input.getBoundingClientRect();
+							const hasBox = rect.width > 0 && rect.height > 0;
+							const passesVisibilityCheck =
+								typeof input.checkVisibility === 'function'
+									? input.checkVisibility({
+											checkOpacity: true,
+											checkVisibilityCSS: true
+										})
+									: input.offsetParent !== null;
+							const isVisible = hasBox && passesVisibilityCheck;
+
+							return {
+								id: inputId,
+								frameId,
+								type:
+									input instanceof HTMLInputElement
+										? input.type === 'file'
+											? 'file'
+											: 'text'
+										: input instanceof HTMLTextAreaElement
+											? 'textarea'
+											: 'text',
+								label: labelText,
+								connectionState: { event: 'new' },
+								isVisible,
+								screenshot: undefined as string | undefined
+							};
+						});
+						return inputFields;
 					}
-
-					return {
-						id: inputId,
-						type:
-							input instanceof HTMLInputElement
-								? input.type === 'file'
-									? 'file'
-									: 'text'
-								: input instanceof HTMLTextAreaElement
-									? 'textarea'
-									: 'text',
-						label: labelText,
-						connectionState: { event: 'new' }
-					};
 				});
-				// Save the input fields to the chrome storage
-				chrome.storage.local.set({ [`inputFields-${currentTabId}`]: inputFields });
-				return inputFields;
-			}
-		});
-		console.log(`Found ${injectionResult.length} input fields.`);
 
-		const potentialResult = injectionResult[0]?.result;
-		if (!potentialResult) {
-			console.error('Injected Code is did not work properly !');
+				const frameInputs = injectionResult[0]?.result;
+				if (frameInputs && frameInputs.length > 0) {
+					allInputs.push(...frameInputs);
+				}
+			} catch (e) {
+				console.warn(`Failed to scan frame ${frame.frameId} (${frame.url}):`, e);
+			}
+		}
+
+		console.log(`Found ${allInputs.length} input fields across ${validFrames.length} frames.`);
+
+		if (allInputs.length === 0) {
+			inputFields = [];
+			chrome.storage.local.set({ [`inputFields-${currentTabId}`]: [] });
+			isScanning = false;
 			return;
 		}
 
-		// Capture all screenshots before showing fields
+		// Capture all screenshots before showing fields (only for top-level frame for now)
 		const inputsWithScreenshots = [];
-		for (const input of potentialResult) {
-			await chrome.scripting.executeScript({
-				target: { tabId: currentTabId! },
-				args: [input.id],
-				func: (inputId) => {
-					const ourMap = window.___flottform_map;
-					const el = ourMap.get(inputId);
-					el?.scrollIntoView({ block: 'center', behavior: 'instant' });
-				}
-			});
-			await new Promise((r) => setTimeout(r, 500));
+		for (const input of allInputs) {
+			if (input.frameId === 0) {
+				await chrome.scripting.executeScript({
+					target: { tabId: currentTabId!, frameIds: [0] },
+					args: [input.id],
+					func: (inputId) => {
+						const ourMap = window.___flottform_map;
+						const el = ourMap.get(inputId);
+						el?.scrollIntoView({ block: 'center', behavior: 'instant' });
+					}
+				});
+				await new Promise((r) => setTimeout(r, 500));
 
-			let screenshot: string | undefined;
-			try {
-				screenshot = await screenshotInput(input.id);
-			} catch (e) {
-				console.warn(`Screenshot failed for ${input.id}:`, e);
+				let screenshot: string | undefined;
+				try {
+					screenshot = await screenshotInput(input.id);
+				} catch (e) {
+					console.warn(`Screenshot failed for ${input.id}:`, e);
+				}
+				inputsWithScreenshots.push({ ...input, screenshot });
+			} else {
+				// Skip screenshots for iframe fields for now
+				inputsWithScreenshots.push({ ...input, screenshot: undefined });
 			}
-			inputsWithScreenshots.push({ ...input, screenshot });
 		}
 
 		inputFields = inputsWithScreenshots;
@@ -204,11 +276,11 @@
 		}
 		return currentTabId;
 	};
-	const handleGenerateQr = async (inputFieldId: string, inputFieldType: string) => {
-		await startFlottformProcess(inputFieldId, inputFieldType);
+	const handleGenerateQr = async (inputFieldId: string, inputFieldType: string, frameId: number = 0) => {
+		await startFlottformProcess(inputFieldId, inputFieldType, frameId);
 	};
 
-	const startFlottformProcess = async (inputFieldId: string, inputFieldType: string) => {
+	const startFlottformProcess = async (inputFieldId: string, inputFieldType: string, frameId: number = 0) => {
 		// Wait for the current tab Id to be available!
 		const tabId = await getCurrentTabId();
 		//console.log(`**** Starting the process for the TAB-${tabId} ****`);
@@ -216,7 +288,7 @@
 		// Inject the bundled flottform script into the page context
 		const flottformModuleFile = chrome.runtime.getURL('scripts/flottform-bundle.js');
 		chrome.scripting.executeScript({
-			target: { tabId: currentTabId! },
+			target: { tabId: currentTabId!, frameIds: [frameId] },
 			args: [
 				flottformModuleFile,
 				inputFieldId,
@@ -239,10 +311,10 @@
 				const { FlottformTextInputHost, FlottformFileInputHost, ConnectionManager } = fm;
 				const connectionManager = ConnectionManager.getInstance();
 
-				if (inputFieldType === 'text' || inputFieldType === 'password') {
-					startFlottformTextInputProcess(inputFieldId, tabId, inputFieldType);
-				} else {
+				if (inputFieldType === 'file') {
 					startFlottformFileInputProcess(inputFieldId, tabId);
+				} else {
+					startFlottformTextInputProcess(inputFieldId, tabId, inputFieldType);
 				}
 
 				function handleFlottformEvent(event: string, data: any, id: string, currentTabId: number) {
@@ -432,38 +504,19 @@
 					});
 
 					flottformFileInputHost.on('done', () => {
-						//console.log('****Inside "done" event*****');
 						handleFlottformEvent('done', undefined, fileInputId, currentTabId);
-						// TODO: HANDLE THE DONE PROCESS
 						const ourMap = window.___flottform_map;
 						const targetFileInput: HTMLInputElement = ourMap.get(fileInputId);
 						targetFileInput.dispatchEvent(new Event('change', { bubbles: true }));
-						targetFileInput.dispatchEvent(new Event('input', { bubbles: true }));
 					});
 				}
 			}
 		});
 	};
 
-	const clearOutdatedTables = async () => {
-		// Wait for the current tab Id to be available!
-		const currentTabId = await getCurrentTabId();
-
+	const createHoverStartHighlightInputField = (inputId: string, frameId: number = 0) => () => {
 		chrome.scripting.executeScript({
-			target: { tabId: currentTabId! },
-			args: [currentTabId],
-			func: async (currentTabId) => {
-				// We have to find a way to add this listener only once & we have to handle single page applications since beforeunload doesn't work for those SPAs!
-				window.addEventListener('beforeunload', () => {
-					chrome.storage.local.set({ [`inputFields-${currentTabId}`]: [] });
-				});
-			}
-		});
-	};
-
-	const createHoverStartHighlightInputField = (inputId: string) => () => {
-		chrome.scripting.executeScript({
-			target: { tabId: currentTabId! },
+			target: { tabId: currentTabId!, frameIds: [frameId] },
 			args: [inputId],
 			func: (inputId) => {
 				const ourMap = window.___flottform_map;
@@ -485,9 +538,9 @@
 		});
 	};
 
-	const createHoverEndHighlightInputField = (inputId: string) => () => {
+	const createHoverEndHighlightInputField = (inputId: string, frameId: number = 0) => () => {
 		chrome.scripting.executeScript({
-			target: { tabId: currentTabId! },
+			target: { tabId: currentTabId!, frameIds: [frameId] },
 			args: [inputId],
 			func: (inputId) => {
 				const ourMap = window.___flottform_map;
@@ -535,10 +588,10 @@
 		});
 	};
 
-	const screenshotInput = async (inputId: string) => {
+	const screenshotInput = async (inputId: string, frameId: number = 0) => {
 		// 1. Get element position from the page
 		const [result] = await chrome.scripting.executeScript({
-			target: { tabId: currentTabId! },
+			target: { tabId: currentTabId!, frameIds: [frameId] },
 			args: [inputId],
 			func: (inputId) => {
 				const ourMap = window.___flottform_map;
@@ -661,8 +714,6 @@
 				extractInputFieldsFromCurrentPage();
 			}
 		});
-
-		clearOutdatedTables();
 	});
 </script>
 
@@ -744,8 +795,8 @@
 				{@const statusDot = getStatusDot(input.connectionState.event)}
 				<li
 					class="flex flex-col bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md hover:border-primary-blue/30 transition-all duration-200"
-					onpointerenter={createHoverStartHighlightInputField(input.id)}
-					onpointerleave={createHoverEndHighlightInputField(input.id)}
+					onpointerenter={createHoverStartHighlightInputField(input.id, input.frameId)}
+					onpointerleave={createHoverEndHighlightInputField(input.id, input.frameId)}
 				>
 					<!-- Clickable header row -->
 					<button
@@ -790,7 +841,14 @@
 							</svg>
 						{/if}
 						<span class="text-sm font-bold truncate flex-1">{displayName}</span>
-						{#if !input.screenshot}
+						{#if input.frameId !== 0}
+							<span
+								class="shrink-0 px-1.5 py-0.5 text-[10px] rounded bg-blue-50 text-blue-400 cursor-help"
+								title="This field is inside an embedded frame (iframe) on the page."
+								>Embedded</span
+							>
+						{/if}
+						{#if !input.isVisible}
 							<span
 								class="shrink-0 px-1.5 py-0.5 text-[10px] rounded bg-gray-100 text-gray-400 cursor-help"
 								title="This field is part of the page but not visible on screen. It may appear after you interact with the page (e.g., click a button or open a menu)."
@@ -831,7 +889,7 @@
 							<!-- State-dependent content -->
 							{#if input.connectionState.event === 'new'}
 								<button
-									onclick={() => handleGenerateQr(input.id, input.type)}
+									onclick={() => handleGenerateQr(input.id, input.type, input.frameId)}
 									class="w-full px-3 py-2 rounded-lg bg-primary-blue text-white text-xs font-semibold hover:opacity-90 transition-opacity duration-200 shadow-sm flex items-center justify-center gap-1.5"
 								>
 									<svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
@@ -862,6 +920,15 @@
 											{copiedInputId === input.id ? 'Copied!' : 'Copy link'}
 										</button>
 									</div>
+									<button
+										onclick={() => regenerateQr(input.id, input.type, input.frameId)}
+										class="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-gray-500 text-xs font-medium hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center gap-1.5"
+									>
+										<svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+											<path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.201 2.466l-.312-.311h2.451a.75.75 0 000-1.5H4.5a.75.75 0 00-.75.75v3.75a.75.75 0 001.5 0v-2.033a7 7 0 0011.712-3.138.75.75 0 00-1.449-.389zm-10.624-3.85a5.5 5.5 0 019.201-2.465l.312.31H11.75a.75.75 0 000 1.5h3.75a.75.75 0 00.75-.75V2.42a.75.75 0 00-1.5 0v2.033A7 7 0 003.038 7.588a.75.75 0 001.449.389z" clip-rule="evenodd" />
+										</svg>
+										New QR code
+									</button>
 								</div>
 							{:else if input.connectionState.event === 'connected'}
 								<div class="flex items-center gap-2 text-primary-green">
@@ -904,6 +971,15 @@
 									</svg>
 									<p class="text-xs font-semibold">Transfer complete</p>
 								</div>
+								<button
+									onclick={() => regenerateQr(input.id, input.type, input.frameId)}
+									class="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-gray-500 text-xs font-medium hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center gap-1.5"
+								>
+									<svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+										<path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.201 2.466l-.312-.311h2.451a.75.75 0 000-1.5H4.5a.75.75 0 00-.75.75v3.75a.75.75 0 001.5 0v-2.033a7 7 0 0011.712-3.138.75.75 0 00-1.449-.389zm-10.624-3.85a5.5 5.5 0 019.201-2.465l.312.31H11.75a.75.75 0 000 1.5h3.75a.75.75 0 00.75-.75V2.42a.75.75 0 00-1.5 0v2.033A7 7 0 003.038 7.588a.75.75 0 001.449.389z" clip-rule="evenodd" />
+									</svg>
+									Send again
+								</button>
 							{:else if input.connectionState.event === 'error'}
 								<div class="bg-red-50 border border-red-200 rounded-md p-2">
 									<p class="text-xs text-red-600 font-medium">
@@ -911,6 +987,15 @@
 											JSON.stringify(input.connectionState.data)}
 									</p>
 								</div>
+								<button
+									onclick={() => regenerateQr(input.id, input.type, input.frameId)}
+									class="w-full px-3 py-1.5 rounded-lg border border-red-200 text-red-600 text-xs font-medium hover:bg-red-50 transition-colors duration-200 flex items-center justify-center gap-1.5"
+								>
+									<svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+										<path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.201 2.466l-.312-.311h2.451a.75.75 0 000-1.5H4.5a.75.75 0 00-.75.75v3.75a.75.75 0 001.5 0v-2.033a7 7 0 0011.712-3.138.75.75 0 00-1.449-.389zm-10.624-3.85a5.5 5.5 0 019.201-2.465l.312.31H11.75a.75.75 0 000 1.5h3.75a.75.75 0 00.75-.75V2.42a.75.75 0 00-1.5 0v2.033A7 7 0 003.038 7.588a.75.75 0 001.449.389z" clip-rule="evenodd" />
+									</svg>
+									Try again
+								</button>
 							{/if}
 						</div>
 					{/if}
