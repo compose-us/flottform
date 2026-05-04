@@ -1,4 +1,6 @@
 let allowAllOrigins = false;
+// Currently a no-op: /ice-server-credentials no longer reads this flag.
+// Kept for the admin /server-control UI and for future per-license TURN gating.
 let useTurnServer = false;
 
 export function getAllowAllOrigins() {

@@ -1,10 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import {
-		defaultTurnServerMeteredEndpointValue,
-		defaultSignalingServerUrlBase,
-		defaultExtensionClientUrlBase
-	} from '$lib/options';
+	import { defaultSignalingServerUrlBase, defaultExtensionClientUrlBase } from '$lib/options';
 	import type * as Flottform from '@flottform/forms';
 	import flottform from './flottform-logo.svg';
 
@@ -87,7 +83,11 @@
 		}, 2000);
 	};
 
-	const regenerateQr = async (inputFieldId: string, inputFieldType: string, frameId: number = 0) => {
+	const regenerateQr = async (
+		inputFieldId: string,
+		inputFieldType: string,
+		frameId: number = 0
+	) => {
 		const flottformModuleFile = chrome.runtime.getURL('scripts/flottform-bundle.js');
 		try {
 			await chrome.scripting.executeScript({
@@ -276,14 +276,21 @@
 		}
 		return currentTabId;
 	};
-	const handleGenerateQr = async (inputFieldId: string, inputFieldType: string, frameId: number = 0) => {
+	const handleGenerateQr = async (
+		inputFieldId: string,
+		inputFieldType: string,
+		frameId: number = 0
+	) => {
 		await startFlottformProcess(inputFieldId, inputFieldType, frameId);
 	};
 
-	const startFlottformProcess = async (inputFieldId: string, inputFieldType: string, frameId: number = 0) => {
+	const startFlottformProcess = async (
+		inputFieldId: string,
+		inputFieldType: string,
+		frameId: number = 0
+	) => {
 		// Wait for the current tab Id to be available!
 		const tabId = await getCurrentTabId();
-		//console.log(`**** Starting the process for the TAB-${tabId} ****`);
 
 		// Inject the bundled flottform script into the page context
 		const flottformModuleFile = chrome.runtime.getURL('scripts/flottform-bundle.js');
@@ -416,7 +423,8 @@
 					let flottformTextInputHost = new FlottformTextInputHost({
 						createClientUrl: async ({ endpointId }: { endpointId: string }) =>
 							`${extensionClientUrlBase}/${endpointId}/#${encodeURIComponent(JSON.stringify(data))}`,
-						flottformApi: signalingServerUrlBase
+						flottformApi: signalingServerUrlBase,
+						rtcConfiguration
 					});
 
 					flottformTextInputHost.start();
@@ -449,7 +457,8 @@
 						createClientUrl: async ({ endpointId }: { endpointId: string }) =>
 							`${extensionClientUrlBase}/${endpointId}/#${encodeURIComponent(JSON.stringify(data))}`,
 						flottformApi: signalingServerUrlBase,
-						inputField: targetedInputField
+						inputField: targetedInputField,
+						rtcConfiguration
 					});
 
 					flottformFileInputHost.start();
@@ -514,52 +523,59 @@
 		});
 	};
 
-	const createHoverStartHighlightInputField = (inputId: string, frameId: number = 0) => () => {
-		chrome.scripting.executeScript({
-			target: { tabId: currentTabId!, frameIds: [frameId] },
-			args: [inputId],
-			func: (inputId) => {
-				const ourMap = window.___flottform_map;
-				const input: HTMLElement | undefined = ourMap.get(inputId);
-				if (!input) {
-					console.warn('could not find target!', inputId);
-					return;
+	const createHoverStartHighlightInputField =
+		(inputId: string, frameId: number = 0) =>
+		() => {
+			chrome.scripting.executeScript({
+				target: { tabId: currentTabId!, frameIds: [frameId] },
+				args: [inputId],
+				func: (inputId) => {
+					const ourMap = window.___flottform_map;
+					const input: HTMLElement | undefined = ourMap.get(inputId);
+					if (!input) {
+						console.warn('could not find target!', inputId);
+						return;
+					}
+					const styleToAppend =
+						';outline:6px solid rgba(255, 0, 0, 0.4);animation:flottform-pulse 1s ease-in-out infinite;';
+					// Inject keyframes if not already present
+					if (!document.getElementById('flottform-highlight-style')) {
+						const style = document.createElement('style');
+						style.id = 'flottform-highlight-style';
+						style.textContent =
+							'@keyframes flottform-pulse { 0%, 100% { outline-color: rgba(255, 0, 0, 0.4); } 50% { outline-color: rgba(255, 0, 0, 0.15); } }';
+						document.head.appendChild(style);
+					}
+					input.setAttribute('style', `${input.getAttribute('style') ?? ''}${styleToAppend}`);
 				}
-				const styleToAppend = ';outline:6px solid rgba(255, 0, 0, 0.4);animation:flottform-pulse 1s ease-in-out infinite;';
-				// Inject keyframes if not already present
-				if (!document.getElementById('flottform-highlight-style')) {
-					const style = document.createElement('style');
-					style.id = 'flottform-highlight-style';
-					style.textContent = '@keyframes flottform-pulse { 0%, 100% { outline-color: rgba(255, 0, 0, 0.4); } 50% { outline-color: rgba(255, 0, 0, 0.15); } }';
-					document.head.appendChild(style);
-				}
-				input.setAttribute('style', `${input.getAttribute('style') ?? ''}${styleToAppend}`);
-			}
-		});
-	};
+			});
+		};
 
-	const createHoverEndHighlightInputField = (inputId: string, frameId: number = 0) => () => {
-		chrome.scripting.executeScript({
-			target: { tabId: currentTabId!, frameIds: [frameId] },
-			args: [inputId],
-			func: (inputId) => {
-				const ourMap = window.___flottform_map;
-				const input: HTMLElement | undefined = ourMap.get(inputId);
-				if (!input) {
-					console.warn('could not find target!', inputId);
-					return;
+	const createHoverEndHighlightInputField =
+		(inputId: string, frameId: number = 0) =>
+		() => {
+			chrome.scripting.executeScript({
+				target: { tabId: currentTabId!, frameIds: [frameId] },
+				args: [inputId],
+				func: (inputId) => {
+					const ourMap = window.___flottform_map;
+					const input: HTMLElement | undefined = ourMap.get(inputId);
+					if (!input) {
+						console.warn('could not find target!', inputId);
+						return;
+					}
+					const styleToAppend =
+						';outline:6px solid rgba(255, 0, 0, 0.4);animation:flottform-pulse 1s ease-in-out infinite;';
+					const currentStyle = input.getAttribute('style');
+					if (currentStyle) {
+						const styleWithoutAppend = currentStyle.endsWith(styleToAppend)
+							? currentStyle.slice(0, -styleToAppend.length)
+							: currentStyle;
+						input.setAttribute('style', styleWithoutAppend);
+					}
 				}
-				const styleToAppend = ';outline:6px solid rgba(255, 0, 0, 0.4);animation:flottform-pulse 1s ease-in-out infinite;';
-				const currentStyle = input.getAttribute('style');
-				if (currentStyle) {
-					const styleWithoutAppend = currentStyle.endsWith(styleToAppend)
-						? currentStyle.slice(0, -styleToAppend.length)
-						: currentStyle;
-					input.setAttribute('style', styleWithoutAppend);
-				}
-			}
-		});
-	};
+			});
+		};
 
 	const cropScreenshot = (
 		dataUrl: string,
@@ -647,7 +663,8 @@
 			'FLOTTFORM_SIGNALING_SERVER_URL_BASE',
 			'FLOTTFORM_EXTENSION_CLIENTS_URL_BASE',
 			'FLOTTFORM_ACTIVE_FILTERS',
-			'FLOTTFORM_EXPANDED_FIELDS'
+			'FLOTTFORM_EXPANDED_FIELDS',
+			'FLOTTFORM_USE_TURN_SERVER'
 		]);
 
 		if (data.FLOTTFORM_ACTIVE_FILTERS && Array.isArray(data.FLOTTFORM_ACTIVE_FILTERS)) {
@@ -656,42 +673,46 @@
 		if (data.FLOTTFORM_EXPANDED_FIELDS && Array.isArray(data.FLOTTFORM_EXPANDED_FIELDS)) {
 			expandedFields = new Set(data.FLOTTFORM_EXPANDED_FIELDS);
 		}
-		let turnServerMeteredEndpointValue: string =
-			data.FLOTTFORM_TURN_SERVER_METERED_ENDPOINT ?? defaultTurnServerMeteredEndpointValue;
-
-		if (turnServerMeteredEndpointValue === '') {
-			rtcConfiguration = {
-				iceServers: [
-					{
-						urls: ['stun:stun1.l.google.com:19302']
-					}
-				]
-			};
-		} else {
-			try {
-				// Get TURN/STUN credentials from metered.ca
-				const response = await fetch(turnServerMeteredEndpointValue);
-				if (!response.ok) {
-					throw new Error(`Network Response not ok, status: ${response.status}`);
-				}
-				// Saving the response in the iceServers array
-				const iceServers = await response.json();
-
-				rtcConfiguration = { iceServers };
-			} catch (error) {
-				console.error(error);
-			}
-		}
-
 		signalingServerUrlBase =
 			data.FLOTTFORM_SIGNALING_SERVER_URL_BASE ?? defaultSignalingServerUrlBase;
 		extensionClientUrlBase =
 			data.FLOTTFORM_EXTENSION_CLIENTS_URL_BASE ?? defaultExtensionClientUrlBase;
-		console.log({
-			rtcConfiguration,
-			signalingServerUrlBase,
-			extensionClientUrlBase
-		});
+
+		const customTurnEndpoint: string = data.FLOTTFORM_TURN_SERVER_METERED_ENDPOINT ?? '';
+		const useTurnServer: boolean = data.FLOTTFORM_USE_TURN_SERVER ?? true;
+
+		try {
+			if (customTurnEndpoint) {
+				const response = await fetch(customTurnEndpoint);
+				if (!response.ok) {
+					throw new Error(`Network Response not ok, status: ${response.status}`);
+				}
+				const iceServers = await response.json();
+				rtcConfiguration = { iceServers };
+			} else if (useTurnServer) {
+				const response = await fetch(`${signalingServerUrlBase}/ice-server-credentials/extension`, {
+					headers: {
+						Authorization: `Bearer ${import.meta.env.VITE_FLOTTFORM_API_TOKEN ?? ''}`
+					}
+				});
+				if (!response.ok) {
+					throw new Error(`Network Response not ok, status: ${response.status}`);
+				}
+				const iceData = await response.json();
+				if (iceData.success === false) {
+					throw new Error(iceData.message || 'Failed to fetch ICE server credentials');
+				}
+				rtcConfiguration = { iceServers: iceData.iceServers };
+			} else {
+				rtcConfiguration = {
+					iceServers: [{ urls: ['stun:stun1.l.google.com:19302'] }]
+				};
+			}
+		} catch {
+			rtcConfiguration = {
+				iceServers: [{ urls: ['stun:stun1.l.google.com:19302'] }]
+			};
+		}
 
 		let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 		currentTabId = tab.id;
@@ -774,15 +795,22 @@
 			<span class="text-[11px] text-gray-400">Filter:</span>
 			{#each filterOptions as filter}
 				{@const isLastActive = activeFilters.has(filter.value) && activeFilters.size === 1}
-				<label class="flex items-center gap-1 select-none {isLastActive ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}">
+				<label
+					class="flex items-center gap-1 select-none {isLastActive
+						? 'cursor-not-allowed opacity-50'
+						: 'cursor-pointer'}"
+				>
 					<input
 						type="checkbox"
 						checked={activeFilters.has(filter.value)}
 						disabled={isLastActive}
 						onchange={() => toggleFilter(filter.value)}
-						class="h-3.5 w-3.5 rounded border-gray-300 text-primary-blue accent-primary-blue {isLastActive ? 'cursor-not-allowed' : 'cursor-pointer'}"
+						class="h-3.5 w-3.5 rounded border-gray-300 text-primary-blue accent-primary-blue {isLastActive
+							? 'cursor-not-allowed'
+							: 'cursor-pointer'}"
 					/>
-					<span class="text-[11px] text-gray-600">{filter.label} ({countByType(filter.value)})</span>
+					<span class="text-[11px] text-gray-600">{filter.label} ({countByType(filter.value)})</span
+					>
 				</label>
 			{/each}
 		</div>
@@ -844,8 +872,7 @@
 						{#if input.frameId !== 0}
 							<span
 								class="shrink-0 px-1.5 py-0.5 text-[10px] rounded bg-blue-50 text-blue-400 cursor-help"
-								title="This field is inside an embedded frame (iframe) on the page."
-								>Embedded</span
+								title="This field is inside an embedded frame (iframe) on the page.">Embedded</span
 							>
 						{/if}
 						{#if !input.isVisible}
@@ -925,7 +952,11 @@
 										class="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-gray-500 text-xs font-medium hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center gap-1.5"
 									>
 										<svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-											<path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.201 2.466l-.312-.311h2.451a.75.75 0 000-1.5H4.5a.75.75 0 00-.75.75v3.75a.75.75 0 001.5 0v-2.033a7 7 0 0011.712-3.138.75.75 0 00-1.449-.389zm-10.624-3.85a5.5 5.5 0 019.201-2.465l.312.31H11.75a.75.75 0 000 1.5h3.75a.75.75 0 00.75-.75V2.42a.75.75 0 00-1.5 0v2.033A7 7 0 003.038 7.588a.75.75 0 001.449.389z" clip-rule="evenodd" />
+											<path
+												fill-rule="evenodd"
+												d="M15.312 11.424a5.5 5.5 0 01-9.201 2.466l-.312-.311h2.451a.75.75 0 000-1.5H4.5a.75.75 0 00-.75.75v3.75a.75.75 0 001.5 0v-2.033a7 7 0 0011.712-3.138.75.75 0 00-1.449-.389zm-10.624-3.85a5.5 5.5 0 019.201-2.465l.312.31H11.75a.75.75 0 000 1.5h3.75a.75.75 0 00.75-.75V2.42a.75.75 0 00-1.5 0v2.033A7 7 0 003.038 7.588a.75.75 0 001.449.389z"
+												clip-rule="evenodd"
+											/>
 										</svg>
 										New QR code
 									</button>
@@ -976,7 +1007,11 @@
 									class="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-gray-500 text-xs font-medium hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center gap-1.5"
 								>
 									<svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-										<path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.201 2.466l-.312-.311h2.451a.75.75 0 000-1.5H4.5a.75.75 0 00-.75.75v3.75a.75.75 0 001.5 0v-2.033a7 7 0 0011.712-3.138.75.75 0 00-1.449-.389zm-10.624-3.85a5.5 5.5 0 019.201-2.465l.312.31H11.75a.75.75 0 000 1.5h3.75a.75.75 0 00.75-.75V2.42a.75.75 0 00-1.5 0v2.033A7 7 0 003.038 7.588a.75.75 0 001.449.389z" clip-rule="evenodd" />
+										<path
+											fill-rule="evenodd"
+											d="M15.312 11.424a5.5 5.5 0 01-9.201 2.466l-.312-.311h2.451a.75.75 0 000-1.5H4.5a.75.75 0 00-.75.75v3.75a.75.75 0 001.5 0v-2.033a7 7 0 0011.712-3.138.75.75 0 00-1.449-.389zm-10.624-3.85a5.5 5.5 0 019.201-2.465l.312.31H11.75a.75.75 0 000 1.5h3.75a.75.75 0 00.75-.75V2.42a.75.75 0 00-1.5 0v2.033A7 7 0 003.038 7.588a.75.75 0 001.449.389z"
+											clip-rule="evenodd"
+										/>
 									</svg>
 									Send again
 								</button>
@@ -992,7 +1027,11 @@
 									class="w-full px-3 py-1.5 rounded-lg border border-red-200 text-red-600 text-xs font-medium hover:bg-red-50 transition-colors duration-200 flex items-center justify-center gap-1.5"
 								>
 									<svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-										<path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.201 2.466l-.312-.311h2.451a.75.75 0 000-1.5H4.5a.75.75 0 00-.75.75v3.75a.75.75 0 001.5 0v-2.033a7 7 0 0011.712-3.138.75.75 0 00-1.449-.389zm-10.624-3.85a5.5 5.5 0 019.201-2.465l.312.31H11.75a.75.75 0 000 1.5h3.75a.75.75 0 00.75-.75V2.42a.75.75 0 00-1.5 0v2.033A7 7 0 003.038 7.588a.75.75 0 001.449.389z" clip-rule="evenodd" />
+										<path
+											fill-rule="evenodd"
+											d="M15.312 11.424a5.5 5.5 0 01-9.201 2.466l-.312-.311h2.451a.75.75 0 000-1.5H4.5a.75.75 0 00-.75.75v3.75a.75.75 0 001.5 0v-2.033a7 7 0 0011.712-3.138.75.75 0 00-1.449-.389zm-10.624-3.85a5.5 5.5 0 019.201-2.465l.312.31H11.75a.75.75 0 000 1.5h3.75a.75.75 0 00.75-.75V2.42a.75.75 0 00-1.5 0v2.033A7 7 0 003.038 7.588a.75.75 0 001.449.389z"
+											clip-rule="evenodd"
+										/>
 									</svg>
 									Try again
 								</button>

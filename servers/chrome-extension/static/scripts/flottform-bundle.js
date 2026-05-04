@@ -1,6 +1,6 @@
 var gt = Object.defineProperty;
-var pt = (o, r, t) => r in o ? gt(o, r, { enumerable: !0, configurable: !0, writable: !0, value: t }) : o[r] = t;
-var u = (o, r, t) => pt(o, typeof r != "symbol" ? r + "" : r, t);
+var pt = (r, o, t) => o in r ? gt(r, o, { enumerable: !0, configurable: !0, writable: !0, value: t }) : r[o] = t;
+var u = (r, o, t) => pt(r, typeof o != "symbol" ? o + "" : o, t);
 const q = class q {
   constructor() {
     u(this, "activeConnections");
@@ -9,19 +9,19 @@ const q = class q {
   static getInstance() {
     return q.instance || (q.instance = new q()), q.instance;
   }
-  addConnection(r, t) {
-    this.activeConnections.set(r, t);
+  addConnection(o, t) {
+    this.activeConnections.set(o, t);
   }
-  getConnection(r) {
-    return this.activeConnections.get(r);
+  getConnection(o) {
+    return this.activeConnections.get(o);
   }
   closeAllConnections() {
-    this.activeConnections.forEach((r) => {
-      r.close();
+    this.activeConnections.forEach((o) => {
+      o.close();
     });
   }
-  removeConnection(r) {
-    this.activeConnections.delete(r);
+  removeConnection(o) {
+    this.activeConnections.delete(o);
   }
 };
 u(q, "instance");
@@ -36,8 +36,8 @@ var ee = {}, U = {}, ve;
 function z() {
   if (ve) return U;
   ve = 1;
-  let o;
-  const r = [
+  let r;
+  const o = [
     0,
     // Not used
     26,
@@ -86,7 +86,7 @@ function z() {
     if (e < 1 || e > 40) throw new Error('"version" should be in range from 1 to 40');
     return e * 4 + 17;
   }, U.getSymbolTotalCodewords = function(e) {
-    return r[e];
+    return o[e];
   }, U.getBCHDigit = function(t) {
     let e = 0;
     for (; t !== 0; )
@@ -95,44 +95,44 @@ function z() {
   }, U.setToSJISFunction = function(e) {
     if (typeof e != "function")
       throw new Error('"toSJISFunc" is not a valid function.');
-    o = e;
+    r = e;
   }, U.isKanjiModeEnabled = function() {
-    return typeof o < "u";
+    return typeof r < "u";
   }, U.toSJIS = function(e) {
-    return o(e);
+    return r(e);
   }, U;
 }
 var te = {}, Le;
 function Ee() {
-  return Le || (Le = 1, function(o) {
-    o.L = { bit: 1 }, o.M = { bit: 0 }, o.Q = { bit: 3 }, o.H = { bit: 2 };
-    function r(t) {
+  return Le || (Le = 1, function(r) {
+    r.L = { bit: 1 }, r.M = { bit: 0 }, r.Q = { bit: 3 }, r.H = { bit: 2 };
+    function o(t) {
       if (typeof t != "string")
         throw new Error("Param is not a string");
       switch (t.toLowerCase()) {
         case "l":
         case "low":
-          return o.L;
+          return r.L;
         case "m":
         case "medium":
-          return o.M;
+          return r.M;
         case "q":
         case "quartile":
-          return o.Q;
+          return r.Q;
         case "h":
         case "high":
-          return o.H;
+          return r.H;
         default:
           throw new Error("Unknown EC Level: " + t);
       }
     }
-    o.isValid = function(e) {
+    r.isValid = function(e) {
       return e && typeof e.bit < "u" && e.bit >= 0 && e.bit < 4;
-    }, o.from = function(e, n) {
-      if (o.isValid(e))
+    }, r.from = function(e, n) {
+      if (r.isValid(e))
         return e;
       try {
-        return r(e);
+        return o(e);
       } catch {
         return n;
       }
@@ -143,59 +143,59 @@ var ne, Me;
 function Ct() {
   if (Me) return ne;
   Me = 1;
-  function o() {
+  function r() {
     this.buffer = [], this.length = 0;
   }
-  return o.prototype = {
-    get: function(r) {
-      const t = Math.floor(r / 8);
-      return (this.buffer[t] >>> 7 - r % 8 & 1) === 1;
+  return r.prototype = {
+    get: function(o) {
+      const t = Math.floor(o / 8);
+      return (this.buffer[t] >>> 7 - o % 8 & 1) === 1;
     },
-    put: function(r, t) {
+    put: function(o, t) {
       for (let e = 0; e < t; e++)
-        this.putBit((r >>> t - e - 1 & 1) === 1);
+        this.putBit((o >>> t - e - 1 & 1) === 1);
     },
     getLengthInBits: function() {
       return this.length;
     },
-    putBit: function(r) {
+    putBit: function(o) {
       const t = Math.floor(this.length / 8);
-      this.buffer.length <= t && this.buffer.push(0), r && (this.buffer[t] |= 128 >>> this.length % 8), this.length++;
+      this.buffer.length <= t && this.buffer.push(0), o && (this.buffer[t] |= 128 >>> this.length % 8), this.length++;
     }
-  }, ne = o, ne;
+  }, ne = r, ne;
 }
 var ie, Re;
 function wt() {
   if (Re) return ie;
   Re = 1;
-  function o(r) {
-    if (!r || r < 1)
+  function r(o) {
+    if (!o || o < 1)
       throw new Error("BitMatrix size must be defined and greater than 0");
-    this.size = r, this.data = new Uint8Array(r * r), this.reservedBit = new Uint8Array(r * r);
+    this.size = o, this.data = new Uint8Array(o * o), this.reservedBit = new Uint8Array(o * o);
   }
-  return o.prototype.set = function(r, t, e, n) {
-    const i = r * this.size + t;
+  return r.prototype.set = function(o, t, e, n) {
+    const i = o * this.size + t;
     this.data[i] = e, n && (this.reservedBit[i] = !0);
-  }, o.prototype.get = function(r, t) {
-    return this.data[r * this.size + t];
-  }, o.prototype.xor = function(r, t, e) {
-    this.data[r * this.size + t] ^= e;
-  }, o.prototype.isReserved = function(r, t) {
-    return this.reservedBit[r * this.size + t];
-  }, ie = o, ie;
+  }, r.prototype.get = function(o, t) {
+    return this.data[o * this.size + t];
+  }, r.prototype.xor = function(o, t, e) {
+    this.data[o * this.size + t] ^= e;
+  }, r.prototype.isReserved = function(o, t) {
+    return this.reservedBit[o * this.size + t];
+  }, ie = r, ie;
 }
 var oe = {}, Ne;
 function yt() {
-  return Ne || (Ne = 1, function(o) {
-    const r = z().getSymbolSize;
-    o.getRowColCoords = function(e) {
+  return Ne || (Ne = 1, function(r) {
+    const o = z().getSymbolSize;
+    r.getRowColCoords = function(e) {
       if (e === 1) return [];
-      const n = Math.floor(e / 7) + 2, i = r(e), s = i === 145 ? 26 : Math.ceil((i - 13) / (2 * n - 2)) * 2, a = [i - 7];
+      const n = Math.floor(e / 7) + 2, i = o(e), s = i === 145 ? 26 : Math.ceil((i - 13) / (2 * n - 2)) * 2, a = [i - 7];
       for (let c = 1; c < n - 1; c++)
         a[c] = a[c - 1] - s;
       return a.push(6), a.reverse();
-    }, o.getPositions = function(e) {
-      const n = [], i = o.getRowColCoords(e), s = i.length;
+    }, r.getPositions = function(e) {
+      const n = [], i = r.getRowColCoords(e), s = i.length;
       for (let a = 0; a < s; a++)
         for (let c = 0; c < s; c++)
           a === 0 && c === 0 || // top-left
@@ -209,23 +209,23 @@ var re = {}, De;
 function bt() {
   if (De) return re;
   De = 1;
-  const o = z().getSymbolSize, r = 7;
+  const r = z().getSymbolSize, o = 7;
   return re.getPositions = function(e) {
-    const n = o(e);
+    const n = r(e);
     return [
       // top-left
       [0, 0],
       // top-right
-      [n - r, 0],
+      [n - o, 0],
       // bottom-left
-      [0, n - r]
+      [0, n - o]
     ];
   }, re;
 }
 var se = {}, ke;
 function St() {
-  return ke || (ke = 1, function(o) {
-    o.Patterns = {
+  return ke || (ke = 1, function(r) {
+    r.Patterns = {
       PATTERN000: 0,
       PATTERN001: 1,
       PATTERN010: 2,
@@ -235,29 +235,29 @@ function St() {
       PATTERN110: 6,
       PATTERN111: 7
     };
-    const r = {
+    const o = {
       N1: 3,
       N2: 3,
       N3: 40,
       N4: 10
     };
-    o.isValid = function(n) {
+    r.isValid = function(n) {
       return n != null && n !== "" && !isNaN(n) && n >= 0 && n <= 7;
-    }, o.from = function(n) {
-      return o.isValid(n) ? parseInt(n, 10) : void 0;
-    }, o.getPenaltyN1 = function(n) {
+    }, r.from = function(n) {
+      return r.isValid(n) ? parseInt(n, 10) : void 0;
+    }, r.getPenaltyN1 = function(n) {
       const i = n.size;
       let s = 0, a = 0, c = 0, l = null, h = null;
       for (let f = 0; f < i; f++) {
         a = c = 0, l = h = null;
         for (let g = 0; g < i; g++) {
           let d = n.get(f, g);
-          d === l ? a++ : (a >= 5 && (s += r.N1 + (a - 5)), l = d, a = 1), d = n.get(g, f), d === h ? c++ : (c >= 5 && (s += r.N1 + (c - 5)), h = d, c = 1);
+          d === l ? a++ : (a >= 5 && (s += o.N1 + (a - 5)), l = d, a = 1), d = n.get(g, f), d === h ? c++ : (c >= 5 && (s += o.N1 + (c - 5)), h = d, c = 1);
         }
-        a >= 5 && (s += r.N1 + (a - 5)), c >= 5 && (s += r.N1 + (c - 5));
+        a >= 5 && (s += o.N1 + (a - 5)), c >= 5 && (s += o.N1 + (c - 5));
       }
       return s;
-    }, o.getPenaltyN2 = function(n) {
+    }, r.getPenaltyN2 = function(n) {
       const i = n.size;
       let s = 0;
       for (let a = 0; a < i - 1; a++)
@@ -265,8 +265,8 @@ function St() {
           const l = n.get(a, c) + n.get(a, c + 1) + n.get(a + 1, c) + n.get(a + 1, c + 1);
           (l === 4 || l === 0) && s++;
         }
-      return s * r.N2;
-    }, o.getPenaltyN3 = function(n) {
+      return s * o.N2;
+    }, r.getPenaltyN3 = function(n) {
       const i = n.size;
       let s = 0, a = 0, c = 0;
       for (let l = 0; l < i; l++) {
@@ -274,47 +274,47 @@ function St() {
         for (let h = 0; h < i; h++)
           a = a << 1 & 2047 | n.get(l, h), h >= 10 && (a === 1488 || a === 93) && s++, c = c << 1 & 2047 | n.get(h, l), h >= 10 && (c === 1488 || c === 93) && s++;
       }
-      return s * r.N3;
-    }, o.getPenaltyN4 = function(n) {
+      return s * o.N3;
+    }, r.getPenaltyN4 = function(n) {
       let i = 0;
       const s = n.data.length;
       for (let c = 0; c < s; c++) i += n.data[c];
-      return Math.abs(Math.ceil(i * 100 / s / 5) - 10) * r.N4;
+      return Math.abs(Math.ceil(i * 100 / s / 5) - 10) * o.N4;
     };
     function t(e, n, i) {
       switch (e) {
-        case o.Patterns.PATTERN000:
+        case r.Patterns.PATTERN000:
           return (n + i) % 2 === 0;
-        case o.Patterns.PATTERN001:
+        case r.Patterns.PATTERN001:
           return n % 2 === 0;
-        case o.Patterns.PATTERN010:
+        case r.Patterns.PATTERN010:
           return i % 3 === 0;
-        case o.Patterns.PATTERN011:
+        case r.Patterns.PATTERN011:
           return (n + i) % 3 === 0;
-        case o.Patterns.PATTERN100:
+        case r.Patterns.PATTERN100:
           return (Math.floor(n / 2) + Math.floor(i / 3)) % 2 === 0;
-        case o.Patterns.PATTERN101:
+        case r.Patterns.PATTERN101:
           return n * i % 2 + n * i % 3 === 0;
-        case o.Patterns.PATTERN110:
+        case r.Patterns.PATTERN110:
           return (n * i % 2 + n * i % 3) % 2 === 0;
-        case o.Patterns.PATTERN111:
+        case r.Patterns.PATTERN111:
           return (n * i % 3 + (n + i) % 2) % 2 === 0;
         default:
           throw new Error("bad maskPattern:" + e);
       }
     }
-    o.applyMask = function(n, i) {
+    r.applyMask = function(n, i) {
       const s = i.size;
       for (let a = 0; a < s; a++)
         for (let c = 0; c < s; c++)
           i.isReserved(c, a) || i.xor(c, a, t(n, c, a));
-    }, o.getBestMask = function(n, i) {
-      const s = Object.keys(o.Patterns).length;
+    }, r.getBestMask = function(n, i) {
+      const s = Object.keys(r.Patterns).length;
       let a = 0, c = 1 / 0;
       for (let l = 0; l < s; l++) {
-        i(l), o.applyMask(l, n);
-        const h = o.getPenaltyN1(n) + o.getPenaltyN2(n) + o.getPenaltyN3(n) + o.getPenaltyN4(n);
-        o.applyMask(l, n), h < c && (c = h, a = l);
+        i(l), r.applyMask(l, n);
+        const h = r.getPenaltyN1(n) + r.getPenaltyN2(n) + r.getPenaltyN3(n) + r.getPenaltyN4(n);
+        r.applyMask(l, n), h < c && (c = h, a = l);
       }
       return a;
     };
@@ -324,7 +324,7 @@ var G = {}, Ue;
 function it() {
   if (Ue) return G;
   Ue = 1;
-  const o = Ee(), r = [
+  const r = Ee(), o = [
     // L  M  Q  H
     1,
     1,
@@ -651,26 +651,26 @@ function it() {
   ];
   return G.getBlocksCount = function(n, i) {
     switch (i) {
-      case o.L:
-        return r[(n - 1) * 4 + 0];
-      case o.M:
-        return r[(n - 1) * 4 + 1];
-      case o.Q:
-        return r[(n - 1) * 4 + 2];
-      case o.H:
-        return r[(n - 1) * 4 + 3];
+      case r.L:
+        return o[(n - 1) * 4 + 0];
+      case r.M:
+        return o[(n - 1) * 4 + 1];
+      case r.Q:
+        return o[(n - 1) * 4 + 2];
+      case r.H:
+        return o[(n - 1) * 4 + 3];
       default:
         return;
     }
   }, G.getTotalCodewordsCount = function(n, i) {
     switch (i) {
-      case o.L:
+      case r.L:
         return t[(n - 1) * 4 + 0];
-      case o.M:
+      case r.M:
         return t[(n - 1) * 4 + 1];
-      case o.Q:
+      case r.Q:
         return t[(n - 1) * 4 + 2];
-      case o.H:
+      case r.H:
         return t[(n - 1) * 4 + 3];
       default:
         return;
@@ -681,47 +681,47 @@ var ae = {}, O = {}, qe;
 function Ft() {
   if (qe) return O;
   qe = 1;
-  const o = new Uint8Array(512), r = new Uint8Array(256);
+  const r = new Uint8Array(512), o = new Uint8Array(256);
   return function() {
     let e = 1;
     for (let n = 0; n < 255; n++)
-      o[n] = e, r[e] = n, e <<= 1, e & 256 && (e ^= 285);
+      r[n] = e, o[e] = n, e <<= 1, e & 256 && (e ^= 285);
     for (let n = 255; n < 512; n++)
-      o[n] = o[n - 255];
+      r[n] = r[n - 255];
   }(), O.log = function(e) {
     if (e < 1) throw new Error("log(" + e + ")");
-    return r[e];
-  }, O.exp = function(e) {
     return o[e];
+  }, O.exp = function(e) {
+    return r[e];
   }, O.mul = function(e, n) {
-    return e === 0 || n === 0 ? 0 : o[r[e] + r[n]];
+    return e === 0 || n === 0 ? 0 : r[o[e] + o[n]];
   }, O;
 }
 var ze;
 function Et() {
-  return ze || (ze = 1, function(o) {
-    const r = Ft();
-    o.mul = function(e, n) {
+  return ze || (ze = 1, function(r) {
+    const o = Ft();
+    r.mul = function(e, n) {
       const i = new Uint8Array(e.length + n.length - 1);
       for (let s = 0; s < e.length; s++)
         for (let a = 0; a < n.length; a++)
-          i[s + a] ^= r.mul(e[s], n[a]);
+          i[s + a] ^= o.mul(e[s], n[a]);
       return i;
-    }, o.mod = function(e, n) {
+    }, r.mod = function(e, n) {
       let i = new Uint8Array(e);
       for (; i.length - n.length >= 0; ) {
         const s = i[0];
         for (let c = 0; c < n.length; c++)
-          i[c] ^= r.mul(n[c], s);
+          i[c] ^= o.mul(n[c], s);
         let a = 0;
         for (; a < i.length && i[a] === 0; ) a++;
         i = i.slice(a);
       }
       return i;
-    }, o.generateECPolynomial = function(e) {
+    }, r.generateECPolynomial = function(e) {
       let n = new Uint8Array([1]);
       for (let i = 0; i < e; i++)
-        n = o.mul(n, new Uint8Array([1, r.exp(i)]));
+        n = r.mul(n, new Uint8Array([1, o.exp(i)]));
       return n;
     };
   }(ae)), ae;
@@ -730,42 +730,42 @@ var ce, _e;
 function It() {
   if (_e) return ce;
   _e = 1;
-  const o = Et();
-  function r(t) {
+  const r = Et();
+  function o(t) {
     this.genPoly = void 0, this.degree = t, this.degree && this.initialize(this.degree);
   }
-  return r.prototype.initialize = function(e) {
-    this.degree = e, this.genPoly = o.generateECPolynomial(this.degree);
-  }, r.prototype.encode = function(e) {
+  return o.prototype.initialize = function(e) {
+    this.degree = e, this.genPoly = r.generateECPolynomial(this.degree);
+  }, o.prototype.encode = function(e) {
     if (!this.genPoly)
       throw new Error("Encoder not initialized");
     const n = new Uint8Array(e.length + this.degree);
     n.set(e);
-    const i = o.mod(n, this.genPoly), s = this.degree - i.length;
+    const i = r.mod(n, this.genPoly), s = this.degree - i.length;
     if (s > 0) {
       const a = new Uint8Array(this.degree);
       return a.set(i, s), a;
     }
     return i;
-  }, ce = r, ce;
+  }, ce = o, ce;
 }
 var le = {}, ue = {}, he = {}, $e;
 function ot() {
-  return $e || ($e = 1, he.isValid = function(r) {
-    return !isNaN(r) && r >= 1 && r <= 40;
+  return $e || ($e = 1, he.isValid = function(o) {
+    return !isNaN(o) && o >= 1 && o <= 40;
   }), he;
 }
 var R = {}, He;
 function rt() {
   if (He) return R;
   He = 1;
-  const o = "[0-9]+", r = "[A-Z $%*+\\-./:]+";
+  const r = "[0-9]+", o = "[A-Z $%*+\\-./:]+";
   let t = "(?:[u3000-u303F]|[u3040-u309F]|[u30A0-u30FF]|[uFF00-uFFEF]|[u4E00-u9FAF]|[u2605-u2606]|[u2190-u2195]|u203B|[u2010u2015u2018u2019u2025u2026u201Cu201Du2225u2260]|[u0391-u0451]|[u00A7u00A8u00B1u00B4u00D7u00F7])+";
   t = t.replace(/u/g, "\\u");
   const e = "(?:(?![A-Z0-9 $%*+\\-./:]|" + t + `)(?:.|[\r
 ]))+`;
-  R.KANJI = new RegExp(t, "g"), R.BYTE_KANJI = new RegExp("[^A-Z0-9 $%*+\\-./:]+", "g"), R.BYTE = new RegExp(e, "g"), R.NUMERIC = new RegExp(o, "g"), R.ALPHANUMERIC = new RegExp(r, "g");
-  const n = new RegExp("^" + t + "$"), i = new RegExp("^" + o + "$"), s = new RegExp("^[A-Z0-9 $%*+\\-./:]+$");
+  R.KANJI = new RegExp(t, "g"), R.BYTE_KANJI = new RegExp("[^A-Z0-9 $%*+\\-./:]+", "g"), R.BYTE = new RegExp(e, "g"), R.NUMERIC = new RegExp(r, "g"), R.ALPHANUMERIC = new RegExp(o, "g");
+  const n = new RegExp("^" + t + "$"), i = new RegExp("^" + r + "$"), s = new RegExp("^[A-Z0-9 $%*+\\-./:]+$");
   return R.testKanji = function(c) {
     return n.test(c);
   }, R.testNumeric = function(c) {
@@ -776,37 +776,37 @@ function rt() {
 }
 var xe;
 function _() {
-  return xe || (xe = 1, function(o) {
-    const r = ot(), t = rt();
-    o.NUMERIC = {
+  return xe || (xe = 1, function(r) {
+    const o = ot(), t = rt();
+    r.NUMERIC = {
       id: "Numeric",
       bit: 1,
       ccBits: [10, 12, 14]
-    }, o.ALPHANUMERIC = {
+    }, r.ALPHANUMERIC = {
       id: "Alphanumeric",
       bit: 2,
       ccBits: [9, 11, 13]
-    }, o.BYTE = {
+    }, r.BYTE = {
       id: "Byte",
       bit: 4,
       ccBits: [8, 16, 16]
-    }, o.KANJI = {
+    }, r.KANJI = {
       id: "Kanji",
       bit: 8,
       ccBits: [8, 10, 12]
-    }, o.MIXED = {
+    }, r.MIXED = {
       bit: -1
-    }, o.getCharCountIndicator = function(i, s) {
+    }, r.getCharCountIndicator = function(i, s) {
       if (!i.ccBits) throw new Error("Invalid mode: " + i);
-      if (!r.isValid(s))
+      if (!o.isValid(s))
         throw new Error("Invalid version: " + s);
       return s >= 1 && s < 10 ? i.ccBits[0] : s < 27 ? i.ccBits[1] : i.ccBits[2];
-    }, o.getBestModeForData = function(i) {
-      return t.testNumeric(i) ? o.NUMERIC : t.testAlphanumeric(i) ? o.ALPHANUMERIC : t.testKanji(i) ? o.KANJI : o.BYTE;
-    }, o.toString = function(i) {
+    }, r.getBestModeForData = function(i) {
+      return t.testNumeric(i) ? r.NUMERIC : t.testAlphanumeric(i) ? r.ALPHANUMERIC : t.testKanji(i) ? r.KANJI : r.BYTE;
+    }, r.toString = function(i) {
       if (i && i.id) return i.id;
       throw new Error("Invalid mode");
-    }, o.isValid = function(i) {
+    }, r.isValid = function(i) {
       return i && i.bit && i.ccBits;
     };
     function e(n) {
@@ -814,19 +814,19 @@ function _() {
         throw new Error("Param is not a string");
       switch (n.toLowerCase()) {
         case "numeric":
-          return o.NUMERIC;
+          return r.NUMERIC;
         case "alphanumeric":
-          return o.ALPHANUMERIC;
+          return r.ALPHANUMERIC;
         case "kanji":
-          return o.KANJI;
+          return r.KANJI;
         case "byte":
-          return o.BYTE;
+          return r.BYTE;
         default:
           throw new Error("Unknown mode: " + n);
       }
     }
-    o.from = function(i, s) {
-      if (o.isValid(i))
+    r.from = function(i, s) {
+      if (r.isValid(i))
         return i;
       try {
         return e(i);
@@ -838,11 +838,11 @@ function _() {
 }
 var Oe;
 function Pt() {
-  return Oe || (Oe = 1, function(o) {
-    const r = z(), t = it(), e = Ee(), n = _(), i = ot(), s = 7973, a = r.getBCHDigit(s);
+  return Oe || (Oe = 1, function(r) {
+    const o = z(), t = it(), e = Ee(), n = _(), i = ot(), s = 7973, a = o.getBCHDigit(s);
     function c(g, d, T) {
       for (let I = 1; I <= 40; I++)
-        if (d <= o.getCapacity(I, T, g))
+        if (d <= r.getCapacity(I, T, g))
           return I;
     }
     function l(g, d) {
@@ -857,16 +857,16 @@ function Pt() {
     }
     function f(g, d) {
       for (let T = 1; T <= 40; T++)
-        if (h(g, T) <= o.getCapacity(T, d, n.MIXED))
+        if (h(g, T) <= r.getCapacity(T, d, n.MIXED))
           return T;
     }
-    o.from = function(d, T) {
+    r.from = function(d, T) {
       return i.isValid(d) ? parseInt(d, 10) : T;
-    }, o.getCapacity = function(d, T, I) {
+    }, r.getCapacity = function(d, T, I) {
       if (!i.isValid(d))
         throw new Error("Invalid QR Code version");
       typeof I > "u" && (I = n.BYTE);
-      const L = r.getSymbolTotalCodewords(d), y = t.getTotalCodewordsCount(d, T), B = (L - y) * 8;
+      const L = o.getSymbolTotalCodewords(d), y = t.getTotalCodewordsCount(d, T), B = (L - y) * 8;
       if (I === n.MIXED) return B;
       const P = B - l(I, d);
       switch (I) {
@@ -880,7 +880,7 @@ function Pt() {
         default:
           return Math.floor(P / 8);
       }
-    }, o.getBestVersionForData = function(d, T) {
+    }, r.getBestVersionForData = function(d, T) {
       let I;
       const L = e.from(T, e.M);
       if (Array.isArray(d)) {
@@ -892,56 +892,56 @@ function Pt() {
       } else
         I = d;
       return c(I.mode, I.getLength(), L);
-    }, o.getEncodedBits = function(d) {
+    }, r.getEncodedBits = function(d) {
       if (!i.isValid(d) || d < 7)
         throw new Error("Invalid QR Code version");
       let T = d << 12;
-      for (; r.getBCHDigit(T) - a >= 0; )
-        T ^= s << r.getBCHDigit(T) - a;
+      for (; o.getBCHDigit(T) - a >= 0; )
+        T ^= s << o.getBCHDigit(T) - a;
       return d << 12 | T;
     };
   }(le)), le;
 }
-var fe = {}, Ve;
+var fe = {}, Je;
 function Tt() {
-  if (Ve) return fe;
-  Ve = 1;
-  const o = z(), r = 1335, t = 21522, e = o.getBCHDigit(r);
+  if (Je) return fe;
+  Je = 1;
+  const r = z(), o = 1335, t = 21522, e = r.getBCHDigit(o);
   return fe.getEncodedBits = function(i, s) {
     const a = i.bit << 3 | s;
     let c = a << 10;
-    for (; o.getBCHDigit(c) - e >= 0; )
-      c ^= r << o.getBCHDigit(c) - e;
+    for (; r.getBCHDigit(c) - e >= 0; )
+      c ^= o << r.getBCHDigit(c) - e;
     return (a << 10 | c) ^ t;
   }, fe;
 }
-var de = {}, ge, Je;
+var de = {}, ge, Ve;
 function At() {
-  if (Je) return ge;
-  Je = 1;
-  const o = _();
-  function r(t) {
-    this.mode = o.NUMERIC, this.data = t.toString();
+  if (Ve) return ge;
+  Ve = 1;
+  const r = _();
+  function o(t) {
+    this.mode = r.NUMERIC, this.data = t.toString();
   }
-  return r.getBitsLength = function(e) {
+  return o.getBitsLength = function(e) {
     return 10 * Math.floor(e / 3) + (e % 3 ? e % 3 * 3 + 1 : 0);
-  }, r.prototype.getLength = function() {
+  }, o.prototype.getLength = function() {
     return this.data.length;
-  }, r.prototype.getBitsLength = function() {
-    return r.getBitsLength(this.data.length);
-  }, r.prototype.write = function(e) {
+  }, o.prototype.getBitsLength = function() {
+    return o.getBitsLength(this.data.length);
+  }, o.prototype.write = function(e) {
     let n, i, s;
     for (n = 0; n + 3 <= this.data.length; n += 3)
       i = this.data.substr(n, 3), s = parseInt(i, 10), e.put(s, 10);
     const a = this.data.length - n;
     a > 0 && (i = this.data.substr(n), s = parseInt(i, 10), e.put(s, a * 3 + 1));
-  }, ge = r, ge;
+  }, ge = o, ge;
 }
 var pe, Ke;
 function Bt() {
   if (Ke) return pe;
   Ke = 1;
-  const o = _(), r = [
+  const r = _(), o = [
     "0",
     "1",
     "2",
@@ -989,7 +989,7 @@ function Bt() {
     ":"
   ];
   function t(e) {
-    this.mode = o.ALPHANUMERIC, this.data = e;
+    this.mode = r.ALPHANUMERIC, this.data = e;
   }
   return t.getBitsLength = function(n) {
     return 11 * Math.floor(n / 2) + 6 * (n % 2);
@@ -1000,38 +1000,38 @@ function Bt() {
   }, t.prototype.write = function(n) {
     let i;
     for (i = 0; i + 2 <= this.data.length; i += 2) {
-      let s = r.indexOf(this.data[i]) * 45;
-      s += r.indexOf(this.data[i + 1]), n.put(s, 11);
+      let s = o.indexOf(this.data[i]) * 45;
+      s += o.indexOf(this.data[i + 1]), n.put(s, 11);
     }
-    this.data.length % 2 && n.put(r.indexOf(this.data[i]), 6);
+    this.data.length % 2 && n.put(o.indexOf(this.data[i]), 6);
   }, pe = t, pe;
 }
 var me, Ge;
 function vt() {
   if (Ge) return me;
   Ge = 1;
-  const o = _();
-  function r(t) {
-    this.mode = o.BYTE, typeof t == "string" ? this.data = new TextEncoder().encode(t) : this.data = new Uint8Array(t);
+  const r = _();
+  function o(t) {
+    this.mode = r.BYTE, typeof t == "string" ? this.data = new TextEncoder().encode(t) : this.data = new Uint8Array(t);
   }
-  return r.getBitsLength = function(e) {
+  return o.getBitsLength = function(e) {
     return e * 8;
-  }, r.prototype.getLength = function() {
+  }, o.prototype.getLength = function() {
     return this.data.length;
-  }, r.prototype.getBitsLength = function() {
-    return r.getBitsLength(this.data.length);
-  }, r.prototype.write = function(t) {
+  }, o.prototype.getBitsLength = function() {
+    return o.getBitsLength(this.data.length);
+  }, o.prototype.write = function(t) {
     for (let e = 0, n = this.data.length; e < n; e++)
       t.put(this.data[e], 8);
-  }, me = r, me;
+  }, me = o, me;
 }
 var Ce, je;
 function Lt() {
   if (je) return Ce;
   je = 1;
-  const o = _(), r = z();
+  const r = _(), o = z();
   function t(e) {
-    this.mode = o.KANJI, this.data = e;
+    this.mode = r.KANJI, this.data = e;
   }
   return t.getBitsLength = function(n) {
     return n * 13;
@@ -1042,7 +1042,7 @@ function Lt() {
   }, t.prototype.write = function(e) {
     let n;
     for (n = 0; n < this.data.length; n++) {
-      let i = r.toSJIS(this.data[n]);
+      let i = o.toSJIS(this.data[n]);
       if (i >= 33088 && i <= 40956)
         i -= 33088;
       else if (i >= 57408 && i <= 60351)
@@ -1058,12 +1058,12 @@ Make sure your charset is UTF-8`
 }
 var we = { exports: {} }, Ye;
 function Mt() {
-  return Ye || (Ye = 1, function(o) {
-    var r = {
+  return Ye || (Ye = 1, function(r) {
+    var o = {
       single_source_shortest_paths: function(t, e, n) {
         var i = {}, s = {};
         s[e] = 0;
-        var a = r.PriorityQueue.make();
+        var a = o.PriorityQueue.make();
         a.push(e, 0);
         for (var c, l, h, f, g, d, T, I, L; !a.empty(); ) {
           c = a.pop(), l = c.value, f = c.cost, g = t[l] || {};
@@ -1082,8 +1082,8 @@ function Mt() {
         return n.reverse(), n;
       },
       find_path: function(t, e, n) {
-        var i = r.single_source_shortest_paths(t, e, n);
-        return r.extract_shortest_path_from_predecessor_list(
+        var i = o.single_source_shortest_paths(t, e, n);
+        return o.extract_shortest_path_from_predecessor_list(
           i,
           n
         );
@@ -1093,7 +1093,7 @@ function Mt() {
        */
       PriorityQueue: {
         make: function(t) {
-          var e = r.PriorityQueue, n = {}, i;
+          var e = o.PriorityQueue, n = {}, i;
           t = t || {};
           for (i in e)
             e.hasOwnProperty(i) && (n[i] = e[i]);
@@ -1121,13 +1121,13 @@ function Mt() {
         }
       }
     };
-    o.exports = r;
+    r.exports = o;
   }(we)), we.exports;
 }
 var Qe;
 function Rt() {
-  return Qe || (Qe = 1, function(o) {
-    const r = _(), t = At(), e = Bt(), n = vt(), i = Lt(), s = rt(), a = z(), c = Mt();
+  return Qe || (Qe = 1, function(r) {
+    const o = _(), t = At(), e = Bt(), n = vt(), i = Lt(), s = rt(), a = z(), c = Mt();
     function l(y) {
       return unescape(encodeURIComponent(y)).length;
     }
@@ -1144,9 +1144,9 @@ function Rt() {
       return b;
     }
     function f(y) {
-      const B = h(s.NUMERIC, r.NUMERIC, y), P = h(s.ALPHANUMERIC, r.ALPHANUMERIC, y);
+      const B = h(s.NUMERIC, o.NUMERIC, y), P = h(s.ALPHANUMERIC, o.ALPHANUMERIC, y);
       let b, M;
-      return a.isKanjiModeEnabled() ? (b = h(s.BYTE, r.BYTE, y), M = h(s.KANJI, r.KANJI, y)) : (b = h(s.BYTE_KANJI, r.BYTE, y), M = []), B.concat(P, b, M).sort(function(F, S) {
+      return a.isKanjiModeEnabled() ? (b = h(s.BYTE, o.BYTE, y), M = h(s.KANJI, o.KANJI, y)) : (b = h(s.BYTE_KANJI, o.BYTE, y), M = []), B.concat(P, b, M).sort(function(F, S) {
         return F.index - S.index;
       }).map(function(F) {
         return {
@@ -1158,13 +1158,13 @@ function Rt() {
     }
     function g(y, B) {
       switch (B) {
-        case r.NUMERIC:
+        case o.NUMERIC:
           return t.getBitsLength(y);
-        case r.ALPHANUMERIC:
+        case o.ALPHANUMERIC:
           return e.getBitsLength(y);
-        case r.KANJI:
+        case o.KANJI:
           return i.getBitsLength(y);
-        case r.BYTE:
+        case o.BYTE:
           return n.getBitsLength(y);
       }
     }
@@ -1179,28 +1179,28 @@ function Rt() {
       for (let P = 0; P < y.length; P++) {
         const b = y[P];
         switch (b.mode) {
-          case r.NUMERIC:
+          case o.NUMERIC:
             B.push([
               b,
-              { data: b.data, mode: r.ALPHANUMERIC, length: b.length },
-              { data: b.data, mode: r.BYTE, length: b.length }
+              { data: b.data, mode: o.ALPHANUMERIC, length: b.length },
+              { data: b.data, mode: o.BYTE, length: b.length }
             ]);
             break;
-          case r.ALPHANUMERIC:
+          case o.ALPHANUMERIC:
             B.push([
               b,
-              { data: b.data, mode: r.BYTE, length: b.length }
+              { data: b.data, mode: o.BYTE, length: b.length }
             ]);
             break;
-          case r.KANJI:
+          case o.KANJI:
             B.push([
               b,
-              { data: b.data, mode: r.BYTE, length: l(b.data) }
+              { data: b.data, mode: o.BYTE, length: l(b.data) }
             ]);
             break;
-          case r.BYTE:
+          case o.BYTE:
             B.push([
-              { data: b.data, mode: r.BYTE, length: l(b.data) }
+              { data: b.data, mode: o.BYTE, length: l(b.data) }
             ]);
         }
       }
@@ -1216,7 +1216,7 @@ function Rt() {
           S.push(C), P[C] = { node: A, lastCount: 0 }, b[C] = {};
           for (let E = 0; E < M.length; E++) {
             const w = M[E];
-            P[w] && P[w].node.mode === A.mode ? (b[w][C] = g(P[w].lastCount + A.length, A.mode) - g(P[w].lastCount, A.mode), P[w].lastCount += A.length) : (P[w] && (P[w].lastCount = A.length), b[w][C] = g(A.length, A.mode) + 4 + r.getCharCountIndicator(A.mode, B));
+            P[w] && P[w].node.mode === A.mode ? (b[w][C] = g(P[w].lastCount + A.length, A.mode) - g(P[w].lastCount, A.mode), P[w].lastCount += A.length) : (P[w] && (P[w].lastCount = A.length), b[w][C] = g(A.length, A.mode) + 4 + o.getCharCountIndicator(A.mode, B));
           }
         }
         M = S;
@@ -1227,32 +1227,32 @@ function Rt() {
     }
     function L(y, B) {
       let P;
-      const b = r.getBestModeForData(y);
-      if (P = r.from(B, b), P !== r.BYTE && P.bit < b.bit)
-        throw new Error('"' + y + '" cannot be encoded with mode ' + r.toString(P) + `.
- Suggested mode is: ` + r.toString(b));
-      switch (P === r.KANJI && !a.isKanjiModeEnabled() && (P = r.BYTE), P) {
-        case r.NUMERIC:
+      const b = o.getBestModeForData(y);
+      if (P = o.from(B, b), P !== o.BYTE && P.bit < b.bit)
+        throw new Error('"' + y + '" cannot be encoded with mode ' + o.toString(P) + `.
+ Suggested mode is: ` + o.toString(b));
+      switch (P === o.KANJI && !a.isKanjiModeEnabled() && (P = o.BYTE), P) {
+        case o.NUMERIC:
           return new t(y);
-        case r.ALPHANUMERIC:
+        case o.ALPHANUMERIC:
           return new e(y);
-        case r.KANJI:
+        case o.KANJI:
           return new i(y);
-        case r.BYTE:
+        case o.BYTE:
           return new n(y);
       }
     }
-    o.fromArray = function(B) {
+    r.fromArray = function(B) {
       return B.reduce(function(P, b) {
         return typeof b == "string" ? P.push(L(b, null)) : b.data && P.push(L(b.data, b.mode)), P;
       }, []);
-    }, o.fromString = function(B, P) {
+    }, r.fromString = function(B, P) {
       const b = f(B, a.isKanjiModeEnabled()), M = T(b), p = I(M, P), F = c.find_path(p.map, "start", "end"), S = [];
       for (let m = 1; m < F.length - 1; m++)
         S.push(p.table[F[m]].node);
-      return o.fromArray(d(S));
-    }, o.rawSplit = function(B) {
-      return o.fromArray(
+      return r.fromArray(d(S));
+    }, r.rawSplit = function(B) {
+      return r.fromArray(
         f(B, a.isKanjiModeEnabled())
       );
     };
@@ -1262,7 +1262,7 @@ var We;
 function Nt() {
   if (We) return ee;
   We = 1;
-  const o = z(), r = Ee(), t = Ct(), e = wt(), n = yt(), i = bt(), s = St(), a = it(), c = It(), l = Pt(), h = Tt(), f = _(), g = Rt();
+  const r = z(), o = Ee(), t = Ct(), e = wt(), n = yt(), i = bt(), s = St(), a = it(), c = It(), l = Pt(), h = Tt(), f = _(), g = Rt();
   function d(p, F) {
     const S = p.size, m = i.getPositions(F);
     for (let A = 0; A < m.length; A++) {
@@ -1323,7 +1323,7 @@ function Nt() {
     S.forEach(function(v) {
       m.put(v.mode.bit, 4), m.put(v.getLength(), f.getCharCountIndicator(v.mode, p)), v.write(m);
     });
-    const A = o.getSymbolTotalCodewords(p), C = a.getTotalCodewordsCount(p, F), E = (A - C) * 8;
+    const A = r.getSymbolTotalCodewords(p), C = a.getTotalCodewordsCount(p, F), E = (A - C) * 8;
     for (m.getLengthInBits() + 4 <= E && m.put(0, 4); m.getLengthInBits() % 8 !== 0; )
       m.putBit(0);
     const w = (E - m.getLengthInBits()) / 8;
@@ -1332,7 +1332,7 @@ function Nt() {
     return b(m, p, F);
   }
   function b(p, F, S) {
-    const m = o.getSymbolTotalCodewords(F), A = a.getTotalCodewordsCount(F, S), C = m - A, E = a.getBlocksCount(F, S), w = m % E, v = E - w, k = Math.floor(m / E), x = Math.floor(C / E), ht = x + 1, Ie = k - x, ft = new c(Ie);
+    const m = r.getSymbolTotalCodewords(F), A = a.getTotalCodewordsCount(F, S), C = m - A, E = a.getBlocksCount(F, S), w = m % E, v = E - w, k = Math.floor(m / E), x = Math.floor(C / E), ht = x + 1, Ie = k - x, ft = new c(Ie);
     let Y = 0;
     const K = new Array(E), Pe = new Array(E);
     let Q = 0;
@@ -1376,7 +1376,7 @@ The chosen QR Code version cannot contain this amount of data.
 Minimum version required to store current data is: ` + C + `.
 `
       );
-    const E = P(F, S, A), w = o.getSymbolSize(F), v = new e(w);
+    const E = P(F, S, A), w = r.getSymbolSize(F), v = new e(w);
     return d(v, F), T(v), I(v, F), y(v, S, 0), F >= 7 && L(v, F), B(v, E), isNaN(m) && (m = s.getBestMask(
       v,
       y.bind(null, v, S)
@@ -1391,14 +1391,14 @@ Minimum version required to store current data is: ` + C + `.
   return ee.create = function(F, S) {
     if (typeof F > "u" || F === "")
       throw new Error("No input text");
-    let m = r.M, A, C;
-    return typeof S < "u" && (m = r.from(S.errorCorrectionLevel, r.M), A = l.from(S.version), C = s.from(S.maskPattern), S.toSJISFunc && o.setToSJISFunction(S.toSJISFunc)), M(F, A, m, C);
+    let m = o.M, A, C;
+    return typeof S < "u" && (m = o.from(S.errorCorrectionLevel, o.M), A = l.from(S.version), C = s.from(S.maskPattern), S.toSJISFunc && r.setToSJISFunction(S.toSJISFunc)), M(F, A, m, C);
   }, ee;
 }
 var ye = {}, be = {}, Ze;
 function st() {
-  return Ze || (Ze = 1, function(o) {
-    function r(t) {
+  return Ze || (Ze = 1, function(r) {
+    function o(t) {
       if (typeof t == "number" && (t = t.toString()), typeof t != "string")
         throw new Error("Color should be defined as hex string");
       let e = t.slice().replace("#", "").split("");
@@ -1416,7 +1416,7 @@ function st() {
         hex: "#" + e.slice(0, 6).join("")
       };
     }
-    o.getOptions = function(e) {
+    r.getOptions = function(e) {
       e || (e = {}), e.color || (e.color = {});
       const n = typeof e.margin > "u" || e.margin === null || e.margin < 0 ? 4 : e.margin, i = e.width && e.width >= 21 ? e.width : void 0, s = e.scale || 4;
       return {
@@ -1424,19 +1424,19 @@ function st() {
         scale: i ? 4 : s,
         margin: n,
         color: {
-          dark: r(e.color.dark || "#000000ff"),
-          light: r(e.color.light || "#ffffffff")
+          dark: o(e.color.dark || "#000000ff"),
+          light: o(e.color.light || "#ffffffff")
         },
         type: e.type,
         rendererOpts: e.rendererOpts || {}
       };
-    }, o.getScale = function(e, n) {
+    }, r.getScale = function(e, n) {
       return n.width && n.width >= e + n.margin * 2 ? n.width / (e + n.margin * 2) : n.scale;
-    }, o.getImageWidth = function(e, n) {
-      const i = o.getScale(e, n);
+    }, r.getImageWidth = function(e, n) {
+      const i = r.getScale(e, n);
       return Math.floor((e + n.margin * 2) * i);
-    }, o.qrToImageData = function(e, n, i) {
-      const s = n.modules.size, a = n.modules.data, c = o.getScale(s, i), l = Math.floor((s + i.margin * 2) * c), h = i.margin * c, f = [i.color.light, i.color.dark];
+    }, r.qrToImageData = function(e, n, i) {
+      const s = n.modules.size, a = n.modules.data, c = r.getScale(s, i), l = Math.floor((s + i.margin * 2) * c), h = i.margin * c, f = [i.color.light, i.color.dark];
       for (let g = 0; g < l; g++)
         for (let d = 0; d < l; d++) {
           let T = (g * l + d) * 4, I = i.color.light;
@@ -1451,8 +1451,8 @@ function st() {
 }
 var Xe;
 function Dt() {
-  return Xe || (Xe = 1, function(o) {
-    const r = st();
+  return Xe || (Xe = 1, function(r) {
+    const o = st();
     function t(n, i, s) {
       n.clearRect(0, 0, i.width, i.height), i.style || (i.style = {}), i.height = s, i.width = s, i.style.height = s + "px", i.style.width = s + "px";
     }
@@ -1463,15 +1463,15 @@ function Dt() {
         throw new Error("You need to specify a canvas element");
       }
     }
-    o.render = function(i, s, a) {
+    r.render = function(i, s, a) {
       let c = a, l = s;
-      typeof c > "u" && (!s || !s.getContext) && (c = s, s = void 0), s || (l = e()), c = r.getOptions(c);
-      const h = r.getImageWidth(i.modules.size, c), f = l.getContext("2d"), g = f.createImageData(h, h);
-      return r.qrToImageData(g.data, i, c), t(f, l, h), f.putImageData(g, 0, 0), l;
-    }, o.renderToDataURL = function(i, s, a) {
+      typeof c > "u" && (!s || !s.getContext) && (c = s, s = void 0), s || (l = e()), c = o.getOptions(c);
+      const h = o.getImageWidth(i.modules.size, c), f = l.getContext("2d"), g = f.createImageData(h, h);
+      return o.qrToImageData(g.data, i, c), t(f, l, h), f.putImageData(g, 0, 0), l;
+    }, r.renderToDataURL = function(i, s, a) {
       let c = a;
       typeof c > "u" && (!s || !s.getContext) && (c = s, s = void 0), c || (c = {});
-      const l = o.render(i, s, c), h = c.type || "image/png", f = c.rendererOpts || {};
+      const l = r.render(i, s, c), h = c.type || "image/png", f = c.rendererOpts || {};
       return l.toDataURL(h, f.quality);
     };
   }(ye)), ye;
@@ -1480,8 +1480,8 @@ var Se = {}, et;
 function kt() {
   if (et) return Se;
   et = 1;
-  const o = st();
-  function r(n, i) {
+  const r = st();
+  function o(n, i) {
     const s = n.a / 255, a = i + '="' + n.hex + '"';
     return s < 1 ? a + " " + i + '-opacity="' + s.toFixed(2).slice(1) + '"' : a;
   }
@@ -1498,7 +1498,7 @@ function kt() {
     return a;
   }
   return Se.render = function(i, s, a) {
-    const c = o.getOptions(s), l = i.modules.size, h = i.modules.data, f = l + c.margin * 2, g = c.color.light.a ? "<path " + r(c.color.light, "fill") + ' d="M0 0h' + f + "v" + f + 'H0z"/>' : "", d = "<path " + r(c.color.dark, "stroke") + ' d="' + e(h, l, c.margin) + '"/>', T = 'viewBox="0 0 ' + f + " " + f + '"', L = '<svg xmlns="http://www.w3.org/2000/svg" ' + (c.width ? 'width="' + c.width + '" height="' + c.width + '" ' : "") + T + ' shape-rendering="crispEdges">' + g + d + `</svg>
+    const c = r.getOptions(s), l = i.modules.size, h = i.modules.data, f = l + c.margin * 2, g = c.color.light.a ? "<path " + o(c.color.light, "fill") + ' d="M0 0h' + f + "v" + f + 'H0z"/>' : "", d = "<path " + o(c.color.dark, "stroke") + ' d="' + e(h, l, c.margin) + '"/>', T = 'viewBox="0 0 ' + f + " " + f + '"', L = '<svg xmlns="http://www.w3.org/2000/svg" ' + (c.width ? 'width="' + c.width + '" height="' + c.width + '" ' : "") + T + ' shape-rendering="crispEdges">' + g + d + `</svg>
 `;
     return typeof a == "function" && a(null, L), L;
   }, Se;
@@ -1507,10 +1507,10 @@ var tt;
 function Ut() {
   if (tt) return H;
   tt = 1;
-  const o = mt(), r = Nt(), t = Dt(), e = kt();
+  const r = mt(), o = Nt(), t = Dt(), e = kt();
   function n(i, s, a, c, l) {
     const h = [].slice.call(arguments, 1), f = h.length, g = typeof h[f - 1] == "function";
-    if (!g && !o())
+    if (!g && !r())
       throw new Error("Callback required as last argument");
     if (g) {
       if (f < 2)
@@ -1521,7 +1521,7 @@ function Ut() {
         throw new Error("Too few arguments provided");
       return f === 1 ? (a = s, s = c = void 0) : f === 2 && !s.getContext && (c = a, a = s, s = void 0), new Promise(function(d, T) {
         try {
-          const I = r.create(a, c);
+          const I = o.create(a, c);
           d(i(I, s, c));
         } catch (I) {
           T(I);
@@ -1529,18 +1529,18 @@ function Ut() {
       });
     }
     try {
-      const d = r.create(a, c);
+      const d = o.create(a, c);
       l(null, i(d, s, c));
     } catch (d) {
       l(d);
     }
   }
-  return H.create = r.create, H.toCanvas = n.bind(null, t.render), H.toDataURL = n.bind(null, t.renderToDataURL), H.toString = n.bind(null, function(i, s, a) {
+  return H.create = o.create, H.toCanvas = n.bind(null, t.render), H.toDataURL = n.bind(null, t.renderToDataURL), H.toString = n.bind(null, function(i, s, a) {
     return e.render(i, a);
   }), H;
 }
 var qt = Ut();
-const V = 1e3, j = {
+const J = 1e3, j = {
   iceServers: [
     {
       urls: ["stun:stun1.l.google.com:19302"]
@@ -1548,41 +1548,38 @@ const V = 1e3, j = {
   ]
 };
 function zt() {
-  return typeof crypto.randomUUID == "function" ? crypto.randomUUID() : "10000000-1000-4000-8000-100000000000".replace(
-    /[018]/g,
-    (o) => (+o ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> +o / 4).toString(16)
-  );
+  return crypto.randomUUID();
 }
-async function Fe(o) {
-  return await (await fetch(o)).json();
+async function Fe(r) {
+  return await (await fetch(r)).json();
 }
-function at(o, r) {
-  for (const t of o)
-    if (JSON.stringify(t) === JSON.stringify(r))
+function at(r, o) {
+  for (const t of r)
+    if (JSON.stringify(t) === JSON.stringify(o))
       return !0;
   return !1;
 }
-class J {
+class V {
   constructor() {
     u(this, "eventListeners", {});
   }
-  on(r, t) {
-    const e = this.eventListeners[r] ?? /* @__PURE__ */ new Set();
-    e.add(t), this.eventListeners[r] = e;
+  on(o, t) {
+    const e = this.eventListeners[o] ?? /* @__PURE__ */ new Set();
+    e.add(t), this.eventListeners[o] = e;
   }
-  off(r, t) {
-    const e = this.eventListeners[r];
-    e && (e.delete(t), e.size === 0 && delete this.eventListeners[r]);
+  off(o, t) {
+    const e = this.eventListeners[o];
+    e && (e.delete(t), e.size === 0 && delete this.eventListeners[o]);
   }
-  emit(r, ...t) {
-    const e = this.eventListeners[r] ?? /* @__PURE__ */ new Set();
+  emit(o, ...t) {
+    const e = this.eventListeners[o] ?? /* @__PURE__ */ new Set();
     for (const n of e)
       n(...t);
   }
 }
-class ct extends J {
+class ct extends V {
 }
-class lt extends J {
+class lt extends V {
   constructor({
     flottformApi: t,
     createClientUrl: e,
@@ -1758,7 +1755,7 @@ class _t extends ct {
     createClientUrl: e,
     inputField: n,
     rtcConfiguration: i = j,
-    pollTimeForIceInMs: s = V,
+    pollTimeForIceInMs: s = J,
     logger: a = console
   }) {
     super();
@@ -1856,13 +1853,13 @@ class _t extends ct {
     }), this.inputField = n, this.logger = a, this.registerListeners();
   }
 }
-class ut extends J {
+class ut extends V {
   // 128KB buffer threshold (maximum of 4 chunks in the buffer waiting to be sent over the network)
   constructor({
     endpointId: t,
     flottformApi: e,
     rtcConfiguration: n,
-    pollTimeForIceInMs: i = V,
+    pollTimeForIceInMs: i = J,
     logger: s = console
   }) {
     super();
@@ -1990,13 +1987,13 @@ class ut extends J {
     this.endpointId = t, this.flottformApi = e, this.rtcConfiguration = n, this.pollTimeForIceInMs = i, this.logger = s;
   }
 }
-class un extends J {
+class un extends V {
   constructor({
     endpointId: t,
     fileInput: e,
     flottformApi: n,
     rtcConfiguration: i = j,
-    pollTimeForIceInMs: s = V,
+    pollTimeForIceInMs: s = J,
     logger: a = console
   }) {
     super();
@@ -2101,12 +2098,12 @@ class un extends J {
     }), this.inputField = e, this.logger = a, this.registerListeners();
   }
 }
-class hn extends J {
+class hn extends V {
   constructor({
     endpointId: t,
     flottformApi: e,
     rtcConfiguration: n = j,
-    pollTimeForIceInMs: i = V,
+    pollTimeForIceInMs: i = J,
     logger: s = console
   }) {
     super();
@@ -2157,7 +2154,7 @@ class $t extends ct {
     createClientUrl: e,
     inputField: n = void 0,
     rtcConfiguration: i = j,
-    pollTimeForIceInMs: s = V,
+    pollTimeForIceInMs: s = J,
     logger: a = console
   }) {
     super();
@@ -2217,36 +2214,36 @@ class $t extends ct {
   }
 }
 const Ht = () => {
-  const o = document.querySelector(
+  const r = document.querySelector(
     ".flottform-elements-container-wrapper"
-  ), r = document.querySelector(".flottform-opener-triangle");
-  o.classList.toggle("flottform-open"), r.classList.toggle("flottform-button-svg-open");
-}, xt = (o, r, t) => {
+  ), o = document.querySelector(".flottform-opener-triangle");
+  r.classList.toggle("flottform-open"), o.classList.toggle("flottform-button-svg-open");
+}, xt = (r, o, t) => {
   const e = document.createElement("div");
   e.setAttribute("class", `flottform-root${t ?? ""}`);
-  const n = Kt(o);
+  const n = Kt(r);
   e.appendChild(n);
-  const i = Gt(r);
+  const i = Gt(o);
   return e.appendChild(i), e;
-}, Ot = (o, r) => {
+}, Ot = (r, o) => {
   const t = document.createElement("img");
-  t.setAttribute("class", "flottform-qr-code"), t.setAttribute("src", o);
+  t.setAttribute("class", "flottform-qr-code"), t.setAttribute("src", r);
   const e = document.createElement("div");
-  return e.setAttribute("class", "flottform-link-offer"), e.innerText = r, {
+  return e.setAttribute("class", "flottform-link-offer"), e.innerText = o, {
     createChannelQrCode: t,
     createChannelLinkWithOffer: e
   };
 }, fn = ({
-  flottformAnchorElement: o,
-  flottformRootElement: r,
+  flottformAnchorElement: r,
+  flottformRootElement: o,
   additionalComponentClass: t,
   flottformRootTitle: e,
   flottformRootDescription: n
 }) => {
-  const i = r ?? document.querySelector(".flottform-root") ?? xt(e, n, t), s = i.querySelector(".flottform-elements-container"), a = i.querySelector(
+  const i = o ?? document.querySelector(".flottform-root") ?? xt(e, n, t), s = i.querySelector(".flottform-elements-container"), a = i.querySelector(
     ".flottform-elements-container-wrapper"
   );
-  return a.appendChild(s), i.appendChild(a), o.appendChild(i), {
+  return a.appendChild(s), i.appendChild(a), r.appendChild(i), {
     flottformRoot: i,
     getAllFlottformItems: () => {
       const c = i.querySelector(".flottform-inputs-list");
@@ -2279,7 +2276,7 @@ const Ht = () => {
         buttonLabel: T,
         onErrorText: I
       }), p = i.querySelector(".flottform-inputs-list");
-      p.appendChild(B), s.appendChild(p), Vt({
+      p.appendChild(B), s.appendChild(p), Jt({
         flottformItem: B,
         statusInformation: P,
         refreshChannelButton: b,
@@ -2311,7 +2308,7 @@ const Ht = () => {
         buttonLabel: T,
         onErrorText: I
       }), M = i.querySelector(".flottform-inputs-list");
-      M.appendChild(B), s.appendChild(M), Jt({
+      M.appendChild(B), s.appendChild(M), Vt({
         flottformItem: B,
         statusInformation: P,
         refreshChannelButton: b,
@@ -2322,39 +2319,39 @@ const Ht = () => {
     }
   };
 }, nt = ({
-  flottformBaseInputHost: o,
-  additionalItemClasses: r,
+  flottformBaseInputHost: r,
+  additionalItemClasses: o,
   label: t,
   buttonLabel: e,
   onErrorText: n
 }) => {
-  const i = jt(r);
+  const i = jt(o);
   en({ label: t, flottformItem: i });
   const s = Yt(), a = Wt(e);
-  a.addEventListener("click", () => o.start());
+  a.addEventListener("click", () => r.start());
   const c = Qt(a);
   i.appendChild(c);
   const l = Zt();
-  return l.addEventListener("click", () => o.start()), o.on("endpoint-created", ({ link: h, qrCode: f }) => {
+  return l.addEventListener("click", () => r.start()), r.on("endpoint-created", ({ link: h, qrCode: f }) => {
     const { createChannelQrCode: g, createChannelLinkWithOffer: d } = Ot(f, h), T = tn();
     c.replaceChildren(g);
     const I = document.createElement("div");
     I.setAttribute("class", "flottform-copy-button-link-wrapper"), I.appendChild(T), I.appendChild(d), c.appendChild(I);
-  }), o.on("connected", () => {
+  }), r.on("connected", () => {
     s.innerHTML = "Connected", s.appendChild(l), c.replaceChildren(s);
-  }), o.on("error", (h) => {
+  }), r.on("error", (h) => {
     s.innerHTML = typeof n == "function" ? n(h) : n ?? `🚨 An error occured (${h.message}). Please try again`, a.innerText = "Retry", c.replaceChildren(s), c.appendChild(a);
   }), { flottformItem: i, statusInformation: s, refreshChannelButton: l, flottformStateItemsContainer: c };
-}, Vt = ({
-  flottformItem: o,
-  statusInformation: r,
+}, Jt = ({
+  flottformItem: r,
+  statusInformation: o,
   refreshChannelButton: t,
   flottformStateItemsContainer: e,
   flottformFileInputHost: n,
   id: i,
   onSuccessText: s
 }) => {
-  i && o.setAttribute("id", i), n.on(
+  i && r.setAttribute("id", i), n.on(
     "progress",
     ({ currentFileProgress: a, overallProgress: c, fileIndex: l, totalFileCount: h, fileName: f }) => {
       nn(e), cn(
@@ -2373,124 +2370,124 @@ const Ht = () => {
       );
     }
   ), n.on("done", () => {
-    r.innerHTML = s ?? "✨ You have succesfully downloaded all your files.", r.appendChild(t), e.replaceChildren(r);
+    o.innerHTML = s ?? "✨ You have succesfully downloaded all your files.", o.appendChild(t), e.replaceChildren(o);
   });
-}, Jt = ({
-  flottformItem: o,
-  statusInformation: r,
+}, Vt = ({
+  flottformItem: r,
+  statusInformation: o,
   refreshChannelButton: t,
   flottformTextInputHost: e,
   id: n,
   onSuccessText: i
 }) => {
-  n && o.setAttribute("id", n), e.on("done", (s) => {
-    if (r.innerHTML = i ?? "✨ You have succesfully submitted your message", r.appendChild(t), o.replaceChildren(r), inputField) {
+  n && r.setAttribute("id", n), e.on("done", (s) => {
+    if (o.innerHTML = i ?? "✨ You have succesfully submitted your message", o.appendChild(t), r.replaceChildren(o), inputField) {
       inputField.setAttribute("value", s);
       const a = new Event("change");
       inputField.dispatchEvent(a);
     }
   });
-}, Kt = (o) => {
-  const r = document.createElement("button");
-  return r.setAttribute("type", "button"), r.setAttribute("class", "flottform-root-opener-button"), r.innerHTML = `<span>${o ?? "Fill from Another Device"}</span><svg class="flottform-opener-triangle" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M6.5,8.5l6,7l6-7H6.5z"/></svg>`, r.addEventListener("click", () => Ht()), r;
-}, Gt = (o) => {
-  const r = document.createElement("div");
-  r.setAttribute("class", "flottform-elements-container");
+}, Kt = (r) => {
+  const o = document.createElement("button");
+  return o.setAttribute("type", "button"), o.setAttribute("class", "flottform-root-opener-button"), o.innerHTML = `<span>${r ?? "Fill from Another Device"}</span><svg class="flottform-opener-triangle" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M6.5,8.5l6,7l6-7H6.5z"/></svg>`, o.addEventListener("click", () => Ht()), o;
+}, Gt = (r) => {
+  const o = document.createElement("div");
+  o.setAttribute("class", "flottform-elements-container");
   const t = document.createElement("div");
-  if (t.setAttribute("class", "flottform-elements-container-wrapper"), o !== "") {
+  if (t.setAttribute("class", "flottform-elements-container-wrapper"), r !== "") {
     const n = document.createElement("div");
-    n.setAttribute("class", "flottform-root-description"), n.innerText = o ?? "This form is powered by Flottform. Need to add details from another device? Simply click a button below to generate a QR code or link, and easily upload information from your other device.", r.appendChild(n);
+    n.setAttribute("class", "flottform-root-description"), n.innerText = r ?? "This form is powered by Flottform. Need to add details from another device? Simply click a button below to generate a QR code or link, and easily upload information from your other device.", o.appendChild(n);
   }
   const e = document.createElement("ul");
-  return e.setAttribute("class", "flottform-inputs-list"), r.appendChild(e), t.appendChild(r), t;
-}, jt = (o) => {
-  const r = document.createElement("li");
-  return r.setAttribute("class", `flottform-item${o ?? ""}`), r;
+  return e.setAttribute("class", "flottform-inputs-list"), o.appendChild(e), t.appendChild(o), t;
+}, jt = (r) => {
+  const o = document.createElement("li");
+  return o.setAttribute("class", `flottform-item${r ?? ""}`), o;
 }, Yt = () => {
-  const o = document.createElement("div");
-  return o.setAttribute("class", "flottform-status-information"), o;
-}, Qt = (o) => {
   const r = document.createElement("div");
-  return r.setAttribute("class", "flottform-state-items-container"), r.appendChild(o), r;
-}, Wt = (o) => {
-  const r = document.createElement("button");
-  return r.setAttribute("type", "button"), r.setAttribute("class", "flottform-button"), r.innerText = o ?? "Get a link", r;
-}, Zt = () => {
+  return r.setAttribute("class", "flottform-status-information"), r;
+}, Qt = (r) => {
+  const o = document.createElement("div");
+  return o.setAttribute("class", "flottform-state-items-container"), o.appendChild(r), o;
+}, Wt = (r) => {
   const o = document.createElement("button");
-  return o.setAttribute("type", "button"), o.setAttribute("class", "flottform-refresh-connection-button"), o.setAttribute(
+  return o.setAttribute("type", "button"), o.setAttribute("class", "flottform-button"), o.innerText = r ?? "Get a link", o;
+}, Zt = () => {
+  const r = document.createElement("button");
+  return r.setAttribute("type", "button"), r.setAttribute("class", "flottform-refresh-connection-button"), r.setAttribute(
     "title",
     "Click this button to refresh Flottform connection for the input field. Previous connection will be closed"
-  ), o.setAttribute(
+  ), r.setAttribute(
     "aria-label",
     "Click this button to refresh Flottform connection for the input field. Previous connection will be closed"
-  ), o.innerHTML = '<svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M13.5 2c-5.288 0-9.649 3.914-10.377 9h-3.123l4 5.917 4-5.917h-2.847c.711-3.972 4.174-7 8.347-7 4.687 0 8.5 3.813 8.5 8.5s-3.813 8.5-8.5 8.5c-3.015 0-5.662-1.583-7.171-3.957l-1.2 1.775c1.916 2.536 4.948 4.182 8.371 4.182 5.797 0 10.5-4.702 10.5-10.5s-4.703-10.5-10.5-10.5z"/></svg>', o;
+  ), r.innerHTML = '<svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M13.5 2c-5.288 0-9.649 3.914-10.377 9h-3.123l4 5.917 4-5.917h-2.847c.711-3.972 4.174-7 8.347-7 4.687 0 8.5 3.813 8.5 8.5s-3.813 8.5-8.5 8.5c-3.015 0-5.662-1.583-7.171-3.957l-1.2 1.775c1.916 2.536 4.948 4.182 8.371 4.182 5.797 0 10.5-4.702 10.5-10.5s-4.703-10.5-10.5-10.5z"/></svg>', r;
 };
 let Xt = 1;
 const en = ({
-  label: o,
-  flottformItem: r
+  label: r,
+  flottformItem: o
 }) => {
-  const t = document.createElement("p"), e = o ?? `File input ${Xt++}`;
-  e && (t.innerHTML = e, r.appendChild(t));
+  const t = document.createElement("p"), e = r ?? `File input ${Xt++}`;
+  e && (t.innerHTML = e, o.appendChild(t));
 }, tn = () => {
-  const o = document.createElement("button");
-  return o.setAttribute("class", "flottform-copy-to-clipboard"), o.setAttribute("type", "button"), o.setAttribute("title", "Copy Flottform link to clipboard"), o.setAttribute("aria-label", "Copy Flottform link to clipboard"), o.innerText = "📋", o.addEventListener("click", async () => {
-    const r = document.querySelector(".flottform-link-offer").innerText;
-    navigator.clipboard.writeText(r).then(() => {
-      o.innerText = "✅", setTimeout(() => {
-        o.innerText = "📋";
+  const r = document.createElement("button");
+  return r.setAttribute("class", "flottform-copy-to-clipboard"), r.setAttribute("type", "button"), r.setAttribute("title", "Copy Flottform link to clipboard"), r.setAttribute("aria-label", "Copy Flottform link to clipboard"), r.innerText = "📋", r.addEventListener("click", async () => {
+    const o = document.querySelector(".flottform-link-offer").innerText;
+    navigator.clipboard.writeText(o).then(() => {
+      r.innerText = "✅", setTimeout(() => {
+        r.innerText = "📋";
       }, 1e3);
     }).catch((t) => {
-      o.innerText = `❌ Failed to copy: ${t}`, setTimeout(() => {
-        o.innerText = "📋";
+      r.innerText = `❌ Failed to copy: ${t}`, setTimeout(() => {
+        r.innerText = "📋";
       }, 1e3);
     });
-  }), o;
-}, nn = (o) => {
-  o.querySelector(
+  }), r;
+}, nn = (r) => {
+  r.querySelector(
     ".flottform-status-information"
-  ) && (o.innerHTML = "");
-}, on = (o) => {
-  let r = o.querySelector("details");
-  if (!r) {
-    r = document.createElement("details");
+  ) && (r.innerHTML = "");
+}, on = (r) => {
+  let o = r.querySelector("details");
+  if (!o) {
+    o = document.createElement("details");
     const t = document.createElement("summary");
-    t.innerText = "Details", r.appendChild(t);
+    t.innerText = "Details", o.appendChild(t);
     const e = document.createElement("div");
-    e.classList.add("details-container"), r.appendChild(e), o.appendChild(r);
+    e.classList.add("details-container"), o.appendChild(e), r.appendChild(o);
   }
-  return r;
-}, rn = (o, r) => {
+  return o;
+}, rn = (r, o) => {
   const t = document.createElement("label");
-  t.setAttribute("id", `flottform-status-bar-${o}`), t.classList.add("flottform-progress-bar-label"), t.innerText = `File ${r} progress:`;
+  t.setAttribute("id", `flottform-status-bar-${r}`), t.classList.add("flottform-progress-bar-label"), t.innerText = `File ${o} progress:`;
   const e = document.createElement("progress");
-  return e.setAttribute("id", `flottform-status-bar-${o}`), e.classList.add("flottform-status-bar"), e.setAttribute("max", "100"), e.setAttribute("value", "0"), { currentFileLabel: t, progressBar: e };
-}, sn = (o, r, t, e, n) => {
+  return e.setAttribute("id", `flottform-status-bar-${r}`), e.classList.add("flottform-status-bar"), e.setAttribute("max", "100"), e.setAttribute("value", "0"), { currentFileLabel: t, progressBar: e };
+}, sn = (r, o, t, e, n) => {
   let i = n.querySelector(
-    `progress#flottform-status-bar-${o}`
+    `progress#flottform-status-bar-${r}`
   );
   if (!i) {
-    const { currentFileLabel: s, progressBar: a } = rn(o, r);
+    const { currentFileLabel: s, progressBar: a } = rn(r, o);
     i = a;
     const c = e.querySelector(".details-container");
     c.appendChild(s), c.appendChild(i);
   }
   i.value = t * 100, i.innerText = `${t * 100}%`;
 }, an = () => {
-  const o = document.createElement("label");
-  o.setAttribute("id", "flottform-status-bar-overall-progress"), o.classList.add("flottform-progress-bar-label"), o.innerText = "Receiving Files Progress";
-  const r = document.createElement("progress");
-  return r.setAttribute("id", "flottform-status-bar-overall-progress"), r.classList.add("flottform-status-bar"), r.setAttribute("max", "100"), r.setAttribute("value", "0"), { overallFilesLabel: o, progressBar: r };
-}, cn = (o, r, t, e) => {
-  let n = o.querySelector("progress#flottform-status-bar-overall-progress");
+  const r = document.createElement("label");
+  r.setAttribute("id", "flottform-status-bar-overall-progress"), r.classList.add("flottform-progress-bar-label"), r.innerText = "Receiving Files Progress";
+  const o = document.createElement("progress");
+  return o.setAttribute("id", "flottform-status-bar-overall-progress"), o.classList.add("flottform-status-bar"), o.setAttribute("max", "100"), o.setAttribute("value", "0"), { overallFilesLabel: r, progressBar: o };
+}, cn = (r, o, t, e) => {
+  let n = r.querySelector("progress#flottform-status-bar-overall-progress");
   if (!n) {
     const { overallFilesLabel: s, progressBar: a } = an();
-    n = a, o.appendChild(s), o.appendChild(n);
+    n = a, r.appendChild(s), r.appendChild(n);
   }
-  const i = o.querySelector(
+  const i = r.querySelector(
     "label#flottform-status-bar-overall-progress"
   );
-  n.value = r * 100, n.innerText = `${r * 100}%`, i.innerText = `Receiving file ${t + 1} of ${e}`;
+  n.value = o * 100, n.innerText = `${o * 100}%`, i.innerText = `Receiving file ${t + 1} of ${e}`;
 };
 export {
   Ae as ConnectionManager,

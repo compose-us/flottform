@@ -41,6 +41,15 @@
 
 		<div class="w-full flex flex-col gap-2 pt-2">
 			<a
+				href="./options.html"
+				class="block w-full px-4 py-2.5 text-sm text-white font-semibold rounded-lg bg-primary-blue hover:bg-primary-blue/90 transition-colors duration-200 text-center"
+			>
+				Configure options
+			</a>
+			<p class="text-xs text-gray-500 text-center leading-relaxed">
+				Optional — set up your own TURN server for better connectivity on VPN or mobile networks.
+			</p>
+			<a
 				href="https://flottform.io"
 				target="_blank"
 				rel="external noopener noreferrer"
