@@ -41,7 +41,7 @@
 
 		<div class="w-full flex flex-col gap-2 pt-2">
 			<a
-				href="./options.html"
+				href="/options"
 				class="block w-full px-4 py-2.5 text-sm text-white font-semibold rounded-lg bg-primary-blue hover:bg-primary-blue/90 transition-colors duration-200 text-center"
 			>
 				Configure options

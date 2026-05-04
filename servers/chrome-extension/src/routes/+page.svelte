@@ -7,7 +7,7 @@
 	type TrackedInputFields = Array<{
 		id: string;
 		frameId: number;
-		type: 'text' | 'textarea' | 'file';
+		type: 'text' | 'textarea' | 'file' | 'password';
 		connectionState: { event: string; data?: any };
 		label: string | undefined | null;
 		screenshot: string | undefined;
@@ -22,6 +22,7 @@
 	let copiedInputId: string | null = $state(null);
 	let isScanning: boolean = $state(false);
 	let activeFilters: Set<string> = $state(new Set(['text', 'textarea', 'file']));
+	let turnFallbackWarning: string | null = $state(null);
 
 	const filterOptions = [
 		{ label: 'Text', value: 'text' },
@@ -39,7 +40,12 @@
 		}
 	};
 
-	const countByType = (type: string) => inputFields.filter((f) => f.type === type).length;
+	// Password fields are bucketed under the 'text' filter so users don't need a 4th checkbox;
+	// they're still visually distinguishable in the card by the lock icon.
+	const effectiveFilterType = (type: string) => (type === 'password' ? 'text' : type);
+
+	const countByType = (type: string) =>
+		inputFields.filter((f) => effectiveFilterType(f.type) === type).length;
 
 	let expandedFields: Set<string> = $state(new Set());
 
@@ -67,7 +73,8 @@
 	const typeLabels: Record<string, string> = {
 		text: 'Text field',
 		textarea: 'Text area',
-		file: 'File upload'
+		file: 'File upload',
+		password: 'Password field'
 	};
 
 	const getDisplayName = (input: TrackedInputFields[number]) => {
@@ -104,7 +111,9 @@
 					}
 				}
 			});
-		} catch (e) {}
+		} catch (e) {
+			console.warn(`Failed to close old connection for ${inputFieldId}:`, e);
+		}
 
 		const updated = inputFields.map((f) =>
 			f.id === inputFieldId ? { ...f, connectionState: { event: 'new' } } : f
@@ -112,7 +121,7 @@
 		inputFields = updated;
 		chrome.storage.local.set({ [`inputFields-${currentTabId}`]: updated });
 
-		await handleGenerateQr(inputFieldId, inputFieldType, frameId);
+		await startFlottformProcess(inputFieldId, inputFieldType, frameId);
 	};
 
 	const removeSavedInputs = async () => {
@@ -147,7 +156,6 @@
 	const extractInputFieldsFromCurrentPage = async () => {
 		isScanning = true;
 		await removeSavedInputs();
-		console.log('Searching for input fields in page');
 
 		// Discover all frames on the page
 		const frames = await chrome.webNavigation.getAllFrames({ tabId: currentTabId! });
@@ -204,7 +212,9 @@
 									input instanceof HTMLInputElement
 										? input.type === 'file'
 											? 'file'
-											: 'text'
+											: input.type === 'password'
+												? 'password'
+												: 'text'
 										: input instanceof HTMLTextAreaElement
 											? 'textarea'
 											: 'text',
@@ -227,8 +237,6 @@
 			}
 		}
 
-		console.log(`Found ${allInputs.length} input fields across ${validFrames.length} frames.`);
-
 		if (allInputs.length === 0) {
 			inputFields = [];
 			chrome.storage.local.set({ [`inputFields-${currentTabId}`]: [] });
@@ -249,7 +257,7 @@
 						el?.scrollIntoView({ block: 'center', behavior: 'instant' });
 					}
 				});
-				await new Promise((r) => setTimeout(r, 500));
+				await new Promise((r) => setTimeout(r, 100));
 
 				let screenshot: string | undefined;
 				try {
@@ -275,13 +283,6 @@
 			currentTabId = tab.id!;
 		}
 		return currentTabId;
-	};
-	const handleGenerateQr = async (
-		inputFieldId: string,
-		inputFieldType: string,
-		frameId: number = 0
-	) => {
-		await startFlottformProcess(inputFieldId, inputFieldType, frameId);
 	};
 
 	const startFlottformProcess = async (
@@ -331,12 +332,10 @@
 							const latestVersionOfInputFields: TrackedInputFields = result[`inputFields-${tabId}`];
 							const updatedInputFields = latestVersionOfInputFields.map((inputField) => {
 								if (inputField.id === id) {
-									//console.warn('Updating only the value of this inputField with ID= ', id);
 									return { ...inputField, connectionState: { event, data } };
 								}
 								return inputField;
 							});
-							//console.warn(`updatedInputFields =${JSON.stringify(updatedInputFields)}, id=${id}`);
 
 							updateSavedInputs(updatedInputFields, currentTabId);
 						}
@@ -344,13 +343,7 @@
 				}
 
 				function updateSavedInputs(updatedInputFields: TrackedInputFields, currentTabId: number) {
-					// Update the UI and the local storage
-					chrome.storage.local.set({ [`inputFields-${currentTabId}`]: updatedInputFields }, () => {
-						console.warn(
-							`Saved ${JSON.stringify(updatedInputFields)} to chrome storage from page context!!!!!!!!!!!!`
-						);
-					});
-					//inputFields = updatedInputFields;
+					chrome.storage.local.set({ [`inputFields-${currentTabId}`]: updatedInputFields });
 				}
 
 				function registerFlottformTextInputListeners(
@@ -362,24 +355,19 @@
 					flottformTextInputHost.on(
 						'endpoint-created',
 						({ link, qrCode }: { link: string; qrCode: string }) => {
-							//console.log(`*****Inside "endpoint-created" event, link=${link}*****`);
 							handleFlottformEvent('endpoint-created', { link, qrCode }, textInputId, currentTabId);
 						}
 					);
 
 					flottformTextInputHost.on('connected', () => {
-						//console.log('****Inside "connected" event*****');
 						handleFlottformEvent('connected', undefined, textInputId, currentTabId);
 					});
 
 					flottformTextInputHost.on('error', (error: Error) => {
-						//console.log('****Inside "error" event*****');
 						handleFlottformEvent('error', { message: error.message }, textInputId, currentTabId);
 					});
 
 					flottformTextInputHost.on('done', (message: string) => {
-						//console.log('****Inside "done" event*****');
-
 						handleFlottformEvent('done', undefined, textInputId, currentTabId);
 
 						const ourMap = window.___flottform_map;
@@ -411,8 +399,6 @@
 					currentTabId: number,
 					inputFieldType: string
 				) {
-					// Query the doc with the ID: textInputId in order to find the input field where you'll paste the text.
-					//console.log(`****Flottform will work on TextInput with id=${textInputId}*****`);
 					const data = {
 						type: inputFieldType,
 						rtcConfiguration,
@@ -431,7 +417,6 @@
 
 					// Track instances of FlottformTextInputHost
 					connectionManager.addConnection(textInputId, flottformTextInputHost);
-					console.log('connectionManager: ', connectionManager);
 
 					registerFlottformTextInputListeners(flottformTextInputHost, textInputId, currentTabId);
 				}
@@ -465,7 +450,6 @@
 
 					// Track instances of FlottformFileInputHost
 					connectionManager.addConnection(fileInputId, flottformFileInputHost);
-					/* console.log('connectionManager: ', connectionManager); */
 
 					registerFlottformFileInputListeners(flottformFileInputHost, fileInputId, currentTabId);
 				}
@@ -478,13 +462,11 @@
 					flottformFileInputHost.on(
 						'endpoint-created',
 						({ link, qrCode }: { link: string; qrCode: string }) => {
-							//console.log(`*****Inside "endpoint-created" event, link=${link}*****`);
 							handleFlottformEvent('endpoint-created', { link, qrCode }, fileInputId, currentTabId);
 						}
 					);
 
 					flottformFileInputHost.on('connected', () => {
-						//console.log('****Inside "connected" event*****');
 						handleFlottformEvent('connected', undefined, fileInputId, currentTabId);
 					});
 
@@ -495,7 +477,6 @@
 								((currentFileProgress * 100) % 10 === 0 && currentFileProgress < 0.85) ||
 								currentFileProgress > 0.85
 							) {
-								console.log(`'currentFileProgress'= ${currentFileProgress}`);
 								// Limit the amount of times we update the progress bar in chrome.storage.local
 								handleFlottformEvent(
 									'progress',
@@ -508,7 +489,6 @@
 					);
 
 					flottformFileInputHost.on('error', (error: Error) => {
-						//console.log('****Inside "error" event*****');
 						handleFlottformEvent('error', { message: error.message }, fileInputId, currentTabId);
 					});
 
@@ -605,7 +585,6 @@
 	};
 
 	const screenshotInput = async (inputId: string, frameId: number = 0) => {
-		// 1. Get element position from the page
 		const [result] = await chrome.scripting.executeScript({
 			target: { tabId: currentTabId!, frameIds: [frameId] },
 			args: [inputId],
@@ -614,17 +593,14 @@
 				const input = ourMap.get(inputId);
 				if (!input) return null;
 
-				// Find the associated label (same logic as extractInputFieldsFromCurrentPage)
 				let label: HTMLLabelElement | null = input.id
 					? document.querySelector(`label[for="${input.id}"]`)
 					: null;
 				label ??= input.closest('label');
 
-				// Get bounding rects
 				const inputRect = input.getBoundingClientRect();
 				const labelRect = label?.getBoundingClientRect();
 
-				// Compute a combined bounding box covering both elements
 				const x = Math.min(inputRect.x, labelRect?.x ?? inputRect.x);
 				const y = Math.min(inputRect.y, labelRect?.y ?? inputRect.y);
 				const right = Math.max(inputRect.right, labelRect?.right ?? inputRect.right);
@@ -641,20 +617,12 @@
 		});
 		const rect = result?.result;
 		if (!rect || rect.width < 1 || rect.height < 1) return undefined;
-		// 2. Capture the full visible tab
 		const fullScreenshot = await chrome.tabs.captureVisibleTab({ format: 'png' });
-		// 3. Crop to just the input element
-		const croppedDataUrl = await cropScreenshot(fullScreenshot, rect, rect.devicePixelRatio);
-		// 4. Use the cropped screenshot however you need:
-		//    - Display it in the popup as <img src={croppedDataUrl} />
-		//    - Store it alongside the input field in your state
-		//    - Send it via WebRTC, etc.
-		return croppedDataUrl;
+		return cropScreenshot(fullScreenshot, rect, rect.devicePixelRatio);
 	};
 
 	onMount(async () => {
 		if (!chrome) {
-			console.warn('Chrome API is not available in this context!!');
 			return;
 		}
 
@@ -708,7 +676,12 @@
 					iceServers: [{ urls: ['stun:stun1.l.google.com:19302'] }]
 				};
 			}
-		} catch {
+		} catch (error) {
+			console.warn('Failed to load TURN credentials, falling back to STUN-only:', error);
+			if (customTurnEndpoint || useTurnServer) {
+				turnFallbackWarning =
+					'TURN server unavailable — using direct connection only. Connections may fail on VPN or mobile networks.';
+			}
 			rtcConfiguration = {
 				iceServers: [{ urls: ['stun:stun1.l.google.com:19302'] }]
 			};
@@ -778,6 +751,24 @@
 		</div>
 	</div>
 
+	{#if turnFallbackWarning}
+		<div class="px-4 py-2 bg-amber-50 border-b border-amber-200 flex items-start gap-2">
+			<svg
+				class="h-3.5 w-3.5 text-amber-600 shrink-0 mt-0.5"
+				viewBox="0 0 20 20"
+				fill="currentColor"
+				aria-hidden="true"
+			>
+				<path
+					fill-rule="evenodd"
+					d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z"
+					clip-rule="evenodd"
+				/>
+			</svg>
+			<p class="text-[11px] text-amber-800 leading-snug">{turnFallbackWarning}</p>
+		</div>
+	{/if}
+
 	{#if isScanning}
 		<!-- Full-popup spinner -->
 		<div class="flex-1 flex flex-col items-center justify-center gap-3 py-16">
@@ -817,7 +808,7 @@
 
 		<!-- Input Fields List -->
 		<ul class="px-4 py-1.5 flex flex-col gap-2 max-h-[460px] overflow-y-auto">
-			{#each inputFields.filter((f) => activeFilters.has(f.type)) as input (input.id)}
+			{#each inputFields.filter((f) => activeFilters.has(effectiveFilterType(f.type))) as input (input.id)}
 				{@const displayName = getDisplayName(input)}
 				{@const expanded = isExpanded(input)}
 				{@const statusDot = getStatusDot(input.connectionState.event)}
@@ -852,6 +843,19 @@
 								<path
 									fill-rule="evenodd"
 									d="M2 3.75A.75.75 0 012.75 3h11.5a.75.75 0 010 1.5H2.75A.75.75 0 012 3.75zM2 7.5a.75.75 0 01.75-.75h6.365a.75.75 0 010 1.5H2.75A.75.75 0 012 7.5zM14 7a.75.75 0 01.55.24l3.25 3.5a.75.75 0 11-1.1 1.02l-1.95-2.1v6.59a.75.75 0 01-1.5 0V9.66l-1.95 2.1a.75.75 0 11-1.1-1.02l3.25-3.5A.75.75 0 0114 7zM2 11.25a.75.75 0 01.75-.75H7A.75.75 0 017 12H2.75a.75.75 0 01-.75-.75z"
+									clip-rule="evenodd"
+								/>
+							</svg>
+						{:else if input.type === 'password'}
+							<svg
+								class="h-3.5 w-3.5 text-gray-400 shrink-0"
+								viewBox="0 0 20 20"
+								fill="currentColor"
+								aria-hidden="true"
+							>
+								<path
+									fill-rule="evenodd"
+									d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z"
 									clip-rule="evenodd"
 								/>
 							</svg>
@@ -916,7 +920,7 @@
 							<!-- State-dependent content -->
 							{#if input.connectionState.event === 'new'}
 								<button
-									onclick={() => handleGenerateQr(input.id, input.type, input.frameId)}
+									onclick={() => startFlottformProcess(input.id, input.type, input.frameId)}
 									class="w-full px-3 py-2 rounded-lg bg-primary-blue text-white text-xs font-semibold hover:opacity-90 transition-opacity duration-200 shadow-sm flex items-center justify-center gap-1.5"
 								>
 									<svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">

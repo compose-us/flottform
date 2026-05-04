@@ -35,7 +35,6 @@
 				FLOTTFORM_EXTENSION_CLIENTS_URL_BASE: flottformExtensionClientsUrlBase,
 				FLOTTFORM_USE_TURN_SERVER: useTurnServer
 			});
-			console.log('saved the options');
 			state = 'saved';
 			setTimeout(() => {
 				state = 'init';
