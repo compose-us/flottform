@@ -17,7 +17,7 @@ export const corsHeaders = (allowedMethods: Array<HttpMethod>, request: Request)
 		return {
 			'Access-Control-Allow-Origin': '*',	
 			'Access-Control-Allow-Methods': allowedMethods.join(','),
-			'Access-Control-Allow-Headers': '*',	
+			'Access-Control-Allow-Headers': 'Authorization, Content-Type, *',	
 		}
 	}
 
@@ -29,7 +29,7 @@ export const corsHeaders = (allowedMethods: Array<HttpMethod>, request: Request)
 			? { 'Access-Control-Allow-Origin': allowedOrigin }
 			: { 'Access-Control-Allow-Origin': '*' }),
 		'Access-Control-Allow-Methods': allowedMethods.join(','),
-		'Access-Control-Allow-Headers': '*',
+		'Access-Control-Allow-Headers': 'Authorization, Content-Type, *',
 		Vary: 'Origin'
 	};
 };
